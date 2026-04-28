@@ -1,152 +1,209 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Plus, Users, Trash2, Loader2, AlertCircle, Info } from 'lucide-react';
-import { getGroups, createGroup } from '@/services/firebase/groups';
-import { ChurchGroup } from '@/types';
-import { toast } from 'sonner';
+import { useState, useEffect, useMemo } from 'react'
+import { Plus, Users, Trash2, Loader2, AlertCircle, Search, Edit } from 'lucide-react'
+import { getGroups, deleteGroup } from '@/services/firebase/groups'
+import { ChurchGroup } from '@/types'
+import { toast } from 'sonner'
+import { PermissionGuard } from '@/components/PermissionGuard'
+import { CreateGroupModal } from './components/CreateGroupModal'
+import { EditGroupModal } from './components/EditGroupModal'
+import { formatDate } from '@/lib/utils'
 
 export default function GroupsPage() {
-  const [groups, setGroups] = useState<ChurchGroup[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newGroupName, setNewGroupName] = useState('');
-  const [newGroupDesc, setNewGroupDesc] = useState('');
+  const [groups, setGroups] = useState<ChurchGroup[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedGroup, setSelectedGroup] = useState<ChurchGroup | null>(null)
+  const [search, setSearch] = useState('')
 
-  const fetchGroups = async () => {
-    setIsLoading(true);
+  const fetchGroups = async (isRefresh = false) => {
+    if (isRefresh) setIsLoading(true)
     try {
-      const data = await getGroups();
-      setGroups(data);
+      const data = await getGroups()
+      setGroups(data)
     } catch (error) {
-      toast.error('Erro ao carregar grupos');
+      toast.error('Erro ao carregar grupos')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchGroups();
-  }, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchGroups()
+  }, [])
 
-  const handleCreateGroup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newGroupName.trim()) return;
+  const filteredGroups = useMemo(() => {
+    return groups.filter(
+      (group) =>
+        group.name.toLowerCase().includes(search.toLowerCase()) ||
+        group.description?.toLowerCase().includes(search.toLowerCase()),
+    )
+  }, [groups, search])
 
-    setIsCreating(true);
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir este grupo?')) return
+
     try {
-      await createGroup(newGroupName, newGroupDesc);
-      toast.success('Grupo criado com sucesso!');
-      setNewGroupName('');
-      setNewGroupDesc('');
-      fetchGroups();
+      await deleteGroup(id)
+      toast.success('Grupo excluído com sucesso!')
+      fetchGroups(true)
     } catch (error) {
-      toast.error('Erro ao criar grupo');
-    } finally {
-      setIsCreating(false);
+      toast.error('Erro ao excluir grupo')
     }
-  };
+  }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Grupos & Ministérios</h1>
-          <p className="text-slate-500 dark:text-slate-400">Gerencie os departamentos e grupos oficiais da igreja.</p>
+    <PermissionGuard permission="canManageUsers">
+      <div className="space-y-6">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Grupos & Ministérios
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400">
+              Gerencie os departamentos e grupos oficiais da igreja.
+            </p>
+          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-700 active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+            Adicionar Novo Grupo
+          </button>
+        </header>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Buscar por nome ou descrição..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900"
+          />
         </div>
-      </header>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Creation Form */}
-        <div className="lg:col-span-1">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
-            <h2 className="mb-4 text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Plus className="h-5 w-5 text-blue-500" />
-              Novo Grupo
-            </h2>
-            <form onSubmit={handleCreateGroup} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome do Grupo</label>
-                <input
-                  type="text"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                  placeholder="Ex: Jovens, Louvor, Infantil"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Descrição (Opcional)</label>
-                <textarea
-                  value={newGroupDesc}
-                  onChange={(e) => setNewGroupDesc(e.target.value)}
-                  placeholder="Breve descrição do ministério..."
-                  rows={3}
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={isCreating || !newGroupName.trim()}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-700 disabled:opacity-50"
-              >
-                {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Criar Grupo'}
-              </button>
-            </form>
-
-            <div className="mt-6 flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-              <Info className="h-5 w-5 shrink-0 mt-0.5" />
-              <p className="text-xs leading-relaxed">
-                Estes grupos ficarão disponíveis para seleção no Mural de Avisos e outras áreas do sistema.
-              </p>
-            </div>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Nome do Grupo
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Descrição
+                  </th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Cadastro
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {isLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4">
+                        <div className="h-10 w-40 bg-slate-100 dark:bg-slate-800 rounded" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-6 w-60 bg-slate-100 dark:bg-slate-800 rounded" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-6 w-24 bg-slate-100 dark:bg-slate-800 rounded" />
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="h-8 w-8 bg-slate-100 dark:bg-slate-800 rounded ml-auto" />
+                      </td>
+                    </tr>
+                  ))
+                ) : filteredGroups.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                      <div className="flex flex-col items-center gap-2">
+                        <AlertCircle className="h-12 w-12 text-slate-300 dark:text-slate-700" />
+                        <p>Nenhum grupo encontrado.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredGroups.map((group) => (
+                    <tr
+                      key={group.id}
+                      className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-bold">
+                            {group.name[0]}
+                          </div>
+                          <span className="font-semibold text-slate-900 dark:text-white">
+                            {group.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-1">
+                          {group.description || 'Sem descrição'}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          {formatDate(group.created_at)}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedGroup(group)
+                              setIsEditModalOpen(true)
+                            }}
+                            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-500 dark:hover:bg-blue-900/20"
+                          >
+                            <Edit className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(group.id)}
+                            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-
-        {/* Groups List */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Users className="h-5 w-5 text-blue-500" />
-            Grupos Cadastrados
-          </h2>
-
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-slate-300" />
-            </div>
-          ) : groups.length > 0 ? (
-            <div className="grid gap-4">
-              {groups.map((group) => (
-                <div 
-                  key={group.id}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-bold text-lg">
-                      {group.name[0]}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900 dark:text-white">{group.name}</h3>
-                      {group.description && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{group.description}</p>
-                      )}
-                    </div>
-                  </div>
-                  <button className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20">
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-slate-300 p-12 text-center dark:border-slate-800">
-              <AlertCircle className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-700" />
-              <p className="mt-4 text-slate-500">Nenhum grupo cadastrado ainda.</p>
-            </div>
-          )}
-        </div>
       </div>
-    </div>
-  );
+
+      <CreateGroupModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => fetchGroups(true)}
+      />
+
+      {selectedGroup && (
+        <EditGroupModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false)
+            setSelectedGroup(null)
+          }}
+          onSuccess={() => fetchGroups(true)}
+          group={selectedGroup}
+        />
+      )}
+    </PermissionGuard>
+  )
 }

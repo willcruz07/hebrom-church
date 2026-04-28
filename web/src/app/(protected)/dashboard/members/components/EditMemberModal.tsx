@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -23,17 +23,22 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Edit, Loader2 } from 'lucide-react'
+import { Edit, Loader2, Check, UserMinus, UserCheck, Trash2 } from 'lucide-react'
 import { AppUser } from '@/types'
 import { updateUserProfile } from '@/services/firebase/users'
 import { doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/services/firebase/config'
+import { getGroups } from '@/services/firebase/groups'
+import { ChurchGroup } from '@/types'
+import { formatPhone, maskPhone } from '@/lib/utils'
+import { deleteUser } from '@/services/firebase/users'
 
 const schema = z.object({
   full_name: z.string().min(3, 'Nome muito curto'),
   role: z.enum(['member', 'secretary', 'pastor', 'visitor', 'pending_member']),
   phone: z.string().optional(),
   birth_date: z.string().optional(),
+  sub_groups: z.array(z.string()),
 })
 
 type FormData = z.infer<typeof schema>
@@ -47,12 +52,15 @@ interface EditMemberModalProps {
 
 export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemberModalProps) {
   const [loading, setLoading] = useState(false)
+  const [groups, setGroups] = useState<ChurchGroup[]>([])
+  const [inactivating, setInactivating] = useState(false)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -60,8 +68,50 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
       role: member.role,
       phone: member.profile.phone,
       birth_date: member.profile.birth_date,
+      sub_groups: member.sub_groups || [],
     },
   })
+
+  const selectedGroups = watch('sub_groups')
+
+  useEffect(() => {
+    if (isOpen) {
+      getGroups().then(setGroups)
+    }
+  }, [isOpen])
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const masked = maskPhone(e.target.value)
+    setValue('phone', masked)
+  }
+
+  const toggleGroup = (groupId: string) => {
+    const current = selectedGroups || []
+    if (current.includes(groupId)) {
+      setValue('sub_groups', current.filter((id) => id !== groupId))
+    } else {
+      setValue('sub_groups', [...current, groupId])
+    }
+  }
+
+  const handleToggleStatus = async () => {
+    setInactivating(true)
+    try {
+      const docRef = doc(db, 'users', member.uid)
+      const newStatus = !member.is_active
+      await updateDoc(docRef, {
+        is_active: newStatus,
+        updated_at: Timestamp.now(),
+      })
+      toast.success(newStatus ? 'Usuário ativado!' : 'Usuário inativado!')
+      onSuccess()
+      onClose()
+    } catch (error: unknown) {
+      toast.error('Erro ao alterar status')
+    } finally {
+      setInactivating(false)
+    }
+  }
 
   const onSubmit = async (data: FormData) => {
     setLoading(true)
@@ -73,20 +123,20 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
         birth_date: data.birth_date,
       })
 
-      // 2. Atualizar Role (Se mudou)
-      if (data.role !== member.role) {
-        const docRef = doc(db, 'users', member.uid)
-        await updateDoc(docRef, {
-          role: data.role,
-          updated_at: Timestamp.now(),
-        })
-      }
+      // 2. Atualizar Role e Grupos
+      const docRef = doc(db, 'users', member.uid)
+      await updateDoc(docRef, {
+        role: data.role,
+        sub_groups: data.sub_groups,
+        updated_at: Timestamp.now(),
+      })
 
       toast.success('Dados atualizados com sucesso!')
       onSuccess()
       onClose()
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao atualizar dados')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erro ao atualizar dados'
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -94,7 +144,7 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] rounded-2xl">
+      <DialogContent className="sm:max-w-[550px] rounded-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Edit className="h-5 w-5 text-blue-600" />
@@ -113,7 +163,7 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Cargo / Permissão</Label>
-              <Select onValueChange={(v) => setValue('role', v as any)} defaultValue={member.role}>
+              <Select onValueChange={(v) => setValue('role', v as FormData['role'])} defaultValue={member.role}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -128,13 +178,96 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit_phone">Telefone</Label>
-              <Input id="edit_phone" {...register('phone')} />
+              <Input id="edit_phone" {...register('phone')} onChange={handlePhoneChange} />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="edit_birth_date">Data de Nascimento</Label>
             <Input id="edit_birth_date" type="date" {...register('birth_date')} />
+          </div>
+
+          <div className="space-y-3">
+            <Label>Sub-Grupos / Ministérios</Label>
+            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+              {groups.map((group) => (
+                <button
+                  key={group.id}
+                  type="button"
+                  onClick={() => toggleGroup(group.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                    selectedGroups?.includes(group.id)
+                      ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400'
+                  }`}
+                >
+                  <div
+                    className={`flex h-4 w-4 items-center justify-center rounded border ${
+                      selectedGroups?.includes(group.id)
+                        ? 'bg-white/20 border-white/40'
+                        : 'border-slate-300 dark:border-slate-700'
+                    }`}
+                  >
+                    {selectedGroups?.includes(group.id) && <Check className="h-3 w-3" />}
+                  </div>
+                  {group.name}
+                </button>
+              ))}
+              {groups.length === 0 && (
+                <p className="text-xs text-slate-500 col-span-2 py-2">Nenhum grupo cadastrado.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleToggleStatus}
+                disabled={inactivating}
+                className={`gap-2 rounded-xl transition-all ${
+                  member.is_active
+                    ? 'text-amber-600 hover:bg-amber-50 hover:text-amber-700 border-amber-100'
+                    : 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 border-emerald-100'
+                }`}
+              >
+                {inactivating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : member.is_active ? (
+                  <UserMinus className="h-4 w-4" />
+                ) : (
+                  <UserCheck className="h-4 w-4" />
+                )}
+                {member.is_active ? 'Inativar' : 'Reativar'}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={async () => {
+                  if (confirm('Tem certeza que deseja excluir permanentemente este usuário?')) {
+                    try {
+                      await deleteUser(member.uid)
+                      toast.success('Usuário excluído com sucesso')
+                      onSuccess()
+                      onClose()
+                    } catch (error) {
+                      toast.error('Erro ao excluir usuário')
+                    }
+                  }
+                }}
+                className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-100 gap-2 rounded-xl"
+              >
+                <Trash2 className="h-4 w-4" />
+                Excluir
+              </Button>
+            </div>
+            <p className="text-[10px] text-slate-500 text-center">
+              {member.is_active
+                ? 'Inativar remove o acesso temporariamente. Excluir é permanente.'
+                : 'O usuário recuperará o acesso ao sistema.'}
+            </p>
           </div>
 
           <DialogFooter className="pt-4">

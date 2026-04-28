@@ -1,33 +1,36 @@
-'use client';
+/* eslint-disable react-hooks/static-components */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
+'use client'
 
-import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
-import { useMessages } from '@/hooks/useMessages';
-import { useNavigation } from '@/hooks/useNavigation';
-import { usePermissions } from '@/hooks/usePermissions';
-import { getPendingUsersCount } from '@/services/firebase/users';
-import { ROUTES } from '@/paths';
-import { useAuth } from '@/store/useAuth';
-import { useMenuState } from '@/store/useMenuState';
-import { 
-  LayoutDashboard, 
-  LogOut, 
-  Settings, 
-  MessageSquare, 
-  Heart, 
-  Calendar, 
-  Users, 
-  User, 
+import Image from 'next/image'
+import { usePathname, useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
+import { useMessages } from '@/hooks/useMessages'
+import { useNavigation } from '@/hooks/useNavigation'
+import { usePermissions } from '@/hooks/usePermissions'
+import { getPendingUsersCount } from '@/services/firebase/users'
+import { ROUTES } from '@/paths'
+import { useAuth } from '@/store/useAuth'
+import { useMenuState } from '@/store/useMenuState'
+import {
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  MessageSquare,
+  Heart,
+  Calendar,
+  Users,
+  User,
   X,
   Layers,
-  IdCard
-} from 'lucide-react';
-import { useWindowSize } from 'usehooks-ts';
-import { Sheet, SheetContent } from './ui/sheet';
+  IdCard,
+} from 'lucide-react'
+import { useWindowSize } from 'usehooks-ts'
+import { Sheet, SheetContent } from './ui/sheet'
 
 interface SidebarProps {
-  className?: string;
+  className?: string
 }
 
 const navigationItems = [
@@ -80,52 +83,52 @@ const navigationItems = [
     description: 'ID Digital de Membro',
     permission: 'canViewProfileCard',
   },
-];
+]
 
 export function Sidebar({ className }: SidebarProps) {
-  const { currentUser, signOut } = useAuth();
-  const { onShowMessage } = useMessages();
-  const { navigateTo } = useNavigation();
-  const { permissions, role: userRole } = usePermissions();
-  const router = useRouter();
-  const pathname = usePathname();
-  const { width } = useWindowSize();
-  const { menuIsOpen, setMenuIsOpen } = useMenuState();
-  const [pendingCount, setPendingCount] = useState(0);
+  const { currentUser, signOut } = useAuth()
+  const { onShowMessage } = useMessages()
+  const { navigateTo } = useNavigation()
+  const { permissions, role: userRole } = usePermissions()
+  const router = useRouter()
+  const pathname = usePathname()
+  const { width } = useWindowSize()
+  const { menuIsOpen, setMenuIsOpen } = useMenuState()
+  const [pendingCount, setPendingCount] = useState(0)
 
   useEffect(() => {
     if (permissions.canManageUsers) {
-      const unsubscribe = getPendingUsersCount(setPendingCount);
-      return () => unsubscribe();
+      const unsubscribe = getPendingUsersCount(setPendingCount)
+      return () => unsubscribe()
     }
-  }, [permissions.canManageUsers]);
+  }, [permissions.canManageUsers])
 
-  const filteredNavigation = navigationItems.filter(item => {
-    if (!item.permission) return true;
-    return (permissions as any)[item.permission];
-  });
+  const filteredNavigation = navigationItems.filter((item) => {
+    if (!item.permission) return true
+    return (permissions as any)[item.permission]
+  })
 
-  const [activeRoute, setActiveRoute] = useState<string>('');
-  const [menuIsFixed, setMenuIsFixed] = useState<boolean>(false);
-
-  useEffect(() => {
-    setActiveRoute(pathname);
-  }, [pathname]);
+  const [activeRoute, setActiveRoute] = useState<string>('')
+  const [menuIsFixed, setMenuIsFixed] = useState<boolean>(false)
 
   useEffect(() => {
-    const isDesktop = width >= 1024;
-    setMenuIsFixed(isDesktop);
+    setActiveRoute(pathname)
+  }, [pathname])
+
+  useEffect(() => {
+    const isDesktop = width >= 1024
+    setMenuIsFixed(isDesktop)
     if (isDesktop) {
-      setMenuIsOpen(false);
+      setMenuIsOpen(false)
     }
-  }, [width, setMenuIsOpen]);
+  }, [width, setMenuIsOpen])
 
   const isActiveRoute = (route: string) => {
     if (route === ROUTES.AUTHENTICATED.HOME) {
-      return activeRoute === route;
+      return activeRoute === route
     }
-    return activeRoute === route || activeRoute.startsWith(route + '/');
-  };
+    return activeRoute === route || activeRoute.startsWith(route + '/')
+  }
 
   const handleSignOut = useCallback(() => {
     onShowMessage({
@@ -135,32 +138,31 @@ export function Sidebar({ className }: SidebarProps) {
       title: 'Confirmar Saída',
       description: 'Deseja realmente sair da aplicação?',
       onConfirm: async () => {
-        await signOut();
-        router.replace(ROUTES.NO_AUTH.SIGN_IN);
+        await signOut()
+        router.replace(ROUTES.NO_AUTH.SIGN_IN)
       },
-    });
-  }, [onShowMessage, router, signOut]);
+    })
+  }, [onShowMessage, router, signOut])
 
   const handleNavigation = (href: string) => {
-    navigateTo(href);
+    navigateTo(href)
     if (!menuIsFixed) {
-      setMenuIsOpen(false);
+      setMenuIsOpen(false)
     }
-  };
+  }
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <div className="border-b border-slate-200 p-6 dark:border-slate-800">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center justify-center rounded-lg bg-blue-500/10 p-2">
-              <Image src="/logo.png" alt="Hebrom Sys" width={40} height={40} className="object-contain" />
-            </div>
-            <div>
-              <h2 className="font-bold text-slate-900 dark:text-white">Hebrom Sys</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Gestão Eclesiástica</p>
-            </div>
+          <div className="relative ml-4 -mb-16 h-56 w-56 -mt-16">
+            <img
+              src="/logo.png"
+              alt="Hebrom Church"
+              className="h-full w-full object-contain object-left mix-blend-screen brightness-150 contrast-125"
+            />
           </div>
+
           {!menuIsFixed && (
             <button
               onClick={() => setMenuIsOpen(false)}
@@ -204,8 +206,8 @@ export function Sidebar({ className }: SidebarProps) {
 
       <nav className="flex-1 space-y-2 p-4 overflow-y-auto">
         {filteredNavigation.map((item) => {
-          const Icon = item.icon;
-          const isActive = isActiveRoute(item.href);
+          const Icon = item.icon
+          const isActive = isActiveRoute(item.href)
 
           return (
             <button
@@ -224,7 +226,9 @@ export function Sidebar({ className }: SidebarProps) {
               </div>
               <div className="flex-1 text-left">
                 <p className={`font-medium ${isActive ? 'text-white' : ''}`}>{item.name}</p>
-                <p className={`text-xs ${isActive ? 'text-blue-100' : 'text-slate-500 dark:text-slate-500'}`}>
+                <p
+                  className={`text-xs ${isActive ? 'text-blue-100' : 'text-slate-500 dark:text-slate-500'}`}
+                >
                   {item.description}
                 </p>
               </div>
@@ -234,7 +238,7 @@ export function Sidebar({ className }: SidebarProps) {
                 </div>
               )}
             </button>
-          );
+          )
         })}
       </nav>
 
@@ -255,14 +259,14 @@ export function Sidebar({ className }: SidebarProps) {
         </button>
       </div>
     </div>
-  );
+  )
 
   if (menuIsFixed) {
     return (
       <aside className={`h-full w-80 ${className}`}>
         <SidebarContent />
       </aside>
-    );
+    )
   }
 
   return (
@@ -271,5 +275,5 @@ export function Sidebar({ className }: SidebarProps) {
         <SidebarContent />
       </SheetContent>
     </Sheet>
-  );
+  )
 }

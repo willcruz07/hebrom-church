@@ -6,6 +6,7 @@ export interface AppUser {
   uid: string;
   email: string;
   role: UserRole;
+  is_active: boolean;
   sub_groups: string[];
   profile: {
     full_name: string;
@@ -32,7 +33,7 @@ export interface FeedPost {
   content: string;
   media_url?: string;
   target_groups: string[];
-  created_at: number;
+  created_at: number | Timestamp;
 }
 
 export interface PrayerRequest {
@@ -57,4 +58,18 @@ export interface ChurchGroup {
   description?: string;
   leader_uid?: string;
   created_at: number;
+}
+
+export type EventCategory = 'Culto' | 'Evento' | 'Ensino' | 'Grupo' | 'Outro';
+
+export interface ChurchEvent {
+  id: string;
+  title: string;
+  description?: string;
+  date: string; // YYYY-MM-DD
+  time: string;
+  location: string;
+  category: EventCategory;
+  created_at: Timestamp | number;
+  updated_at?: Timestamp | number;
 }

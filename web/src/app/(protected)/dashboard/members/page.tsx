@@ -64,7 +64,6 @@ export default function MembersPage() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchMembers()
   }, [])
 
@@ -270,13 +269,7 @@ export default function MembersPage() {
                               onClick={() => setEditingMember(member)}
                               className="gap-2 px-3 py-2.5 cursor-pointer rounded-lg"
                             >
-                              <Eye className="h-4 w-4" /> Visualizar Dados
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setEditingMember(member)}
-                              className="gap-2 px-3 py-2.5 cursor-pointer rounded-lg"
-                            >
-                              <Eye className="h-4 w-4" /> Editar Perfil
+                              <Users className="h-4 w-4" /> Editar Membro
                             </DropdownMenuItem>
 
                             {member.role === 'pending_member' && (

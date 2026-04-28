@@ -13,7 +13,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatDate(
   date: Date | string | number | FirestoreTimestamp | null | undefined, 
-  format = "DD [de] MMM, YYYY"
+  format = "DD/MM/YYYY"
 ) {
   if (!date) return '-'
   
@@ -27,4 +27,27 @@ export function formatDate(
   if (!d.isValid()) return '-'
   
   return d.format(format)
+}
+
+export function formatPhone(phone?: string) {
+  if (!phone) return '-'
+  const cleaned = phone.replace(/\D/g, '')
+  
+  if (cleaned.length === 11) {
+    return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+  }
+  
+  if (cleaned.length === 10) {
+    return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3')
+  }
+  
+  return phone
+}
+
+export function maskPhone(value: string) {
+  const cleaned = value.replace(/\D/g, '')
+  if (cleaned.length <= 10) {
+    return cleaned.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '').substring(0, 14)
+  }
+  return cleaned.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '').substring(0, 15)
 }

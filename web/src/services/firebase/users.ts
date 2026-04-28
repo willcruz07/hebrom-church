@@ -1,5 +1,5 @@
 import { AppUser } from '@/types';
-import { Timestamp, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { Timestamp, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './config';
 import { 
@@ -124,5 +124,15 @@ export const approveUser = async (uid: string): Promise<void> => {
   } catch (error) {
     console.error('Erro ao aprovar usuário:', error);
     throw new Error('Não foi possível aprovar o usuário.');
+  }
+};
+
+export const deleteUser = async (uid: string): Promise<void> => {
+  try {
+    const docRef = doc(db, 'users', uid);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error('Erro ao excluir usuário:', error);
+    throw new Error('Não foi possível excluir o usuário.');
   }
 };
