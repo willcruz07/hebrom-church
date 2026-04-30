@@ -1,23 +1,28 @@
-'use client';
+'use client'
 
-import { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
-import { MobileBottomNav } from './MobileBottomNav';
-import { useAuth } from '@/store/useAuth';
-import { User, Menu } from 'lucide-react';
-import { useMenuState } from '@/store/useMenuState';
-import Image from 'next/image';
+import { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
+import { MobileBottomNav } from './MobileBottomNav'
+import { useAuth } from '@/store/useAuth'
+import { User, Menu } from 'lucide-react'
+import { useMenuState } from '@/store/useMenuState'
+import Image from 'next/image'
 
 interface MobileLayoutProps {
-  children: ReactNode;
-  showBottomNav?: boolean;
-  className?: string;
-  contentClassName?: string;
+  children: ReactNode
+  showBottomNav?: boolean
+  className?: string
+  contentClassName?: string
 }
 
-export function MobileLayout({ children, showBottomNav = true, className, contentClassName }: MobileLayoutProps) {
-  const { currentUser } = useAuth();
-  const { setMenuIsOpen } = useMenuState();
+export function MobileLayout({
+  children,
+  showBottomNav = true,
+  className,
+  contentClassName,
+}: MobileLayoutProps) {
+  const { currentUser } = useAuth()
+  const { setMenuIsOpen } = useMenuState()
 
   return (
     <div className={cn('flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950', className)}>
@@ -31,24 +36,34 @@ export function MobileLayout({ children, showBottomNav = true, className, conten
         </button>
 
         <div className="flex items-center gap-2">
-          <Image src="/logo.png" alt="Hebrom" width={32} height={32} className="object-contain" />
-          <span className="font-bold text-slate-900 dark:text-white">Hebrom Sys</span>
+          <Image src="/logo_sb.png" alt="Hebrom" width={124} height={124} className=" w-auto" />
+          {/* <span className="font-bold text-slate-900 dark:text-white">Hebrom Sys</span> */}
         </div>
 
-        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-blue-500/10">
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-amber-500/10">
           {currentUser?.profile.avatar_url ? (
-            <img src={currentUser.profile.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+            <img
+              src={currentUser.profile.avatar_url}
+              alt="Profile"
+              className="h-full w-full object-cover"
+            />
           ) : (
-            <User className="h-5 w-5 text-blue-500" />
+            <User className="h-5 w-5 text-amber-500" />
           )}
         </div>
       </header>
 
-      <main className={cn('flex-1 overflow-y-auto px-4 py-6', showBottomNav && 'pb-mobile-nav', contentClassName)}>
+      <main
+        className={cn(
+          'flex-1 overflow-y-auto px-4 py-6',
+          showBottomNav && 'pb-mobile-nav',
+          contentClassName,
+        )}
+      >
         {children}
       </main>
 
       {showBottomNav && <MobileBottomNav />}
     </div>
-  );
+  )
 }

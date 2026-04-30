@@ -15,7 +15,32 @@ export interface AppUser {
     birth_date: string;
     baptism_date: string | null;
     phone: string;
+    // Expanded data
+    gender?: 'M' | 'F' | 'O';
+    marital_status?: 'single' | 'married' | 'divorced' | 'widowed' | 'separated';
+    spouse_name?: string;
+    children_count?: number;
+    profession?: string;
+    rg?: string;
+    cpf?: string;
+    father_name?: string;
+    mother_name?: string;
+    naturalness?: string;
+    communion_date?: string;
+    
     address: string;
+    address_number?: string;
+    address_complement?: string;
+    neighborhood?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    
+    emergency_contact_name?: string;
+    emergency_contact_phone?: string;
+    blood_type?: string;
+    church_position?: string;
+    
     is_profile_public: boolean;
   };
   created_at: Timestamp;
@@ -72,4 +97,15 @@ export interface ChurchEvent {
   category: EventCategory;
   created_at: Timestamp | number;
   updated_at?: Timestamp | number;
+}
+
+export interface DailyWord {
+  id: string;
+  content: string;
+  reference?: string;
+  theme: string;
+  author_uid: string;
+  author_name: string;
+  publish_date: string; // YYYY-MM-DD
+  created_at: Timestamp | number;
 }

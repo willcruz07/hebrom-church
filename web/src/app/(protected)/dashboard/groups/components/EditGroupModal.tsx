@@ -70,7 +70,7 @@ export function EditGroupModal({ isOpen, onClose, onSuccess, group }: EditGroupM
       <DialogContent className="sm:max-w-[500px] rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Edit className="h-5 w-5 text-blue-600" />
+            <Edit className="h-5 w-5 text-amber-600" />
             Editar Grupo / Ministério
           </DialogTitle>
           <DialogDescription>Altere os dados do grupo {group.name}.</DialogDescription>
@@ -79,7 +79,11 @@ export function EditGroupModal({ isOpen, onClose, onSuccess, group }: EditGroupM
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="edit_name">Nome do Grupo</Label>
-            <Input id="edit_name" {...register('name')} placeholder="Ex: Jovens, Louvor, Infantil" />
+            <Input
+              id="edit_name"
+              {...register('name')}
+              placeholder="Ex: Jovens, Louvor, Infantil"
+            />
             {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
           </div>
 
@@ -97,7 +101,7 @@ export function EditGroupModal({ isOpen, onClose, onSuccess, group }: EditGroupM
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" disabled={loading} className="bg-amber-600 hover:bg-amber-700">
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Salvar Alterações
             </Button>

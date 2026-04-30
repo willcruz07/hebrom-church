@@ -51,3 +51,19 @@ export function maskPhone(value: string) {
   }
   return cleaned.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '').substring(0, 15)
 }
+
+export function maskCPF(value: string) {
+  const cleaned = value.replace(/\D/g, '')
+  return cleaned
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+    .substring(0, 14)
+}
+
+export function maskCEP(value: string) {
+  const cleaned = value.replace(/\D/g, '')
+  return cleaned
+    .replace(/(\d{5})(\d)/, '$1-$2')
+    .substring(0, 9)
+}

@@ -70,7 +70,7 @@ export function CreateGroupModal({ isOpen, onClose, onSuccess }: CreateGroupModa
       <DialogContent className="sm:max-w-[500px] rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-blue-600" />
+            <Users className="h-5 w-5 text-amber-600" />
             Novo Grupo / Ministério
           </DialogTitle>
           <DialogDescription>Crie um novo grupo para organizar avisos e membros.</DialogDescription>
@@ -97,7 +97,7 @@ export function CreateGroupModal({ isOpen, onClose, onSuccess }: CreateGroupModa
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" disabled={loading} className="bg-amber-600 hover:bg-amber-700">
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Criar Grupo
             </Button>

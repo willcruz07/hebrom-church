@@ -178,7 +178,7 @@ export default function ProfilePage() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg transition-transform hover:scale-110 active:scale-95 disabled:opacity-50"
+                      className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-600 text-white shadow-lg transition-transform hover:scale-110 active:scale-95 disabled:opacity-50"
                     >
                       <Camera className="h-5 w-5" />
                     </button>
@@ -199,7 +199,7 @@ export default function ProfilePage() {
                       {currentUser.email}
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-2 pt-2 md:justify-start">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                         <CheckCircle2 className="h-3 w-3" />
                         {userRole === 'visitor'
                           ? 'Visitante'
@@ -227,7 +227,7 @@ export default function ProfilePage() {
                       <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input
                         {...register('full_name')}
-                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-blue-500 focus:outline-none dark:bg-slate-800 ${errors.full_name ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
+                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-amber-500 focus:outline-none dark:bg-slate-800 ${errors.full_name ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
                         placeholder="Seu nome completo"
                       />
                     </div>
@@ -259,7 +259,7 @@ export default function ProfilePage() {
                       <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input
                         {...register('phone')}
-                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-blue-500 focus:outline-none dark:bg-slate-800 ${errors.phone ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
+                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-amber-500 focus:outline-none dark:bg-slate-800 ${errors.phone ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
                         placeholder="(00) 00000-0000"
                       />
                     </div>
@@ -275,7 +275,7 @@ export default function ProfilePage() {
                       <input
                         {...register('birth_date')}
                         type="date"
-                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-blue-500 focus:outline-none dark:bg-slate-800 ${errors.birth_date ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
+                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-amber-500 focus:outline-none dark:bg-slate-800 ${errors.birth_date ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
                       />
                     </div>
                     {errors.birth_date && (
@@ -291,7 +291,7 @@ export default function ProfilePage() {
                       <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input
                         {...register('address')}
-                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-blue-500 focus:outline-none dark:bg-slate-800 ${errors.address ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
+                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-amber-500 focus:outline-none dark:bg-slate-800 ${errors.address ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
                         placeholder="Rua, Número, Bairro, Cidade - UF"
                       />
                     </div>
@@ -307,7 +307,7 @@ export default function ProfilePage() {
                     <textarea
                       {...register('bio')}
                       rows={3}
-                      className={`w-full rounded-xl border bg-slate-50 p-4 text-sm transition-colors focus:border-blue-500 focus:outline-none dark:bg-slate-800 ${errors.bio ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
+                      className={`w-full rounded-xl border bg-slate-50 p-4 text-sm transition-colors focus:border-amber-500 focus:outline-none dark:bg-slate-800 ${errors.bio ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
                       placeholder="Conte um pouco sobre sua trajetória ou ministério..."
                     />
                     <div className="flex justify-between items-center mt-1">
@@ -325,7 +325,7 @@ export default function ProfilePage() {
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-95 disabled:opacity-50"
+                    className="flex items-center gap-2 rounded-xl bg-amber-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 hover:shadow-amber-500/40 active:scale-95 disabled:opacity-50"
                   >
                     {isSaving ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -342,7 +342,7 @@ export default function ProfilePage() {
           {/* Ministerial Data (Read Only for Members, Edit by Admin in future) */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-              <Shield className="h-5 w-5 text-blue-500" />
+              <Shield className="h-5 w-5 text-amber-500" />
               Dados Ministeriais
             </h3>
 
@@ -376,7 +376,7 @@ export default function ProfilePage() {
                     currentUser.sub_groups.map((group) => (
                       <span
                         key={group}
-                        className="rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                        className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
                       >
                         {group}
                       </span>
@@ -413,18 +413,18 @@ export default function ProfilePage() {
           {/* Card Preview */}
           <div className="space-y-4">
             <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-              <CreditCard className="h-5 w-5 text-blue-500" />
+              <CreditCard className="h-5 w-5 text-amber-500" />
               Sua Carteirinha
             </h3>
 
             {permissions.canViewProfileCard ? (
               <motion.div
                 whileHover={{ y: -5 }}
-                className="relative aspect-[1.586/1] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-2xl shadow-blue-950/20"
+                className="relative aspect-[1.586/1] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-2xl shadow-amber-950/20"
               >
                 {/* Texture/Overlay */}
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
-                <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
+                <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
 
                 <div className="relative flex h-full flex-col justify-between">
                   <div className="flex justify-between items-start">
@@ -436,7 +436,9 @@ export default function ProfilePage() {
                         <h4 className="font-bold text-sm leading-tight uppercase tracking-widest">
                           Hebrom
                         </h4>
-                        <p className="text-[8px] text-blue-400 font-bold uppercase">System Admin</p>
+                        <p className="text-[8px] text-amber-400 font-bold uppercase">
+                          System Admin
+                        </p>
                       </div>
                     </div>
                     <div className="rounded-full border border-white/20 bg-white/5 px-2 py-0.5 text-[8px] font-bold backdrop-blur-sm">
@@ -459,7 +461,7 @@ export default function ProfilePage() {
                         />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest opacity-70">
+                        <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest opacity-70">
                           Membro
                         </p>
                         <p className="font-bold text-lg leading-tight truncate max-w-[180px]">
@@ -510,9 +512,9 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <div className="rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-6 text-white">
+          <div className="rounded-2xl bg-gradient-to-br from-amber-600 to-indigo-700 p-6 text-white">
             <h4 className="font-bold">Dica de Perfil</h4>
-            <p className="mt-2 text-sm text-blue-100">
+            <p className="mt-2 text-sm text-amber-100">
               Mantenha seu telefone e endereço atualizados para receber comunicações da secretaria e
               comunicados oficiais.
             </p>

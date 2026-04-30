@@ -62,7 +62,7 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
     setValue,
     watch,
   } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       full_name: member.profile.full_name,
       role: member.role,
@@ -88,7 +88,10 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
   const toggleGroup = (groupId: string) => {
     const current = selectedGroups || []
     if (current.includes(groupId)) {
-      setValue('sub_groups', current.filter((id) => id !== groupId))
+      setValue(
+        'sub_groups',
+        current.filter((id) => id !== groupId),
+      )
     } else {
       setValue('sub_groups', [...current, groupId])
     }
@@ -147,7 +150,7 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
       <DialogContent className="sm:max-w-[550px] rounded-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Edit className="h-5 w-5 text-blue-600" />
+            <Edit className="h-5 w-5 text-amber-600" />
             Editar Membro
           </DialogTitle>
           <DialogDescription>Alterar informações de {member.profile.full_name}</DialogDescription>
@@ -163,7 +166,10 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Cargo / Permissão</Label>
-              <Select onValueChange={(v) => setValue('role', v as FormData['role'])} defaultValue={member.role}>
+              <Select
+                onValueChange={(v) => setValue('role', v as FormData['role'])}
+                defaultValue={member.role}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -197,8 +203,8 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
                   onClick={() => toggleGroup(group.id)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                     selectedGroups?.includes(group.id)
-                      ? 'bg-blue-600 border-blue-600 text-white shadow-md'
-                      : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400'
+                      ? 'bg-amber-600 border-amber-600 text-white shadow-md'
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400'
                   }`}
                 >
                   <div
@@ -274,7 +280,7 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" disabled={loading} className="bg-amber-600 hover:bg-amber-700">
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Salvar Alterações
             </Button>

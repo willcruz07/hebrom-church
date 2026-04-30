@@ -131,11 +131,11 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-blue-500/60 rounded-md;
+  @apply bg-amber-500/60 rounded-md;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-blue-500/80;
+  @apply bg-amber-500/80;
 }
 
 @media (max-width: 768px) {

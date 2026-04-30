@@ -13,7 +13,16 @@ import {
   Search,
   CalendarDays,
   Trash2,
+  MoreHorizontal,
+  Edit,
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { agendaService } from '@/services/firebase/agenda'
 import { ChurchEvent, EventCategory } from '@/types'
 import { CreateEventModal } from './components/CreateEventModal'
@@ -23,7 +32,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 
 const CATEGORIES: { name: EventCategory; color: string; dot: string }[] = [
-  { name: 'Culto', color: 'bg-blue-500', dot: 'bg-blue-500' },
+  { name: 'Culto', color: 'bg-amber-500', dot: 'bg-amber-500' },
   { name: 'Evento', color: 'bg-amber-500', dot: 'bg-amber-500' },
   { name: 'Ensino', color: 'bg-emerald-500', dot: 'bg-emerald-500' },
   { name: 'Grupo', color: 'bg-rose-500', dot: 'bg-rose-500' },
@@ -39,20 +48,14 @@ export default function AgendaPage() {
   const [currentMonth, setCurrentMonth] = useState(dayjs())
   const [selectedDate, setSelectedDate] = useState(dayjs())
 
-  const fetchEvents = async () => {
-    try {
-      setLoading(true)
-      const data = await agendaService.getEvents()
-      setEvents(data)
-    } catch (error) {
-      toast.error('Erro ao carregar eventos')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    fetchEvents()
+    setLoading(true)
+    const unsubscribe = agendaService.subscribeToEvents((data) => {
+      setEvents(data)
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
   }, [])
 
   const filteredEvents = useMemo(() => {
@@ -111,7 +114,7 @@ export default function AgendaPage() {
         {permissions.canManageAgenda && (
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-95"
+            className="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 hover:shadow-amber-500/40 active:scale-95"
           >
             <Plus className="h-4 w-4" />
             Novo Evento
@@ -167,11 +170,11 @@ export default function AgendaPage() {
                     className={cn(
                       'group relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl text-sm transition-all duration-200',
                       isSelected
-                        ? 'bg-blue-600 font-bold text-white shadow-lg shadow-blue-500/30 scale-105 z-10'
+                        ? 'bg-amber-600 font-bold text-white shadow-lg shadow-amber-500/30 scale-105 z-10'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300',
                       isToday &&
                         !isSelected &&
-                        'border border-blue-500/50 text-blue-600 dark:text-blue-400',
+                        'border border-amber-500/50 text-amber-600 dark:text-amber-400',
                     )}
                   >
                     {day.date()}
@@ -218,7 +221,7 @@ export default function AgendaPage() {
                 className={cn(
                   'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all',
                   filter === 'Todos'
-                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+                    ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'
                     : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800',
                 )}
               >
@@ -261,7 +264,7 @@ export default function AgendaPage() {
           <div className="space-y-4">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent mb-4" />
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent mb-4" />
                 <p>Carregando agenda...</p>
               </div>
             ) : filteredEvents.filter((e) => e.date === selectedDate.format('YYYY-MM-DD')).length >
@@ -274,7 +277,7 @@ export default function AgendaPage() {
                   return (
                     <div
                       key={event.id}
-                      className="group flex items-start gap-5 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/5 dark:border-slate-800 dark:bg-slate-900/50"
+                      className="group flex items-start gap-5 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-amber-500/50 hover:shadow-xl hover:shadow-amber-500/5 dark:border-slate-800 dark:bg-slate-900/50"
                     >
                       <div
                         className={cn(
@@ -293,7 +296,7 @@ export default function AgendaPage() {
                       <div className="flex-1 space-y-3">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <h4 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                            <h4 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
                               {event.title}
                             </h4>
                             {event.description && (
@@ -329,24 +332,35 @@ export default function AgendaPage() {
                       </div>
 
                       {permissions.canManageAgenda && (
-                        <div className="flex flex-col gap-2">
-                          <button
-                            onClick={async () => {
-                              if (confirm('Deseja excluir este evento?')) {
-                                try {
-                                  await agendaService.deleteEvent(event.id)
-                                  toast.success('Evento excluído')
-                                  fetchEvents()
-                                } catch (error) {
-                                  toast.error('Erro ao excluir')
-                                }
-                              }
-                            }}
-                            className="rounded-xl p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-all"
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white transition-all outline-none">
+                            <MoreHorizontal className="h-5 w-5" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="w-48 rounded-xl border-slate-200 dark:border-slate-800"
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+                            <DropdownMenuLabel className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2">
+                              Opções do Evento
+                            </DropdownMenuLabel>
+
+                            <DropdownMenuItem
+                              onClick={async () => {
+                                if (confirm('Deseja excluir este evento?')) {
+                                  try {
+                                    await agendaService.deleteEvent(event.id)
+                                    toast.success('Evento excluído')
+                                  } catch (error) {
+                                    toast.error('Erro ao excluir')
+                                  }
+                                }
+                              }}
+                              className="gap-2 px-3 py-2.5 cursor-pointer text-red-600 dark:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-900/20 dark:focus:text-red-400 rounded-lg"
+                            >
+                              <Trash2 className="h-4 w-4" /> Excluir Evento
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
                     </div>
                   )
@@ -367,7 +381,7 @@ export default function AgendaPage() {
                   <Button
                     onClick={() => setIsModalOpen(true)}
                     variant="outline"
-                    className="mt-6 rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50"
+                    className="mt-6 rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50"
                   >
                     Adicionar Evento
                   </Button>
@@ -381,7 +395,7 @@ export default function AgendaPage() {
       <CreateEventModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={fetchEvents}
+        onSuccess={() => {}}
       />
     </div>
   )

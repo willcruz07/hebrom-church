@@ -8,6 +8,7 @@ import {
   where, 
   getDocs, 
   orderBy,
+  onSnapshot,
   Timestamp,
   serverTimestamp
 } from 'firebase/firestore';
@@ -33,6 +34,24 @@ export const agendaService = {
       console.error('Error getting events:', error);
       throw error;
     }
+  },
+
+  subscribeToEvents(callback: (events: ChurchEvent[]) => void) {
+    const q = query(
+      collection(db, COLLECTION_NAME), 
+      orderBy('date', 'asc'),
+      orderBy('time', 'asc')
+    );
+    
+    return onSnapshot(q, (snapshot) => {
+      const events = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as ChurchEvent[];
+      callback(events);
+    }, (error) => {
+      console.error('Error subscribing to events:', error);
+    });
   },
 
   async createEvent(eventData: Omit<ChurchEvent, 'id' | 'created_at'>) {

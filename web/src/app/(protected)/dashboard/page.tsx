@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import { useMemo } from 'react';
-import { useAuth } from '@/store/useAuth';
-import { usePermissions } from '@/hooks/usePermissions';
-import { useRouter } from 'next/navigation';
-import { ROUTES } from '@/paths';
-import { useEffect } from 'react';
-import { AnimatedNumber } from '@/components/ui/animated-number';
-import { Badge } from '@/components/ui/badge';
+import { useMemo } from 'react'
+import { useAuth } from '@/store/useAuth'
+import { usePermissions } from '@/hooks/usePermissions'
+import { useRouter } from 'next/navigation'
+import { ROUTES } from '@/paths'
+import { useEffect } from 'react'
+import { AnimatedNumber } from '@/components/ui/animated-number'
+import { Badge } from '@/components/ui/badge'
 import {
   Users,
   Heart,
@@ -17,7 +17,12 @@ import {
   TrendingDown,
   UserCheck,
   UserPlus,
-} from 'lucide-react';
+  BookOpen,
+} from 'lucide-react'
+import { getDailyWord } from '@/services/firebase/daily-word'
+import { DailyWord } from '@/types'
+import dayjs from 'dayjs'
+import { useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -29,16 +34,16 @@ import {
   Cell,
   Pie,
   PieChart,
-} from 'recharts';
+} from 'recharts'
 
 interface StatCardProps {
-  title: string;
-  value: number;
-  icon: any;
-  trend?: number;
-  colorClass: string;
-  subLabel?: string;
-  subValue?: number;
+  title: string
+  value: number
+  icon: any
+  trend?: number
+  colorClass: string
+  subLabel?: string
+  subValue?: number
 }
 
 const StatCard = ({
@@ -50,7 +55,7 @@ const StatCard = ({
   subLabel,
   subValue,
 }: StatCardProps) => (
-  <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white/60 p-6 shadow-lg backdrop-blur-md transition-all hover:-translate-y-1 hover:border-blue-500/30 hover:bg-white/80 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-900/80">
+  <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white/60 p-6 shadow-lg backdrop-blur-md transition-all hover:-translate-y-1 hover:border-amber-500/30 hover:bg-white/80 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-900/80">
     <div
       className={`absolute -top-6 -right-6 h-24 w-24 rounded-full opacity-5 blur-2xl transition-all group-hover:opacity-10 ${colorClass.replace('text-', 'bg-')}`}
     ></div>
@@ -63,11 +68,14 @@ const StatCard = ({
         </h3>
         {subValue !== undefined && (
           <p className="mt-1 text-xs text-slate-500">
-            {subLabel}: <span className="font-medium text-slate-700 dark:text-slate-300">{subValue}</span>
+            {subLabel}:{' '}
+            <span className="font-medium text-slate-700 dark:text-slate-300">{subValue}</span>
           </p>
         )}
       </div>
-      <div className={`rounded-xl p-3 shadow-inner ${colorClass} bg-opacity-10 ring-1 ring-blue-500/10 ring-inset`}>
+      <div
+        className={`rounded-xl p-3 shadow-inner ${colorClass} bg-opacity-10 ring-1 ring-amber-500/10 ring-inset`}
+      >
         <Icon className="h-6 w-6" />
       </div>
     </div>
@@ -75,14 +83,18 @@ const StatCard = ({
     {trend !== undefined && (
       <div className="mt-4 flex items-center text-sm font-medium">
         <span className={`flex items-center ${trend >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-          {trend >= 0 ? <TrendingUp className="mr-1 h-3 w-3" /> : <TrendingDown className="mr-1 h-3 w-3" />}
+          {trend >= 0 ? (
+            <TrendingUp className="mr-1 h-3 w-3" />
+          ) : (
+            <TrendingDown className="mr-1 h-3 w-3" />
+          )}
           {Math.abs(trend)}%
         </span>
         <span className="ml-2 text-slate-500">vs. mês anterior</span>
       </div>
     )}
   </div>
-);
+)
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -93,14 +105,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           <div key={index} className="mb-1 flex items-center gap-2 text-sm last:mb-0">
             <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
             <span className="text-slate-500 dark:text-slate-400 capitalize">{entry.name}:</span>
-            <span className="ml-auto font-medium text-slate-900 dark:text-slate-200">{entry.value}</span>
+            <span className="ml-auto font-medium text-slate-900 dark:text-slate-200">
+              {entry.value}
+            </span>
           </div>
         ))}
       </div>
-    );
+    )
   }
-  return null;
-};
+  return null
+}
 
 const mockMonthlyData = [
   { month: 'Jan', membros: 45, pedidos: 12 },
@@ -109,33 +123,42 @@ const mockMonthlyData = [
   { month: 'Abr', membros: 61, pedidos: 22 },
   { month: 'Mai', membros: 75, pedidos: 28 },
   { month: 'Jun', membros: 89, pedidos: 25 },
-];
+]
 
-const COLORS = ['#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE'];
+const COLORS = ['#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE']
 
 const mockCategoryData = [
   { name: 'Homens', value: 35 },
   { name: 'Mulheres', value: 45 },
   { name: 'Jovens', value: 20 },
-];
+]
 
 export default function DashboardPage() {
-  const { currentUser } = useAuth();
-  const { permissions } = usePermissions();
-  const router = useRouter();
+  const { currentUser } = useAuth()
+  const { permissions } = usePermissions()
+  const router = useRouter()
+  const [dailyWord, setDailyWord] = useState<DailyWord | null>(null)
 
   useEffect(() => {
-    if (!permissions.canViewDashboardOverview) {
-      router.replace(ROUTES.AUTHENTICATED.MURAL);
+    const fetchDailyWord = async () => {
+      const today = dayjs().format('YYYY-MM-DD')
+      const word = await getDailyWord(today)
+      setDailyWord(word)
     }
-  }, [permissions.canViewDashboardOverview, router]);
+
+    fetchDailyWord()
+
+    if (!permissions.canViewDashboardOverview) {
+      router.replace(ROUTES.AUTHENTICATED.MURAL)
+    }
+  }, [permissions.canViewDashboardOverview, router])
 
   if (!permissions.canViewDashboardOverview) {
-    return null;
+    return null
   }
 
-  const userName = currentUser?.profile.full_name || 'Usuário';
-  const firstName = userName.split(' ')[0];
+  const userName = currentUser?.profile.full_name || 'Usuário'
+  const firstName = userName.split(' ')[0]
 
   return (
     <div className="space-y-8 pb-10">
@@ -150,7 +173,11 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="h-10 px-4 text-sm font-medium">
-            {new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}
+            {new Date().toLocaleDateString('pt-BR', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
           </Badge>
         </div>
       </header>
@@ -162,7 +189,7 @@ export default function DashboardPage() {
             value={1248}
             icon={Users}
             trend={12}
-            colorClass="text-blue-500"
+            colorClass="text-amber-500"
             subLabel="Ativos"
             subValue={1150}
           />
@@ -195,19 +222,68 @@ export default function DashboardPage() {
         />
       </div>
 
+      {dailyWord && (
+        <div
+          onClick={() => router.push('/dashboard/daily-word')}
+          className="group relative cursor-pointer overflow-hidden rounded-3xl border-none bg-gradient-to-r from-amber-600 to-indigo-700 p-8 text-white shadow-2xl transition-all hover:scale-[1.01] active:scale-[0.99]"
+        >
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-white/10 blur-3xl transition-transform group-hover:scale-110"></div>
+          <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl transition-transform group-hover:scale-110"></div>
+
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex-1 space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-white/20 p-2 backdrop-blur-md">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <span className="text-sm font-bold uppercase tracking-widest text-amber-100">
+                  Palavra do Dia
+                </span>
+              </div>
+              <blockquote className="text-xl md:text-2xl font-medium leading-relaxed italic">
+                "{dailyWord.content}"
+              </blockquote>
+              <div className="flex items-center gap-3">
+                {dailyWord.reference && (
+                  <cite className="not-italic font-bold text-amber-200">
+                    — {dailyWord.reference}
+                  </cite>
+                )}
+                <Badge className="bg-white/20 text-white hover:bg-white/30 border-none">
+                  {dailyWord.theme}
+                </Badge>
+              </div>
+            </div>
+            <button className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-amber-600 shadow-xl transition-transform group-hover:rotate-12">
+              <Heart className="h-6 w-6 fill-current" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {permissions.canViewMetrics && (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white/50 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Crescimento de Membros</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Crescimento de Membros
+                </h3>
                 <p className="text-sm text-slate-500">Evolução nos últimos 6 meses</p>
               </div>
             </div>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={mockMonthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} className="dark:stroke-slate-800" />
+                <BarChart
+                  data={mockMonthlyData}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#e2e8f0"
+                    vertical={false}
+                    className="dark:stroke-slate-800"
+                  />
                   <XAxis
                     dataKey="month"
                     axisLine={false}
@@ -221,7 +297,13 @@ export default function DashboardPage() {
                     tick={{ fill: '#64748b', fontSize: 12 }}
                   />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9', opacity: 0.4 }} />
-                  <Bar dataKey="membros" name="Novos Membros" fill="#3B82F6" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                  <Bar
+                    dataKey="membros"
+                    name="Novos Membros"
+                    fill="#3B82F6"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={40}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -230,7 +312,9 @@ export default function DashboardPage() {
           <div className="rounded-2xl border border-slate-200 bg-white/50 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Distribuição por Perfil</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Distribuição por Perfil
+                </h3>
                 <p className="text-sm text-slate-500">Composição da congregação</p>
               </div>
             </div>
@@ -251,7 +335,13 @@ export default function DashboardPage() {
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
-                  <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-slate-900 dark:fill-white font-bold text-xl">
+                  <text
+                    x="50%"
+                    y="50%"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="fill-slate-900 dark:fill-white font-bold text-xl"
+                  >
                     100%
                   </text>
                 </PieChart>
@@ -259,8 +349,13 @@ export default function DashboardPage() {
               <div className="flex flex-col gap-4 pr-4">
                 {mockCategoryData.map((item, index) => (
                   <div key={item.name} className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.name}</span>
+                    <div
+                      className="h-3 w-3 rounded-full"
+                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {item.name}
+                    </span>
                     <span className="text-sm text-slate-500">{item.value}%</span>
                   </div>
                 ))}
@@ -277,33 +372,41 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {permissions.canManageUsers && (
-              <button className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-800">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+              <button className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-amber-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-800">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
                   <UserPlus className="h-6 w-6" />
                 </div>
-                <span className="text-sm font-medium text-slate-900 dark:text-white">Novo Membro</span>
+                <span className="text-sm font-medium text-slate-900 dark:text-white">
+                  Novo Membro
+                </span>
               </button>
             )}
-            <button className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-800">
+            <button className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-amber-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-800">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500">
                 <Heart className="h-6 w-6" />
               </div>
-              <span className="text-sm font-medium text-slate-900 dark:text-white">Novo Pedido</span>
+              <span className="text-sm font-medium text-slate-900 dark:text-white">
+                Novo Pedido
+              </span>
             </button>
             {permissions.canManageAgenda && (
-              <button className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-800">
+              <button className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-amber-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-800">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
                   <Calendar className="h-6 w-6" />
                 </div>
-                <span className="text-sm font-medium text-slate-900 dark:text-white">Agendar Evento</span>
+                <span className="text-sm font-medium text-slate-900 dark:text-white">
+                  Agendar Evento
+                </span>
               </button>
             )}
             {permissions.canPostTargetedFeed && (
-              <button className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-800">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+              <button className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-amber-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-800">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
                   <MessageSquare className="h-6 w-6" />
                 </div>
-                <span className="text-sm font-medium text-slate-900 dark:text-white">Postar Mural</span>
+                <span className="text-sm font-medium text-slate-900 dark:text-white">
+                  Postar Mural
+                </span>
               </button>
             )}
           </div>
@@ -318,21 +421,21 @@ export default function DashboardPage() {
               { name: 'Ana Oliveira', date: '29 de Jun', active: false },
             ].map((person, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
                   <UserCheck className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">{person.name}</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    {person.name}
+                  </p>
                   <p className="text-xs text-slate-500">{person.date}</p>
                 </div>
-                {person.active && (
-                  <Badge className="bg-blue-500">Festa!</Badge>
-                )}
+                {person.active && <Badge className="bg-amber-500">Festa!</Badge>}
               </div>
             ))}
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

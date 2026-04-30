@@ -5,27 +5,41 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Image as ImageIcon, Loader2, Send, Type, AlignLeft, Users, AlertCircle } from 'lucide-react'
+import {
+  X,
+  Image as ImageIcon,
+  Loader2,
+  Send,
+  Type,
+  AlignLeft,
+  Users,
+  AlertCircle,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/store/useAuth'
 import { createPost } from '@/services/firebase/mural'
 import { getGroups } from '@/services/firebase/groups'
 import { ChurchGroup } from '@/types'
 
-const postSchema = z.object({
-  title: z.string().min(5, 'O título deve ter pelo menos 5 caracteres'),
-  content: z.string().min(10, 'O conteúdo deve ter pelo menos 10 caracteres'),
-  type: z.enum(['Geral', 'Grupo']),
-  target_group: z.string().optional().or(z.literal('')),
-}).refine((data) => {
-  if (data.type === 'Grupo' && !data.target_group) {
-    return false;
-  }
-  return true;
-}, {
-  message: 'Selecione um grupo para este aviso',
-  path: ['target_group'],
-})
+const postSchema = z
+  .object({
+    title: z.string().min(5, 'O título deve ter pelo menos 5 caracteres'),
+    content: z.string().min(10, 'O conteúdo deve ter pelo menos 10 caracteres'),
+    type: z.enum(['Geral', 'Grupo']),
+    target_group: z.string().optional().or(z.literal('')),
+  })
+  .refine(
+    (data) => {
+      if (data.type === 'Grupo' && !data.target_group) {
+        return false
+      }
+      return true
+    },
+    {
+      message: 'Selecione um grupo para este aviso',
+      path: ['target_group'],
+    },
+  )
 
 type PostFormValues = z.infer<typeof postSchema>
 
@@ -101,17 +115,20 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
 
     setIsSaving(true)
     try {
-      await createPost({
-        title: data.title,
-        content: data.content,
-        author: {
-          uid: currentUser.uid,
-          name: currentUser.profile.full_name || currentUser.email,
-          avatar_url: currentUser.profile.avatar_url || '',
+      await createPost(
+        {
+          title: data.title,
+          content: data.content,
+          author: {
+            uid: currentUser.uid,
+            name: currentUser.profile.full_name || currentUser.email,
+            avatar_url: currentUser.profile.avatar_url || '',
+          },
+          target_groups: data.type === 'Grupo' && data.target_group ? [data.target_group] : [],
         },
-        target_groups: data.type === 'Grupo' && data.target_group ? [data.target_group] : [],
-      }, selectedFile || undefined)
-      
+        selectedFile || undefined,
+      )
+
       toast.success('Aviso publicado com sucesso!')
       reset()
       setPreviewImage(null)
@@ -169,9 +186,9 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   className={`relative flex aspect-video w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-all ${
-                    previewImage 
-                      ? 'border-blue-500' 
-                      : 'border-slate-200 hover:border-blue-400 dark:border-slate-700'
+                    previewImage
+                      ? 'border-amber-500'
+                      : 'border-slate-200 hover:border-amber-400 dark:border-slate-700'
                   }`}
                 >
                   {previewImage ? (
@@ -179,12 +196,16 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
                   ) : (
                     <div className="flex flex-col items-center gap-2 text-slate-400">
                       <ImageIcon className="h-10 w-10" />
-                      <span className="text-xs font-medium">Adicionar Banner ou Imagem (Opcional)</span>
+                      <span className="text-xs font-medium">
+                        Adicionar Banner ou Imagem (Opcional)
+                      </span>
                     </div>
                   )}
                   {previewImage && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
-                      <span className="text-xs font-bold text-white uppercase tracking-widest">Alterar Imagem</span>
+                      <span className="text-xs font-bold text-white uppercase tracking-widest">
+                        Alterar Imagem
+                      </span>
                     </div>
                   )}
                 </div>
@@ -193,23 +214,27 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
               {/* Title Input */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                  <Type className="h-4 w-4 text-blue-500" />
+                  <Type className="h-4 w-4 text-amber-500" />
                   Título do Aviso
                 </label>
                 <input
                   {...register('title')}
                   placeholder="Ex: Culto Especial de Santa Ceia"
-                  className={`w-full rounded-xl border bg-slate-50 px-4 py-2.5 text-sm transition-all focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:bg-slate-800 ${
+                  className={`w-full rounded-xl border bg-slate-50 px-4 py-2.5 text-sm transition-all focus:ring-2 focus:ring-amber-500/20 focus:outline-none dark:bg-slate-800 ${
                     errors.title ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                   }`}
                 />
-                {errors.title && <p className="text-xs text-red-500 font-medium">{errors.title.message}</p>}
+                {errors.title && (
+                  <p className="text-xs text-red-500 font-medium">{errors.title.message}</p>
+                )}
               </div>
 
               {/* Type & Group Selection */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Tipo de Alcance</label>
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                    Tipo de Alcance
+                  </label>
                   <select
                     {...register('type')}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none dark:border-slate-700 dark:bg-slate-800"
@@ -221,14 +246,18 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                    <Users className={`h-4 w-4 ${postType === 'Grupo' ? 'text-blue-500' : 'text-slate-400'}`} />
+                    <Users
+                      className={`h-4 w-4 ${postType === 'Grupo' ? 'text-amber-500' : 'text-slate-400'}`}
+                    />
                     Vínculo de Grupo
                   </label>
                   <select
                     {...register('target_group')}
                     disabled={postType === 'Geral' || isLoadingGroups}
                     className={`w-full rounded-xl border bg-slate-50 px-4 py-2.5 text-sm transition-all focus:outline-none dark:bg-slate-800 ${
-                      postType === 'Geral' ? 'opacity-50 grayscale' : 'border-slate-200 dark:border-slate-700'
+                      postType === 'Geral'
+                        ? 'opacity-50 grayscale'
+                        : 'border-slate-200 dark:border-slate-700'
                     } ${errors.target_group ? 'border-red-500' : ''}`}
                   >
                     <option value="">Selecione um grupo...</option>
@@ -244,25 +273,31 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
                       Nenhum grupo cadastrado nas configurações.
                     </p>
                   )}
-                  {errors.target_group && <p className="text-xs text-red-500 font-medium">{errors.target_group.message}</p>}
+                  {errors.target_group && (
+                    <p className="text-xs text-red-500 font-medium">
+                      {errors.target_group.message}
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* Description Input */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                  <AlignLeft className="h-4 w-4 text-blue-500" />
+                  <AlignLeft className="h-4 w-4 text-amber-500" />
                   Descrição do Post
                 </label>
                 <textarea
                   {...register('content')}
                   rows={4}
                   placeholder="Descreva os detalhes do aviso aqui..."
-                  className={`w-full resize-none rounded-xl border bg-slate-50 p-4 text-sm transition-all focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:bg-slate-800 ${
+                  className={`w-full resize-none rounded-xl border bg-slate-50 p-4 text-sm transition-all focus:ring-2 focus:ring-amber-500/20 focus:outline-none dark:bg-slate-800 ${
                     errors.content ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                   }`}
                 />
-                {errors.content && <p className="text-xs text-red-500 font-medium">{errors.content.message}</p>}
+                {errors.content && (
+                  <p className="text-xs text-red-500 font-medium">{errors.content.message}</p>
+                )}
               </div>
 
               {/* Actions */}
@@ -277,7 +312,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-700 hover:shadow-blue-500/40 disabled:opacity-50"
+                  className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-sm font-bold text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 hover:shadow-amber-500/40 disabled:opacity-50"
                 >
                   {isSaving ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

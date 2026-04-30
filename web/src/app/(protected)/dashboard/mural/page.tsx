@@ -3,9 +3,25 @@
 import { useState, useEffect, useCallback } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/store/useAuth'
-import { MessageSquare, Bell, Filter, Plus, Heart, Loader2 } from 'lucide-react'
+import {
+  MessageSquare,
+  Bell,
+  Filter,
+  Plus,
+  Heart,
+  Loader2,
+  MoreHorizontal,
+  Trash2,
+} from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { CreatePostModal } from './components/CreatePostModal'
-import { getPosts } from '@/services/firebase/mural'
+import { getPosts, deletePost } from '@/services/firebase/mural'
 import { FeedPost } from '@/types'
 import { Timestamp } from 'firebase/firestore'
 import dayjs from '@/lib/dayjs'
@@ -52,6 +68,18 @@ export default function MuralPage() {
     return isGeral
   })
 
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm('Deseja excluir este aviso?')) return
+
+    try {
+      await deletePost(postId)
+      toast.success('Aviso excluído com sucesso!')
+      fetchPosts()
+    } catch (error) {
+      toast.error('Erro ao excluir aviso')
+    }
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <header className="flex items-center justify-between">
@@ -67,7 +95,7 @@ export default function MuralPage() {
           <>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-700 active:scale-95"
+              className="flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 active:scale-95"
             >
               <Plus className="h-4 w-4" />
               Novo Aviso
@@ -139,7 +167,7 @@ export default function MuralPage() {
                       className="h-12 w-12 rounded-2xl object-cover"
                     />
                   ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-bold text-lg">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 font-bold text-lg">
                       {post.author.name[0]}
                     </div>
                   )}
@@ -149,7 +177,7 @@ export default function MuralPage() {
                         {post.author.name}
                       </h3>
                       {post.target_groups.length > 0 && (
-                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-md">
                           {post.target_groups[0]}
                         </span>
                       )}
@@ -163,15 +191,39 @@ export default function MuralPage() {
                     </p>
                   </div>
                 </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
-                    post.target_groups.length === 0
-                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                  }`}
-                >
-                  {post.target_groups.length === 0 ? 'Geral' : 'Grupo'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
+                      post.target_groups.length === 0
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                    }`}
+                  >
+                    {post.target_groups.length === 0 ? 'Geral' : 'Grupo'}
+                  </span>
+
+                  {(permissions.canPostTargetedFeed || post.author.uid === currentUser?.uid) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white outline-none transition-all">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-48 rounded-xl border-slate-200 dark:border-slate-800"
+                      >
+                        <DropdownMenuLabel className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2">
+                          Opções do Post
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem
+                          onClick={() => handleDeletePost(post.id)}
+                          className="gap-2 px-3 py-2.5 cursor-pointer text-red-600 dark:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-900/20 dark:focus:text-red-400 rounded-lg"
+                        >
+                          <Trash2 className="h-4 w-4" /> Excluir Aviso
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
               </div>
 
               {post.media_url && (
@@ -198,7 +250,7 @@ export default function MuralPage() {
                   <Heart className="h-4 w-4" />
                   <span>0</span>
                 </button>
-                <button className="flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-blue-500">
+                <button className="flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-amber-500">
                   <MessageSquare className="h-4 w-4" />
                   <span>0</span>
                 </button>

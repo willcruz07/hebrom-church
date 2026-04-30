@@ -4,30 +4,24 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { email, password, full_name, role, phone, baptism_date, birth_date } = body;
+    const { email, password, role, sub_groups, ...profileData } = await request.json();
 
     // 1. Criar usuário no Firebase Auth
     const userRecord = await adminAuth.createUser({
       email,
       password,
-      displayName: full_name,
+      displayName: profileData.full_name,
     });
 
     // 2. Criar documento do usuário no Firestore
     const userData = {
       email,
       role: role || 'member',
-      sub_groups: [],
+      sub_groups: sub_groups || [],
       profile: {
-        full_name,
-        avatar_url: null,
-        bio: '',
-        birth_date: birth_date || '',
-        baptism_date: baptism_date || null,
-        phone: phone || '',
-        address: '',
-        is_profile_public: true,
+        ...profileData,
+        avatar_url: profileData.avatar_url || null,
+        is_profile_public: profileData.is_profile_public ?? true,
       },
       created_at: Timestamp.now(),
       updated_at: Timestamp.now(),

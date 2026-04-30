@@ -83,6 +83,13 @@ const navigationItems = [
     description: 'ID Digital de Membro',
     permission: 'canViewProfileCard',
   },
+  {
+    name: 'Palavra do Dia',
+    href: ROUTES.AUTHENTICATED.DAILY_WORD,
+    icon: Heart,
+    description: 'Versículos e devocionais',
+    permission: 'canViewGeneralFeed', // Todos podem ver
+  },
 ]
 
 export function Sidebar({ className }: SidebarProps) {
@@ -155,11 +162,14 @@ export function Sidebar({ className }: SidebarProps) {
     <div className="flex h-full flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <div className="border-b border-slate-200 p-6 dark:border-slate-800">
         <div className="flex items-center justify-between">
-          <div className="relative ml-4 -mb-16 h-56 w-56 -mt-16">
-            <img
-              src="/logo.png"
-              alt="Hebrom Church"
-              className="h-full w-full object-contain object-left mix-blend-screen brightness-150 contrast-125"
+          <div className="mb-8 text-center flex flex-col items-center">
+            <Image
+              src="/logo_sb.png"
+              width={500}
+              height={200}
+              alt="Hebrom Sys"
+              loading="eager"
+              className="-mb-24 -mt-12 w-64 h-auto"
             />
           </div>
 
@@ -176,8 +186,9 @@ export function Sidebar({ className }: SidebarProps) {
 
       <div className="border-b border-slate-200 p-6 dark:border-slate-800">
         <div className="flex items-center space-x-3">
-          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-slate-700 dark:to-slate-600">
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-100 to-amber-200 dark:from-slate-700 dark:to-slate-600">
             {currentUser?.profile.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={currentUser.profile.avatar_url}
                 alt={currentUser.profile.full_name || currentUser.email || 'Usuário'}
@@ -186,7 +197,7 @@ export function Sidebar({ className }: SidebarProps) {
                 className="h-12 w-12 rounded-full object-cover"
               />
             ) : (
-              <User className="h-6 w-6 text-blue-600 dark:text-slate-300" />
+              <User className="h-6 w-6 text-amber-600 dark:text-slate-300" />
             )}
           </div>
           <div className="min-w-0 flex-1">
@@ -215,7 +226,7 @@ export function Sidebar({ className }: SidebarProps) {
               onClick={() => handleNavigation(item.href)}
               className={`group flex w-full cursor-pointer items-center space-x-3 rounded-xl px-4 py-3 transition-all duration-200 ${
                 isActive
-                  ? 'bg-blue-600 shadow-blue-500/25 text-white shadow-lg'
+                  ? 'bg-amber-600 shadow-amber-500/25 text-white shadow-lg'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
               }`}
             >
@@ -227,7 +238,7 @@ export function Sidebar({ className }: SidebarProps) {
               <div className="flex-1 text-left">
                 <p className={`font-medium ${isActive ? 'text-white' : ''}`}>{item.name}</p>
                 <p
-                  className={`text-xs ${isActive ? 'text-blue-100' : 'text-slate-500 dark:text-slate-500'}`}
+                  className={`text-xs ${isActive ? 'text-amber-100' : 'text-slate-500 dark:text-slate-500'}`}
                 >
                   {item.description}
                 </p>

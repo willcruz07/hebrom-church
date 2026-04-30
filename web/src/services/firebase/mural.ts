@@ -57,3 +57,13 @@ export const getPosts = async (userGroups: string[] = []): Promise<FeedPost[]> =
     return [];
   }
 };
+
+export const deletePost = async (postId: string): Promise<void> => {
+  try {
+    const { doc, deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(doc(db, 'posts', postId));
+  } catch (error) {
+    console.error('Erro ao excluir post:', error);
+    throw new Error('Não foi possível excluir o aviso.');
+  }
+};
