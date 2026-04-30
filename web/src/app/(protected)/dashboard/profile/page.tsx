@@ -159,7 +159,7 @@ export default function ProfilePage() {
                           `https://ui-avatars.com/api/?name=${currentUser.profile.full_name}&background=0D8ABC&color=fff&size=256`
                         }
                         alt="Avatar"
-                        className="object-cover"
+                        className="object-cover w-full"
                       />
                       <AnimatePresence>
                         {isUploading && (
@@ -408,10 +408,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Sidebar Cards */}
         <div className="space-y-6">
-          {/* Card Preview */}
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
               <CreditCard className="h-5 w-5 text-amber-500" />
               Sua Carteirinha
@@ -422,7 +420,6 @@ export default function ProfilePage() {
                 whileHover={{ y: -5 }}
                 className="relative aspect-[1.586/1] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-2xl shadow-amber-950/20"
               >
-                {/* Texture/Overlay */}
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
                 <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
 
@@ -510,7 +507,7 @@ export default function ProfilePage() {
             >
               Ver Carteira Completa
             </button>
-          </div>
+          </div> */}
 
           <div className="rounded-2xl bg-gradient-to-br from-amber-600 to-indigo-700 p-6 text-white">
             <h4 className="font-bold">Dica de Perfil</h4>

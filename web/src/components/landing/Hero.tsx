@@ -31,7 +31,7 @@ export function Hero() {
             height={500}
             src="/logo_sb.png"
             alt="Hebrom Church"
-            className="h-auto w-2xl -mb-56 object-contain brightness-125 contrast-125 drop-shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+            className="h-auto w-2xl -mb-32 md:-mb-56 object-contain brightness-125 contrast-125 drop-shadow-[0_0_20px_rgba(245,158,11,0.3)]"
           />
         </motion.div>
 
