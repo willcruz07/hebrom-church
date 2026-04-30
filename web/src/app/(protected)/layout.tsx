@@ -9,7 +9,12 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   const isMobile = width < 1024;
 
   if (isMobile) {
-    return <MobileLayout>{children}</MobileLayout>;
+    return (
+      <>
+        <MobileLayout>{children}</MobileLayout>
+        <Sidebar />
+      </>
+    );
   }
 
   return (

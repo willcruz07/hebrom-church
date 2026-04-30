@@ -6,6 +6,7 @@ import { MobileBottomNav } from './MobileBottomNav'
 import { useAuth } from '@/store/useAuth'
 import { User, Menu } from 'lucide-react'
 import { useMenuState } from '@/store/useMenuState'
+import { usePermissions } from '@/hooks/usePermissions'
 import Image from 'next/image'
 
 interface MobileLayoutProps {
@@ -23,21 +24,25 @@ export function MobileLayout({
 }: MobileLayoutProps) {
   const { currentUser } = useAuth()
   const { setMenuIsOpen } = useMenuState()
+  const { isVisitor } = usePermissions()
 
   return (
     <div className={cn('flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950', className)}>
       {/* Mobile Top Header */}
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
-        <button
-          onClick={() => setMenuIsOpen(true)}
-          className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-        >
-          <Menu className="h-6 w-6" />
-        </button>
+        {!isVisitor ? (
+          <button
+            onClick={() => setMenuIsOpen(true)}
+            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+        ) : (
+          <div className="w-10" /> // Spacer for layout balance
+        )}
 
         <div className="flex items-center gap-2">
           <Image src="/logo_sb.png" alt="Hebrom" width={124} height={124} className=" w-auto" />
-          {/* <span className="font-bold text-slate-900 dark:text-white">Hebrom Sys</span> */}
         </div>
 
         <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-amber-500/10">

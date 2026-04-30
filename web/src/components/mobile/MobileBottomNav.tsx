@@ -5,7 +5,7 @@ import { useNavigation } from '@/hooks/useNavigation'
 import { usePermissions } from '@/hooks/usePermissions'
 import { ROUTES } from '@/paths'
 import clsx from 'clsx'
-import { MessageSquare, Heart, Calendar, Users, Home } from 'lucide-react'
+import { MessageSquare, Heart, Calendar, Settings, Home } from 'lucide-react'
 
 interface NavItem {
   name: string
@@ -52,9 +52,9 @@ const navigationItems: NavItem[] = [
     permission: 'canViewAgenda',
   },
   {
-    name: 'Perfil',
+    name: 'Configuração',
     href: ROUTES.AUTHENTICATED.PROFILE,
-    icon: Users,
+    icon: Settings,
     isActive: (pathname) => pathname.startsWith(ROUTES.AUTHENTICATED.PROFILE),
   },
 ]

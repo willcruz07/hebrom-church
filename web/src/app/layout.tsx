@@ -20,6 +20,20 @@ export const metadata: Metadata = {
   description: 'Sistema de Gestão - Hebrom',
   icons: {
     icon: '/hearth.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
+  openGraph: {
+    title: 'Hebrom Sys',
+    description: 'Sistema de Gestão - Hebrom',
+    images: [
+      {
+        url: '/logo.png',
+        width: 800,
+        height: 600,
+        alt: 'Hebrom Sys',
+      },
+    ],
   },
 }
 
