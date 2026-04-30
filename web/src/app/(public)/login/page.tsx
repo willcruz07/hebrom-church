@@ -9,6 +9,8 @@ import { z } from 'zod'
 import { ROUTES } from '@/paths'
 import Image from 'next/image'
 
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
+
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Mínimo 6 caracteres'),
@@ -135,9 +137,16 @@ export default function LoginPage() {
             <button
               disabled={loading.signIn}
               type="submit"
-              className="mt-2 w-full rounded-lg bg-amber-600 px-4 py-2.5 font-semibold text-white transition-all hover:bg-amber-700 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
+              className="mt-2 w-full rounded-lg bg-amber-600 px-4 py-2.5 font-semibold text-white transition-all hover:bg-amber-700 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 flex items-center justify-center gap-2"
             >
-              {loading.signIn ? 'Entrando...' : 'Entrar'}
+              {loading.signIn ? (
+                <>
+                  <HebromSpinner size="sm" className="brightness-200" />
+                  <span>Entrando...</span>
+                </>
+              ) : (
+                'Entrar'
+              )}
             </button>
           </form>
 
@@ -154,7 +163,7 @@ export default function LoginPage() {
             className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-700 bg-slate-800/60 px-4 py-2.5 font-medium text-slate-200 transition-all hover:bg-slate-700 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
           >
             {loading.signIn ? (
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-400 border-t-white"></div>
+              <HebromSpinner size="sm" />
             ) : (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-5 w-5">
@@ -260,9 +269,16 @@ export default function LoginPage() {
                 <button
                   disabled={loading.signIn}
                   type="submit"
-                  className="w-1/2 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 transition-all disabled:opacity-70"
+                  className="w-1/2 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
                 >
-                  {loading.signIn ? 'Registrando...' : 'Registrar'}
+                  {loading.signIn ? (
+                    <>
+                      <HebromSpinner size="sm" className="brightness-200" />
+                      <span>Registrando...</span>
+                    </>
+                  ) : (
+                    'Registrar'
+                  )}
                 </button>
               </div>
             </form>

@@ -17,7 +17,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Loader2, Users, Edit } from 'lucide-react'
+import { Users, Edit } from 'lucide-react'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { updateGroup } from '@/services/firebase/groups'
 import { ChurchGroup } from '@/types'
 
@@ -102,7 +103,7 @@ export function EditGroupModal({ isOpen, onClose, onSuccess, group }: EditGroupM
               Cancelar
             </Button>
             <Button type="submit" disabled={loading} className="bg-amber-600 hover:bg-amber-700">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {loading ? <HebromSpinner size="sm" className="mr-2 brightness-200" /> : null}
               Salvar Alterações
             </Button>
           </DialogFooter>

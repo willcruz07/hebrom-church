@@ -9,11 +9,11 @@ import {
   BookOpen,
   Quote,
   Filter,
-  Loader2,
   Trash2,
   CheckCircle2,
   Sparkles,
 } from 'lucide-react'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { toast } from 'sonner'
 import dayjs from 'dayjs'
 
@@ -263,7 +263,7 @@ export default function DailyWordPage() {
                   disabled={isSubmitting}
                   className="bg-amber-600 hover:bg-amber-700"
                 >
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Lançar'}
+                  {isSubmitting ? <HebromSpinner size="sm" className="brightness-200" /> : 'Lançar'}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -284,7 +284,7 @@ export default function DailyWordPage() {
         <TabsContent value="today" className="mt-8 space-y-6">
           {loading ? (
             <div className="flex justify-center py-20">
-              <Loader2 className="h-10 w-10 animate-spin text-amber-600" />
+              <HebromSpinner size="lg" />
             </div>
           ) : todayWord ? (
             <Card className="relative overflow-hidden border-none shadow-2xl dark:bg-slate-900 bg-white">
@@ -374,7 +374,7 @@ export default function DailyWordPage() {
 
               {loading ? (
                 <div className="flex justify-center py-20">
-                  <Loader2 className="h-10 w-10 animate-spin text-amber-600" />
+                  <HebromSpinner size="lg" />
                 </div>
               ) : selectedVerse ? (
                 <Card className="relative overflow-hidden border-none shadow-xl bg-gradient-to-br from-amber-600 to-purple-700 text-white">

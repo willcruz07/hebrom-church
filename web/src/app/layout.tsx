@@ -1,29 +1,32 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { AuthSession } from "@/providers/AuthSession";
-import { ThemeProvider } from "@/providers/ThemeProvider";
-import { MessagesProvider } from "@/hooks/useMessages";
-import PwaManager from "@/components/PwaManager";
-import InstallPrompt from "@/components/notifications/InstallPrompt";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { AppMessageDialog } from "@/components/ui/app-message-dialog";
-import { Toaster } from "sonner";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { AuthSession } from '@/providers/AuthSession'
+import { ThemeProvider } from '@/providers/ThemeProvider'
+import { MessagesProvider } from '@/hooks/useMessages'
+import PwaManager from '@/components/PwaManager'
+import InstallPrompt from '@/components/notifications/InstallPrompt'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { AppMessageDialog } from '@/components/ui/app-message-dialog'
+import { Toaster } from 'sonner'
 
 const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
+  variable: '--font-inter',
+  subsets: ['latin'],
+})
 
 export const metadata: Metadata = {
-  title: "Hebrom Sys",
-  description: "Sistema de Gestão - Hebrom",
-};
+  title: 'Hebrom Sys',
+  description: 'Sistema de Gestão - Hebrom',
+  icons: {
+    icon: '/hearth.png',
+  },
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="pt-BR">
@@ -49,5 +52,5 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

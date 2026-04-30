@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useAuth } from '@/store/useAuth'
+import { LoadingScreen } from '@/components/ui/LoadingScreen'
 
 interface IAuthSessionProps {
   children: React.ReactNode
@@ -15,11 +16,7 @@ export function AuthSession({ children }: IAuthSessionProps) {
   }, [checkAuth])
 
   if (loading.checkAuth) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-amber-500"></div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return <>{children}</>

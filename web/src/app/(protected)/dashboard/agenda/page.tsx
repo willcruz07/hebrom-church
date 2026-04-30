@@ -26,6 +26,7 @@ import {
 import { agendaService } from '@/services/firebase/agenda'
 import { ChurchEvent, EventCategory } from '@/types'
 import { CreateEventModal } from './components/CreateEventModal'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import dayjs from '@/lib/dayjs'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -264,7 +265,7 @@ export default function AgendaPage() {
           <div className="space-y-4">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent mb-4" />
+                <HebromSpinner size="md" className="mb-4" />
                 <p>Carregando agenda...</p>
               </div>
             ) : filteredEvents.filter((e) => e.date === selectedDate.format('YYYY-MM-DD')).length >

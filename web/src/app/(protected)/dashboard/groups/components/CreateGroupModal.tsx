@@ -17,7 +17,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Loader2, Users } from 'lucide-react'
+import { Users } from 'lucide-react'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { createGroup } from '@/services/firebase/groups'
 
 const schema = z.object({
@@ -98,7 +99,7 @@ export function CreateGroupModal({ isOpen, onClose, onSuccess }: CreateGroupModa
               Cancelar
             </Button>
             <Button type="submit" disabled={loading} className="bg-amber-600 hover:bg-amber-700">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {loading ? <HebromSpinner size="sm" className="mr-2 brightness-200" /> : null}
               Criar Grupo
             </Button>
           </DialogFooter>

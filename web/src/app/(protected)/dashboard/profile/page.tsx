@@ -13,10 +13,10 @@ import {
   Save,
   Camera,
   MapPin,
-  Loader2,
-  Info,
   CheckCircle2,
+  Info,
 } from 'lucide-react'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -169,7 +169,7 @@ export default function ProfilePage() {
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm"
                           >
-                            <Loader2 className="h-8 w-8 animate-spin text-white" />
+                            <HebromSpinner size="md" />
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -328,7 +328,7 @@ export default function ProfilePage() {
                     className="flex items-center gap-2 rounded-xl bg-amber-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 hover:shadow-amber-500/40 active:scale-95 disabled:opacity-50"
                   >
                     {isSaving ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <HebromSpinner size="sm" className="brightness-200" />
                     ) : (
                       <Save className="h-4 w-4" />
                     )}

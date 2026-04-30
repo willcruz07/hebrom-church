@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   X,
   Image as ImageIcon,
-  Loader2,
   Send,
   Type,
   AlignLeft,
@@ -20,6 +19,7 @@ import { useAuth } from '@/store/useAuth'
 import { createPost } from '@/services/firebase/mural'
 import { getGroups } from '@/services/firebase/groups'
 import { ChurchGroup } from '@/types'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 
 const postSchema = z
   .object({
@@ -315,7 +315,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
                   className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-amber-600 py-3 text-sm font-bold text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 hover:shadow-amber-500/40 disabled:opacity-50"
                 >
                   {isSaving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <HebromSpinner size="sm" className="brightness-200" />
                   ) : (
                     <>
                       <Send className="h-4 w-4" />

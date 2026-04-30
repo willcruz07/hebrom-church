@@ -14,7 +14,6 @@ import {
   FileText,
   Shield,
   ArrowLeft,
-  Loader2,
   Save,
   Trash2,
   AlertCircle,
@@ -26,6 +25,7 @@ import {
   Flag,
   Cross,
 } from 'lucide-react'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -206,7 +206,7 @@ export default function MemberEditPage() {
   if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+        <HebromSpinner size="lg" />
       </div>
     )
   }
@@ -255,7 +255,7 @@ export default function MemberEditPage() {
             disabled={saving}
           >
             {saving ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <HebromSpinner size="sm" className="mr-2 brightness-200" />
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}

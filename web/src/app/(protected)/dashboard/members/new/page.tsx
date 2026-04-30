@@ -8,7 +8,6 @@ import * as z from 'zod'
 import {
   ChevronLeft,
   Save,
-  Loader2,
   User,
   FileText,
   MapPin,
@@ -20,6 +19,7 @@ import {
   Mail,
   Lock,
 } from 'lucide-react'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -177,7 +177,7 @@ export default function MemberCreatePage() {
               className="bg-amber-600 hover:bg-amber-700 rounded-xl shadow-lg shadow-amber-500/25"
             >
               {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <HebromSpinner size="sm" className="mr-2 brightness-200" />
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
@@ -605,7 +605,7 @@ export default function MemberCreatePage() {
           className="h-11 px-8 bg-amber-600 hover:bg-amber-700 rounded-xl shadow-lg shadow-amber-500/25"
         >
           {loading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <HebromSpinner size="sm" className="mr-2 brightness-200" />
           ) : (
             <Save className="mr-2 h-4 w-4" />
           )}

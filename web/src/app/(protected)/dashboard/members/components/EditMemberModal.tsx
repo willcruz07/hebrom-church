@@ -23,7 +23,8 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Edit, Loader2, Check, UserMinus, UserCheck, Trash2 } from 'lucide-react'
+import { Edit, Check, UserMinus, UserCheck, Trash2 } from 'lucide-react'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { AppUser } from '@/types'
 import { updateUserProfile } from '@/services/firebase/users'
 import { doc, updateDoc, Timestamp } from 'firebase/firestore'
@@ -239,7 +240,7 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
                 }`}
               >
                 {inactivating ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <HebromSpinner size="sm" />
                 ) : member.is_active ? (
                   <UserMinus className="h-4 w-4" />
                 ) : (
@@ -281,7 +282,7 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
               Cancelar
             </Button>
             <Button type="submit" disabled={loading} className="bg-amber-600 hover:bg-amber-700">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {loading ? <HebromSpinner size="sm" className="mr-2 brightness-200" /> : null}
               Salvar Alterações
             </Button>
           </DialogFooter>

@@ -9,10 +9,10 @@ import {
   Filter,
   Plus,
   Heart,
-  Loader2,
   MoreHorizontal,
   Trash2,
 } from 'lucide-react'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -149,7 +149,7 @@ export default function MuralPage() {
       <div className="grid gap-6">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-            <Loader2 className="h-8 w-8 animate-spin mb-4" />
+            <HebromSpinner size="lg" className="mb-4" />
             <p className="text-sm font-medium">Carregando avisos...</p>
           </div>
         ) : filteredPosts.length > 0 ? (

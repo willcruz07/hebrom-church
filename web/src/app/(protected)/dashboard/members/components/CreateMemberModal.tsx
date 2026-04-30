@@ -23,7 +23,8 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Loader2, UserPlus, Check } from 'lucide-react'
+import { UserPlus, Check } from 'lucide-react'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { getGroups } from '@/services/firebase/groups'
 import { ChurchGroup } from '@/types'
 import { formatPhone, maskPhone } from '@/lib/utils'
@@ -227,7 +228,7 @@ export function CreateMemberModal({ isOpen, onClose, onSuccess }: CreateMemberMo
               Cancelar
             </Button>
             <Button type="submit" disabled={loading} className="bg-amber-600 hover:bg-amber-700">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {loading ? <HebromSpinner size="sm" className="mr-2 brightness-200" /> : null}
               Cadastrar Membro
             </Button>
           </DialogFooter>
