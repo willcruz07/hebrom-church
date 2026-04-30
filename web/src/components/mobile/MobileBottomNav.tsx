@@ -66,14 +66,19 @@ interface MobileBottomNavProps {
 export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
   const pathname = usePathname()
   const { navigateTo } = useNavigation()
-  const { permissions } = usePermissions()
+  const { permissions, isVisitor } = usePermissions()
 
   const handleNavigation = (href: string) => {
     navigateTo(href)
   }
 
   const filteredNavigation = navigationItems.filter((item) => {
-    // Lógica especial para o botão Início duplicado
+    // Hide specific items for visitors: Home and Prayer
+    if (isVisitor && (item.name === 'Início' || item.name === 'Oração')) {
+      return false
+    }
+
+    // Lógica especial para o botão Início duplicado (para não-visitantes)
     if (item.name === 'Início') {
       if (item.href === ROUTES.AUTHENTICATED.HOME) return permissions.canViewDashboardOverview
       if (item.href === ROUTES.AUTHENTICATED.MURAL) return !permissions.canViewDashboardOverview
