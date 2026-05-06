@@ -85,7 +85,7 @@ export interface ChurchGroup {
   created_at: number;
 }
 
-export type EventCategory = 'Culto' | 'Evento' | 'Ensino' | 'Grupo' | 'Outro';
+export type EventCategory = 'Culto' | 'Homens' | 'Mulheres' | 'Jovens' | 'Imersão' | 'Batismo' | 'Outro';
 
 export interface ChurchEvent {
   id: string;
@@ -95,6 +95,7 @@ export interface ChurchEvent {
   time: string;
   location: string;
   category: EventCategory;
+  thumbnail_url?: string;
   created_at: Timestamp | number;
   updated_at?: Timestamp | number;
 }

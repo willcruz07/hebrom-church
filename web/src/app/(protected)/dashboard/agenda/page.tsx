@@ -34,9 +34,11 @@ import { Button } from '@/components/ui/button'
 
 const CATEGORIES: { name: EventCategory; color: string; dot: string }[] = [
   { name: 'Culto', color: 'bg-amber-500', dot: 'bg-amber-500' },
-  { name: 'Evento', color: 'bg-amber-500', dot: 'bg-amber-500' },
-  { name: 'Ensino', color: 'bg-emerald-500', dot: 'bg-emerald-500' },
-  { name: 'Grupo', color: 'bg-rose-500', dot: 'bg-rose-500' },
+  { name: 'Homens', color: 'bg-blue-600', dot: 'bg-blue-600' },
+  { name: 'Mulheres', color: 'bg-rose-500', dot: 'bg-rose-500' },
+  { name: 'Jovens', color: 'bg-purple-600', dot: 'bg-purple-600' },
+  { name: 'Imersão', color: 'bg-emerald-600', dot: 'bg-emerald-600' },
+  { name: 'Batismo', color: 'bg-sky-500', dot: 'bg-sky-500' },
   { name: 'Outro', color: 'bg-slate-500', dot: 'bg-slate-500' },
 ]
 
@@ -64,10 +66,6 @@ export default function AgendaPage() {
     if (filter !== 'Todos') {
       filtered = filtered.filter((e) => e.category === filter)
     }
-    // Filter by selected month for the list?
-    // Usually people want to see upcoming events or events of the selected day.
-    // Let's show upcoming events by default, but if a date is selected, maybe filter?
-    // The user asked for "visualizar uma marcação na agenda dias que estão com evento".
     return filtered
   }, [events, filter])
 
@@ -85,7 +83,6 @@ export default function AgendaPage() {
     const endOfMonth = currentMonth.endOf('month')
     const days = []
 
-    // Previous month padding
     const firstDayOfWeek = startOfMonth.day()
     for (let i = 0; i < firstDayOfWeek; i++) {
       days.push(null)
@@ -183,7 +180,8 @@ export default function AgendaPage() {
                       <div className="absolute bottom-1.5 flex gap-0.5">
                         {eventsByDate[dateStr].slice(0, 3).map((event, idx) => {
                           const category =
-                            CATEGORIES.find((c) => c.name === event.category) || CATEGORIES[4]
+                            CATEGORIES.find((c) => c.name === event.category) ||
+                            CATEGORIES[CATEGORIES.length - 1]
                           return (
                             <div
                               key={event.id || idx}
@@ -274,95 +272,121 @@ export default function AgendaPage() {
                 .filter((e) => e.date === selectedDate.format('YYYY-MM-DD'))
                 .map((event) => {
                   const category =
-                    CATEGORIES.find((c) => c.name === event.category) || CATEGORIES[4]
+                    CATEGORIES.find((c) => c.name === event.category) ||
+                    CATEGORIES[CATEGORIES.length - 1]
                   return (
                     <div
                       key={event.id}
-                      className="group flex items-start gap-5 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-amber-500/50 hover:shadow-xl hover:shadow-amber-500/5 dark:border-slate-800 dark:bg-slate-900/50"
+                      className="group flex flex-col md:flex-row items-stretch gap-5 rounded-3xl border border-slate-200 bg-white p-4 transition-all hover:border-amber-500/50 hover:shadow-xl hover:shadow-amber-500/5 dark:border-slate-800 dark:bg-slate-900/50"
                     >
-                      <div
-                        className={cn(
-                          'flex flex-col items-center justify-center rounded-2xl px-4 py-3 text-white shadow-lg',
-                          category.color,
-                        )}
-                      >
-                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">
-                          {dayjs(event.date).format('MMM')}
-                        </span>
-                        <span className="text-2xl font-black leading-none mt-1">
-                          {dayjs(event.date).format('DD')}
-                        </span>
-                      </div>
-
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <h4 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
-                              {event.title}
-                            </h4>
-                            {event.description && (
-                              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                                {event.description}
-                              </p>
+                      {/* Image Thumbnail */}
+                      <div className="relative h-40 w-full md:h-auto md:w-48 overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800 shrink-0">
+                        {event.thumbnail_url ? (
+                          <img
+                            src={event.thumbnail_url}
+                            alt={event.title}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                        ) : (
+                          <div
+                            className={cn(
+                              'flex h-full w-full flex-col items-center justify-center text-white',
+                              category.color,
                             )}
+                          >
+                            <CalendarIcon className="h-8 w-8 mb-2 opacity-50" />
+                            <span className="text-xl font-black">
+                              {dayjs(event.date).format('DD')}
+                            </span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">
+                              {dayjs(event.date).format('MMM')}
+                            </span>
                           </div>
+                        )}
+                        <div className="absolute top-3 left-3">
                           <span
                             className={cn(
-                              'rounded-full px-3 py-1 text-[10px] font-bold tracking-wider uppercase',
-                              'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+                              'rounded-full px-3 py-1 text-[10px] font-bold tracking-wider uppercase text-white shadow-lg',
+                              category.color,
                             )}
                           >
                             {event.category}
                           </span>
                         </div>
-
-                        <div className="flex flex-wrap gap-5">
-                          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                            <div className="rounded-lg bg-slate-100 p-1.5 dark:bg-slate-800">
-                              <Clock className="h-3.5 w-3.5" />
-                            </div>
-                            <span className="font-medium">{event.time}h</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                            <div className="rounded-lg bg-slate-100 p-1.5 dark:bg-slate-800">
-                              <MapPin className="h-3.5 w-3.5" />
-                            </div>
-                            <span className="font-medium">{event.location}</span>
-                          </div>
-                        </div>
                       </div>
 
-                      {permissions.canManageAgenda && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white transition-all outline-none">
-                            <MoreHorizontal className="h-5 w-5" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="w-48 rounded-xl border-slate-200 dark:border-slate-800"
-                          >
-                            <DropdownMenuLabel className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2">
-                              Opções do Evento
-                            </DropdownMenuLabel>
+                      <div className="flex flex-1 flex-col justify-between py-1">
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <h4 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
+                                {event.title}
+                              </h4>
+                              {event.description && (
+                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                                  {event.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
 
-                            <DropdownMenuItem
-                              onClick={async () => {
-                                if (confirm('Deseja excluir este evento?')) {
-                                  try {
-                                    await agendaService.deleteEvent(event.id)
-                                    toast.success('Evento excluído')
-                                  } catch (error) {
-                                    toast.error('Erro ao excluir')
-                                  }
-                                }
-                              }}
-                              className="gap-2 px-3 py-2.5 cursor-pointer text-red-600 dark:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-900/20 dark:focus:text-red-400 rounded-lg"
-                            >
-                              <Trash2 className="h-4 w-4" /> Excluir Evento
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                          <div className="flex flex-wrap gap-5">
+                            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                              <div className="rounded-lg bg-slate-100 p-1.5 dark:bg-slate-800">
+                                <Clock className="h-3.5 w-3.5" />
+                              </div>
+                              <span className="font-medium">{event.time}h</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                              <div className="rounded-lg bg-slate-100 p-1.5 dark:bg-slate-800">
+                                <MapPin className="h-3.5 w-3.5" />
+                              </div>
+                              <span className="font-medium">{event.location}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+                          <div className="flex items-center gap-2">
+                            <div className={cn('h-2 w-2 rounded-full', category.dot)} />
+                            <span className="text-xs font-medium text-slate-500">
+                              {category.name}
+                            </span>
+                          </div>
+
+                          {permissions.canManageAgenda && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white transition-all outline-none">
+                                <MoreHorizontal className="h-5 w-5" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                className="w-48 rounded-xl border-slate-200 dark:border-slate-800"
+                              >
+                                <DropdownMenuLabel className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2">
+                                  Opções do Evento
+                                </DropdownMenuLabel>
+
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    if (confirm('Deseja excluir este evento?')) {
+                                      try {
+                                        await agendaService.deleteEvent(event.id)
+                                        toast.success('Evento excluído')
+                                      } catch (error) {
+                                        toast.error('Erro ao excluir')
+                                      }
+                                    }
+                                  }}
+                                  className="gap-2 px-3 py-2.5 cursor-pointer text-red-600 dark:text-red-400 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-900/20 dark:focus:text-red-400 rounded-lg"
+                                >
+                                  <Trash2 className="h-4 w-4" /> Excluir Evento
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )
                 })
@@ -381,8 +405,7 @@ export default function AgendaPage() {
                 {permissions.canManageAgenda && (
                   <Button
                     onClick={() => setIsModalOpen(true)}
-                    variant="outline"
-                    className="mt-6 rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50"
+                    className="mt-6 rounded-xl bg-amber-600 px-8 font-bold text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
                   >
                     Adicionar Evento
                   </Button>
