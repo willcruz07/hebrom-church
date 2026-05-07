@@ -228,38 +228,50 @@ export default function MemberEditPage() {
               Detalhes do Membro
             </h1>
             <p className="text-[10px] md:text-xs font-medium text-slate-500">
-              Gerencie as informações de <span className="text-amber-600 dark:text-amber-400">{member?.profile.full_name}</span>
+              Gerencie as informações de{' '}
+              <span className="text-amber-600 dark:text-amber-400">
+                {member?.profile.full_name}
+              </span>
             </p>
           </div>
         </div>
 
         {/* Profile Overview Card */}
         <div className="relative overflow-hidden rounded-2xl bg-white p-4 md:p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-          <div className="absolute top-0 right-0 p-4 opacity-5 dark:opacity-10 pointer-events-none">
+          {/* <div className="absolute top-0 right-0 p-4 opacity-5 dark:opacity-10 pointer-events-none">
             <User className="h-24 w-24 md:h-32 md:w-32" />
-          </div>
-          
+          </div> */}
+
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 relative z-10">
             <div className="flex h-20 w-20 md:h-24 md:w-24 shrink-0 items-center justify-center rounded-3xl bg-amber-100 text-amber-600 dark:bg-slate-800 dark:text-slate-400 font-black overflow-hidden border-4 border-white dark:border-slate-800 shadow-xl ring-1 ring-slate-100 dark:ring-slate-700">
               {member?.profile.avatar_url ? (
-                <img src={member.profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                <img
+                  src={member.profile.avatar_url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <span className="text-3xl uppercase">{member?.profile.full_name[0]}</span>
               )}
             </div>
-            
+
             <div className="flex-1 space-y-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white">
                   {member?.profile.full_name}
                 </h2>
-                <span className={cn(
-                  "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest",
-                  member?.role === 'pastor' ? "bg-purple-100 text-purple-700" :
-                  member?.role === 'secretary' ? "bg-blue-100 text-blue-700" :
-                  member?.role === 'visitor' ? "bg-slate-100 text-slate-700" :
-                  "bg-emerald-100 text-emerald-700"
-                )}>
+                <span
+                  className={cn(
+                    'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest',
+                    member?.role === 'pastor'
+                      ? 'bg-purple-100 text-purple-700'
+                      : member?.role === 'secretary'
+                        ? 'bg-blue-100 text-blue-700'
+                        : member?.role === 'visitor'
+                          ? 'bg-slate-100 text-slate-700'
+                          : 'bg-emerald-100 text-emerald-700',
+                  )}
+                >
                   {member?.role && member.role.replace('_', ' ')}
                 </span>
               </div>
@@ -281,19 +293,25 @@ export default function MemberEditPage() {
                 onClick={handleSubmit(onSubmit)}
                 disabled={saving}
               >
-                {saving ? <HebromSpinner size="sm" className="mr-2" /> : <Save className="mr-2 h-4 w-4" />}
+                {saving ? (
+                  <HebromSpinner size="sm" className="mr-2" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
                 Salvar
               </Button>
               <Button
                 variant="outline"
-                className="w-full text-red-600 border-red-100 hover:bg-red-50 rounded-xl font-bold"
+                className="w-full text-red-600 hover:bg-red-50 rounded-xl font-bold"
                 onClick={async () => {
                   if (confirm('Excluir permanentemente este membro?')) {
                     try {
                       await deleteUser(uid)
                       toast.success('Membro excluído')
                       router.push('/dashboard/members')
-                    } catch (error) { toast.error('Erro ao excluir') }
+                    } catch (error) {
+                      toast.error('Erro ao excluir')
+                    }
                   }
                 }}
               >
@@ -306,41 +324,41 @@ export default function MemberEditPage() {
       </header>
 
       <Tabs defaultValue="personal" className="w-full">
-        <div className="w-full overflow-x-auto scrollbar-hide mb-6 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
-          <TabsList className="flex h-11 w-max min-w-full items-center justify-start rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
+        <div className="relative w-full overflow-x-auto mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="overflow-x-auto scrollbar-hide inline-flex h-11 w-max min-w-full items-center justify-start rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
             <TabsTrigger
               value="personal"
-              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap shrink-0"
             >
               <User className="mr-2 h-3.5 w-3.5" /> Informações
             </TabsTrigger>
             <TabsTrigger
               value="family"
-              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap shrink-0"
             >
               <Baby className="mr-2 h-3.5 w-3.5" /> Família
             </TabsTrigger>
             <TabsTrigger
               value="address"
-              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap shrink-0"
             >
               <MapPin className="mr-2 h-3.5 w-3.5" /> Endereço
             </TabsTrigger>
             <TabsTrigger
               value="docs"
-              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap shrink-0"
             >
               <FileText className="mr-2 h-3.5 w-3.5" /> Documentos
             </TabsTrigger>
             <TabsTrigger
               value="church"
-              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap shrink-0"
             >
               <Cross className="mr-2 h-3.5 w-3.5" /> Igreja
             </TabsTrigger>
             <TabsTrigger
               value="health"
-              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+              className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap shrink-0"
             >
               <Heart className="mr-2 h-3.5 w-3.5" /> Saúde
             </TabsTrigger>
@@ -351,9 +369,13 @@ export default function MemberEditPage() {
           <TabsContent value="personal">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-4 space-y-1">
-                <CardTitle className="text-xs md:text-base font-black">Informações Básicas</CardTitle>
-                <CardDescription className="text-[9px]">Dados essenciais de identificação e contato.</CardDescription>
+              <CardHeader className="py-2">
+                <CardTitle className="text-base md:text-base font-black">
+                  Informações Básicas
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Dados essenciais de identificação e contato.
+                </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
@@ -415,9 +437,13 @@ export default function MemberEditPage() {
           <TabsContent value="family">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-4 space-y-1">
-                <CardTitle className="text-sm md:text-base font-black">Família e Relacionamento</CardTitle>
-                <CardDescription className="text-[10px]">Informações sobre cônjuge e filhos.</CardDescription>
+              <CardHeader className="py-4">
+                <CardTitle className="text-base md:text-base font-black">
+                  Família e Relacionamento
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Informações sobre cônjuge e filhos.
+                </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
@@ -467,9 +493,13 @@ export default function MemberEditPage() {
           <TabsContent value="address">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-4 space-y-1">
-                <CardTitle className="text-sm md:text-base font-black">Endereço Residencial</CardTitle>
-                <CardDescription className="text-[10px]">Onde o membro reside atualmente.</CardDescription>
+              <CardHeader className="py-4">
+                <CardTitle className="text-base md:text-base font-black">
+                  Endereço Residencial
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Onde o membro reside atualmente.
+                </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
@@ -521,9 +551,11 @@ export default function MemberEditPage() {
           <TabsContent value="docs">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-4 space-y-1">
-                <CardTitle className="text-sm md:text-base font-black">Documentação</CardTitle>
-                <CardDescription className="text-[10px]">Documentos de identificação oficial.</CardDescription>
+              <CardHeader className="py-4">
+                <CardTitle className="text-base md:text-base font-black">Documentação</CardTitle>
+                <CardDescription className="text-sm">
+                  Documentos de identificação oficial.
+                </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
@@ -554,9 +586,13 @@ export default function MemberEditPage() {
           <TabsContent value="church">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-4 space-y-1">
-                <CardTitle className="text-sm md:text-base font-black">Vida Eclesiástica</CardTitle>
-                <CardDescription className="text-[10px]">Histórico ministerial e grupos.</CardDescription>
+              <CardHeader className="py-4">
+                <CardTitle className="text-base md:text-base font-black">
+                  Vida Eclesiástica
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Histórico ministerial e grupos.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-8">
                 <div className="grid gap-6 md:grid-cols-3">
@@ -640,9 +676,13 @@ export default function MemberEditPage() {
           <TabsContent value="health">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-4 space-y-1">
-                <CardTitle className="text-sm md:text-base font-black">Saúde e Cuidados</CardTitle>
-                <CardDescription className="text-[10px]">Informações importantes para casos de emergência.</CardDescription>
+              <CardHeader className="py-4">
+                <CardTitle className="text-base md:text-base font-black">
+                  Saúde e Cuidados
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Informações importantes para casos de emergência.
+                </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
