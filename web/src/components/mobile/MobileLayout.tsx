@@ -1,12 +1,13 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { MobileBottomNav } from './MobileBottomNav'
 import { useAuth } from '@/store/useAuth'
 import { User, Menu } from 'lucide-react'
 import { useMenuState } from '@/store/useMenuState'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useNewUsersStore } from '@/store/useNewUsersStore'
 import Image from 'next/image'
 
 interface MobileLayoutProps {
@@ -24,7 +25,15 @@ export function MobileLayout({
 }: MobileLayoutProps) {
   const { currentUser } = useAuth()
   const { setMenuIsOpen } = useMenuState()
-  const { isVisitor } = usePermissions()
+  const { pendingCount, visitorsCount, startMonitoring } = useNewUsersStore()
+  const { permissions, isVisitor } = usePermissions()
+
+  useEffect(() => {
+    const unsub = startMonitoring(permissions.canManageUsers)
+    return () => unsub()
+  }, [permissions.canManageUsers, startMonitoring])
+
+  const hasNotifications = pendingCount > 0 || visitorsCount > 0
 
   return (
     <div className={cn('flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950', className)}>
@@ -33,9 +42,21 @@ export function MobileLayout({
         {!isVisitor ? (
           <button
             onClick={() => setMenuIsOpen(true)}
-            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+            className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
           >
             <Menu className="h-6 w-6" />
+            {hasNotifications && (
+              <span className="absolute right-1.5 top-1.5 flex h-3 w-3">
+                <span className={cn(
+                  "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
+                  pendingCount > 0 ? "bg-red-400" : "bg-blue-400"
+                )}></span>
+                <span className={cn(
+                  "relative inline-flex h-3 w-3 rounded-full",
+                  pendingCount > 0 ? "bg-red-500" : "bg-blue-500"
+                )}></span>
+              </span>
+            )}
           </button>
         ) : (
           <div className="w-10" /> // Spacer for layout balance

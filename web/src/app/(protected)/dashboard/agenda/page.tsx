@@ -101,18 +101,18 @@ export default function AgendaPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <div className="space-y-1">
+          <h1 className="text-lg md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Agenda
           </h1>
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="text-[10px] md:text-sm font-medium text-slate-500 dark:text-slate-400">
             Eventos, cultos e programações da nossa igreja.
           </p>
         </div>
         {permissions.canManageAgenda && (
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 hover:shadow-amber-500/40 active:scale-95"
+            className="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 hover:shadow-amber-500/40 active:scale-95"
           >
             <Plus className="h-4 w-4" />
             Novo Evento
@@ -209,36 +209,36 @@ export default function AgendaPage() {
           </div>
 
           {/* Filters */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 dark:text-white">Filtros</h3>
+              <h3 className="text-sm md:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">Filtros</h3>
               <Filter className="h-4 w-4 text-slate-400" />
             </div>
-            <div className="space-y-2">
+            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide -mx-2 px-2 md:mx-0 md:px-0 md:flex-col md:space-y-2">
               <button
                 onClick={() => setFilter('Todos')}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all',
+                  'flex items-center gap-3 rounded-xl px-4 py-2.5 text-[10px] md:text-sm font-black uppercase tracking-wider transition-all whitespace-nowrap md:w-full',
                   filter === 'Todos'
-                    ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'
-                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800',
+                    ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
+                    : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400',
                 )}
               >
                 <CalendarDays className="h-4 w-4" />
-                Todos os Eventos
+                Todos
               </button>
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.name}
                   onClick={() => setFilter(cat.name)}
                   className={cn(
-                    'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all',
+                    'flex items-center gap-3 rounded-xl px-4 py-2.5 text-[10px] md:text-sm font-black uppercase tracking-wider transition-all whitespace-nowrap md:w-full',
                     filter === cat.name
-                      ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
-                      : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800',
+                      ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
+                      : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400',
                   )}
                 >
-                  <div className={cn('h-2 w-2 rounded-full', cat.dot)} />
+                  <div className={cn('h-2 w-2 rounded-full shrink-0', filter === cat.name ? 'bg-white' : cat.dot)} />
                   {cat.name}
                 </button>
               ))}
@@ -249,7 +249,7 @@ export default function AgendaPage() {
         {/* Events List */}
         <div className="lg:col-span-8 space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+            <h3 className="text-sm md:text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">
               {selectedDate.isSame(dayjs(), 'day')
                 ? 'Atividades de Hoje'
                 : `Atividades em ${selectedDate.format('DD/MM')}`}
@@ -295,7 +295,7 @@ export default function AgendaPage() {
                             )}
                           >
                             <CalendarIcon className="h-8 w-8 mb-2 opacity-50" />
-                            <span className="text-xl font-black">
+                            <span className="text-lg font-black">
                               {dayjs(event.date).format('DD')}
                             </span>
                             <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">
@@ -319,11 +319,11 @@ export default function AgendaPage() {
                         <div className="space-y-3">
                           <div className="flex items-start justify-between gap-4">
                             <div>
-                              <h4 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
+                              <h4 className="text-sm md:text-xl font-black text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
                                 {event.title}
                               </h4>
                               {event.description && (
-                                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                                <p className="mt-1 text-[11px] md:text-sm font-medium text-slate-500 dark:text-slate-400 line-clamp-2">
                                   {event.description}
                                 </p>
                               )}
@@ -405,7 +405,7 @@ export default function AgendaPage() {
                 {permissions.canManageAgenda && (
                   <Button
                     onClick={() => setIsModalOpen(true)}
-                    className="mt-6 rounded-xl bg-amber-600 px-8 font-bold text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
+                    className="mt-6 w-full md:w-auto rounded-xl bg-amber-600 px-8 py-6 md:py-2 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
                   >
                     Adicionar Evento
                   </Button>

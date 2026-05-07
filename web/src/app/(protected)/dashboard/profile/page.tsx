@@ -135,7 +135,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-8 pb-10">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white lg:text-4xl">
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white lg:text-4xl">
           Meu Perfil
         </h1>
         <p className="text-slate-500 dark:text-slate-400">
@@ -192,7 +192,7 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="flex-1 space-y-1 text-center md:text-left">
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
                       {currentUser.profile.full_name}
                     </h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -341,7 +341,7 @@ export default function ProfilePage() {
 
           {/* Ministerial Data (Read Only for Members, Edit by Admin in future) */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
-            <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
+            <h3 className="mb-6 flex items-center gap-2 text-base md:text-lg font-bold text-slate-900 dark:text-white">
               <Shield className="h-5 w-5 text-amber-500" />
               Dados Ministeriais
             </h3>

@@ -9,10 +9,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { useMessages } from '@/hooks/useMessages'
 import { useNavigation } from '@/hooks/useNavigation'
 import { usePermissions } from '@/hooks/usePermissions'
-import { getPendingUsersCount } from '@/services/firebase/users'
 import { ROUTES } from '@/paths'
 import { useAuth } from '@/store/useAuth'
 import { useMenuState } from '@/store/useMenuState'
+import { useNewUsersStore } from '@/store/useNewUsersStore'
 import {
   LayoutDashboard,
   LogOut,
@@ -101,14 +101,12 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const { width } = useWindowSize()
   const { menuIsOpen, setMenuIsOpen } = useMenuState()
-  const [pendingCount, setPendingCount] = useState(0)
+  const { pendingCount, visitorsCount, startMonitoring } = useNewUsersStore()
 
   useEffect(() => {
-    if (permissions.canManageUsers) {
-      const unsubscribe = getPendingUsersCount(setPendingCount)
-      return () => unsubscribe()
-    }
-  }, [permissions.canManageUsers])
+    const unsub = startMonitoring(permissions.canManageUsers)
+    return () => unsub()
+  }, [permissions.canManageUsers, startMonitoring])
 
   const filteredNavigation = navigationItems.filter((item) => {
     if (!item.permission) return true
@@ -243,9 +241,24 @@ export function Sidebar({ className }: SidebarProps) {
                   {item.description}
                 </p>
               </div>
-              {item.name === 'Membros' && pendingCount > 0 && (
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-900">
-                  {pendingCount}
+              {item.name === 'Membros' && (pendingCount > 0 || visitorsCount > 0) && (
+                <div className="flex gap-1">
+                  {pendingCount > 0 && (
+                    <div 
+                      title={`${pendingCount} membros pendentes`}
+                      className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-900 shadow-sm"
+                    >
+                      {pendingCount}
+                    </div>
+                  )}
+                  {visitorsCount > 0 && (
+                    <div 
+                      title={`${visitorsCount} novos visitantes`}
+                      className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-900 shadow-sm"
+                    >
+                      {visitorsCount}
+                    </div>
+                  )}
                 </div>
               )}
             </button>

@@ -232,6 +232,9 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
 
       const userData = await getUserById(user.uid)
 
+      console.log(userData, 'USER DATA')
+      console.log(user, 'USER')
+
       if (userData) {
         set({ currentUser: userData })
       } else {
@@ -241,8 +244,8 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
           role: 'visitor',
           sub_groups: [],
           profile: {
-            full_name: '',
-            avatar_url: null,
+            full_name: user.displayName ?? '',
+            avatar_url: user.photoURL ?? '',
             bio: '',
             birth_date: '',
             baptism_date: null,

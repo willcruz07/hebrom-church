@@ -172,12 +172,12 @@ export default function IdCardPage() {
 
             {/* Member Name */}
             <div className="mb-8 md:mb-10">
-              <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight leading-tight drop-shadow-md line-clamp-2">
+              <h1 className="text-lg md:text-4xl font-black text-white tracking-tight leading-tight drop-shadow-md line-clamp-2">
                 {currentUser?.profile.full_name || 'Nome do Membro'}
               </h1>
               <div className="flex items-center gap-3 mt-1.5">
                 <div className="h-1 w-8 md:w-10 bg-amber-600 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.5)]" />
-                <span className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] md:tracking-[0.4em]">
+                <span className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.4em]">
                   Membro Hebrom
                 </span>
               </div>
@@ -192,7 +192,7 @@ export default function IdCardPage() {
                     Cadastrado em
                   </span>
                 </div>
-                <p className="text-sm md:text-base font-bold text-slate-100">{registrationDate}</p>
+                <p className="text-[10px] md:text-base font-bold text-slate-100">{registrationDate}</p>
               </div>
 
               <div className="space-y-1">
@@ -202,7 +202,7 @@ export default function IdCardPage() {
                     Data Batismo
                   </span>
                 </div>
-                <p className="text-sm md:text-base font-bold text-slate-100">
+                <p className="text-[10px] md:text-base font-bold text-slate-100">
                   {currentUser?.profile.baptism_date
                     ? formatDate(currentUser.profile.baptism_date)
                     : '---'}
@@ -216,7 +216,7 @@ export default function IdCardPage() {
                     Contato
                   </span>
                 </div>
-                <p className="text-sm md:text-base font-bold text-slate-100 tracking-wide">
+                <p className="text-[10px] md:text-base font-bold text-slate-100 tracking-wide">
                   {formatPhone(currentUser?.profile.phone)}
                 </p>
               </div>
@@ -228,7 +228,7 @@ export default function IdCardPage() {
                     Unidade
                   </span>
                 </div>
-                <p className="text-sm md:text-base font-bold text-slate-100">Sede Principal</p>
+                <p className="text-[10px] md:text-base font-bold text-slate-100">Sede Principal</p>
               </div>
             </div>
 

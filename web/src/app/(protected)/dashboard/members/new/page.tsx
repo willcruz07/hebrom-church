@@ -160,14 +160,14 @@ export default function MemberCreatePage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-sm md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               Novo Membro
             </h1>
-            <p className="text-slate-500 dark:text-slate-400">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
               Cadastre um novo membro com todas as informações necessárias.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="hidden sm:flex gap-3">
             <Button variant="outline" onClick={() => router.back()} className="rounded-xl">
               Cancelar
             </Button>
@@ -188,86 +188,88 @@ export default function MemberCreatePage() {
       </header>
 
       <Tabs defaultValue="auth" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-7 rounded-xl bg-slate-100 dark:bg-slate-800 p-1 mb-8">
-          <TabsTrigger
-            value="auth"
-            className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950"
-          >
-            <Lock className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">Acesso</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="personal"
-            className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950"
-          >
-            <User className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">Pessoal</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="family"
-            className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950"
-          >
-            <Baby className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">Família</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="address"
-            className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950"
-          >
-            <MapPin className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">Endereço</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="docs"
-            className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950"
-          >
-            <FileText className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">Docs</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="church"
-            className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950"
-          >
-            <Cross className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">Igreja</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="health"
-            className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950"
-          >
-            <Heart className="mr-2 h-4 w-4" /> <span className="hidden sm:inline">Saúde</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto scrollbar-hide mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="flex w-max min-w-full md:grid md:w-full md:grid-cols-7 rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
+            <TabsTrigger
+              value="auth"
+              className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+            >
+              <Lock className="mr-2 h-4 w-4" /> <span className="text-xs font-bold">Acesso</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="personal"
+              className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+            >
+              <User className="mr-2 h-4 w-4" /> <span className="text-xs font-bold">Pessoal</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="family"
+              className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+            >
+              <Baby className="mr-2 h-4 w-4" /> <span className="text-xs font-bold">Família</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="address"
+              className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+            >
+              <MapPin className="mr-2 h-4 w-4" /> <span className="text-xs font-bold">Endereço</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="docs"
+              className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+            >
+              <FileText className="mr-2 h-4 w-4" /> <span className="text-xs font-bold">Docs</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="church"
+              className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+            >
+              <Cross className="mr-2 h-4 w-4" /> <span className="text-xs font-bold">Igreja</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="health"
+              className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap"
+            >
+              <Heart className="mr-2 h-4 w-4" /> <span className="text-xs font-bold">Saúde</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <TabsContent value="auth">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-2 bg-slate-900 w-full" />
-              <CardHeader>
-                <CardTitle className="text-lg">Credenciais de Acesso</CardTitle>
-                <CardDescription>Dados para o membro acessar o sistema.</CardDescription>
+              <CardHeader className="py-4">
+                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Credenciais de Acesso</CardTitle>
+                <CardDescription className="text-[10px]">Dados para o membro acessar o sistema.</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>E-mail</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">E-mail</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
                       {...register('email')}
                       type="email"
                       placeholder="email@exemplo.com"
-                      className="pl-10 h-11"
+                      className="pl-10 h-11 rounded-xl"
                     />
                   </div>
-                  {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+                  {errors.email && <p className="text-xs text-red-500 font-medium">{errors.email.message}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label>Senha Provisória</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Senha Provisória</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
                       {...register('password')}
                       type="password"
                       placeholder="Mínimo 6 caracteres"
-                      className="pl-10 h-11"
+                      className="pl-10 h-11 rounded-xl"
                     />
                   </div>
                   {errors.password && (
-                    <p className="text-xs text-red-500">{errors.password.message}</p>
+                    <p className="text-xs text-red-500 font-medium">{errors.password.message}</p>
                   )}
                 </div>
               </CardContent>
@@ -275,45 +277,45 @@ export default function MemberCreatePage() {
           </TabsContent>
 
           <TabsContent value="personal">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-2 bg-amber-600 w-full" />
-              <CardHeader>
-                <CardTitle className="text-lg">Informações Básicas</CardTitle>
-                <CardDescription>Dados essenciais de identificação e contato.</CardDescription>
+              <CardHeader className="py-4">
+                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Informações Básicas</CardTitle>
+                <CardDescription className="text-[10px]">Dados essenciais de identificação e contato.</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Nome Completo</Label>
-                  <Input {...register('full_name')} placeholder="Nome completo" className="h-11" />
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome Completo</Label>
+                  <Input {...register('full_name')} placeholder="Nome completo" className="h-11 rounded-xl" />
                   {errors.full_name && (
-                    <p className="text-xs text-red-500">{errors.full_name.message}</p>
+                    <p className="text-xs text-red-500 font-medium">{errors.full_name.message}</p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label>Telefone</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Telefone</Label>
                   <Input
                     {...register('phone')}
                     onChange={(e) => setValue('phone', maskPhone(e.target.value))}
                     placeholder="(00) 00000-0000"
-                    className="h-11"
+                    className="h-11 rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Data de Nascimento</Label>
-                  <Input type="date" {...register('birth_date')} className="h-11" />
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Data de Nascimento</Label>
+                  <Input type="date" {...register('birth_date')} className="h-11 rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Naturalidade</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Naturalidade</Label>
                   <Input
                     {...register('naturalness')}
                     placeholder="Ex: São Paulo - SP"
-                    className="h-11"
+                    className="h-11 rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Sexo</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Sexo</Label>
                   <Select onValueChange={(v) => setValue('gender', v as any)} defaultValue="M">
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11 rounded-xl">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
@@ -328,28 +330,28 @@ export default function MemberCreatePage() {
           </TabsContent>
 
           <TabsContent value="family">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-2 bg-pink-500 w-full" />
-              <CardHeader>
-                <CardTitle className="text-lg">Estrutura Familiar</CardTitle>
-                <CardDescription>Informações sobre pais, cônjuge e dependentes.</CardDescription>
+              <CardHeader className="py-4">
+                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Estrutura Familiar</CardTitle>
+                <CardDescription className="text-[10px]">Informações sobre pais, cônjuge e dependentes.</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Nome do Pai</Label>
-                  <Input {...register('father_name')} placeholder="Nome do pai" className="h-11" />
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome do Pai</Label>
+                  <Input {...register('father_name')} placeholder="Nome do pai" className="h-11 rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Nome da Mãe</Label>
-                  <Input {...register('mother_name')} placeholder="Nome da mãe" className="h-11" />
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome da Mãe</Label>
+                  <Input {...register('mother_name')} placeholder="Nome da mãe" className="h-11 rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Estado Civil</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Estado Civil</Label>
                   <Select
                     onValueChange={(v) => setValue('marital_status', v as any)}
                     defaultValue="single"
                   >
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11 rounded-xl">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
@@ -362,16 +364,16 @@ export default function MemberCreatePage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Quantidade de Filhos</Label>
-                  <Input type="number" {...register('children_count')} className="h-11" />
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Quantidade de Filhos</Label>
+                  <Input type="number" {...register('children_count')} className="h-11 rounded-xl" />
                 </div>
                 {watch('marital_status') === 'married' && (
                   <div className="space-y-2 md:col-span-2">
-                    <Label>Nome do Cônjuge</Label>
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome do Cônjuge</Label>
                     <Input
                       {...register('spouse_name')}
                       placeholder="Nome do cônjuge"
-                      className="h-11"
+                      className="h-11 rounded-xl"
                     />
                   </div>
                 )}
@@ -380,53 +382,53 @@ export default function MemberCreatePage() {
           </TabsContent>
 
           <TabsContent value="address">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-              <div className="h-2 bg-amber-500 w-full" />
-              <CardHeader>
-                <CardTitle className="text-lg">Endereço Residencial</CardTitle>
-                <CardDescription>Localização atual do membro.</CardDescription>
+            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
+              <div className="h-2 bg-blue-500 w-full" />
+              <CardHeader className="py-4">
+                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Endereço Residencial</CardTitle>
+                <CardDescription className="text-[10px]">Localização atual do membro.</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label>CEP</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">CEP</Label>
                   <Input
                     {...register('zip_code')}
                     onChange={(e) => setValue('zip_code', maskCEP(e.target.value))}
                     placeholder="00000-000"
-                    className="h-11"
+                    className="h-11 rounded-xl"
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Logradouro / Rua</Label>
-                  <Input {...register('address')} placeholder="Rua, Avenida..." className="h-11" />
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Logradouro / Rua</Label>
+                  <Input {...register('address')} placeholder="Rua, Avenida..." className="h-11 rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Número</Label>
-                  <Input {...register('address_number')} placeholder="Nº" className="h-11" />
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Número</Label>
+                  <Input {...register('address_number')} placeholder="Nº" className="h-11 rounded-xl" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Complemento</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Complemento</Label>
                   <Input
                     {...register('address_complement')}
                     placeholder="Apto, Bloco, Casa..."
-                    className="h-11"
+                    className="h-11 rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Bairro</Label>
-                  <Input {...register('neighborhood')} placeholder="Bairro" className="h-11" />
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Bairro</Label>
+                  <Input {...register('neighborhood')} placeholder="Bairro" className="h-11 rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Cidade</Label>
-                  <Input {...register('city')} placeholder="Cidade" className="h-11" />
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Cidade</Label>
+                  <Input {...register('city')} placeholder="Cidade" className="h-11 rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Estado (UF)</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Estado (UF)</Label>
                   <Input
                     {...register('state')}
                     maxLength={2}
                     placeholder="EX: SP"
-                    className="uppercase h-11"
+                    className="uppercase h-11 rounded-xl"
                   />
                 </div>
               </CardContent>
@@ -434,32 +436,32 @@ export default function MemberCreatePage() {
           </TabsContent>
 
           <TabsContent value="docs">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-2 bg-emerald-500 w-full" />
-              <CardHeader>
-                <CardTitle className="text-lg">Documentação e Carreira</CardTitle>
-                <CardDescription>Documentos oficiais e informações profissionais.</CardDescription>
+              <CardHeader className="py-4">
+                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Documentação e Carreira</CardTitle>
+                <CardDescription className="text-[10px]">Documentos oficiais e informações profissionais.</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>CPF</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">CPF</Label>
                   <Input
                     {...register('cpf')}
                     onChange={(e) => setValue('cpf', maskCPF(e.target.value))}
                     placeholder="000.000.000-00"
-                    className="h-11"
+                    className="h-11 rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>RG</Label>
-                  <Input {...register('rg')} placeholder="00.000.000-0" className="h-11" />
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">RG</Label>
+                  <Input {...register('rg')} placeholder="00.000.000-0" className="h-11 rounded-xl" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Profissão</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Profissão</Label>
                   <Input
                     {...register('profession')}
                     placeholder="Ex: Engenheiro, Professor, Autônomo"
-                    className="h-11"
+                    className="h-11 rounded-xl"
                   />
                 </div>
               </CardContent>
@@ -467,26 +469,26 @@ export default function MemberCreatePage() {
           </TabsContent>
 
           <TabsContent value="church">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-2 bg-purple-600 w-full" />
-              <CardHeader>
-                <CardTitle className="text-lg">Vida Eclesiástica</CardTitle>
-                <CardDescription>Histórico ministerial e participação em grupos.</CardDescription>
+              <CardHeader className="py-4">
+                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Vida Eclesiástica</CardTitle>
+                <CardDescription className="text-[10px]">Histórico ministerial e participação em grupos.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-8">
                 <div className="grid gap-6 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label>Cargo Eclesiástico</Label>
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Cargo Eclesiástico</Label>
                     <Input
                       {...register('church_position')}
                       placeholder="Ex: Diácono, Presbítero, Obreiro"
-                      className="h-11"
+                      className="h-11 rounded-xl"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Permissão do Sistema</Label>
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Permissão do Sistema</Label>
                     <Select onValueChange={(v) => setValue('role', v as any)} defaultValue="member">
-                      <SelectTrigger className="h-11">
+                      <SelectTrigger className="h-11 rounded-xl">
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
@@ -499,19 +501,19 @@ export default function MemberCreatePage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Data de Batismo</Label>
-                    <Input type="date" {...register('baptism_date')} className="h-11" />
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Data de Batismo</Label>
+                    <Input type="date" {...register('baptism_date')} className="h-11 rounded-xl" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Data de Comunhão</Label>
-                    <Input type="date" {...register('communion_date')} className="h-11" />
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Data de Comunhão</Label>
+                    <Input type="date" {...register('communion_date')} className="h-11 rounded-xl" />
                   </div>
                 </div>
 
                 <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">Ministérios e Grupos</Label>
-                    <span className="text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+                    <Label className="text-sm font-black tracking-tight">Ministérios e Grupos</Label>
+                    <span className="text-[10px] font-black uppercase text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
                       {selectedGroups?.length || 0} selecionados
                     </span>
                   </div>
@@ -522,7 +524,7 @@ export default function MemberCreatePage() {
                         type="button"
                         onClick={() => toggleGroup(group.id)}
                         className={cn(
-                          'flex items-center gap-2 px-3 py-3 rounded-xl text-xs font-semibold transition-all border text-left',
+                          'flex items-center gap-2 px-3 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border text-left',
                           selectedGroups?.includes(group.id)
                             ? 'bg-amber-600 border-amber-600 text-white shadow-md shadow-amber-200 dark:shadow-none'
                             : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400',
@@ -550,17 +552,17 @@ export default function MemberCreatePage() {
           </TabsContent>
 
           <TabsContent value="health">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-2 bg-red-500 w-full" />
-              <CardHeader>
-                <CardTitle className="text-lg">Saúde e Emergência</CardTitle>
-                <CardDescription>Informações cruciais para segurança do membro.</CardDescription>
+              <CardHeader className="py-4">
+                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Saúde e Emergência</CardTitle>
+                <CardDescription className="text-[10px]">Informações cruciais para segurança do membro.</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Tipo Sanguíneo</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Tipo Sanguíneo</Label>
                   <Select onValueChange={(v) => setValue('blood_type', v)} defaultValue="O+">
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11 rounded-xl">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
@@ -573,45 +575,51 @@ export default function MemberCreatePage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Nome do Contato de Emergência</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome do Contato de Emergência</Label>
                   <Input
                     {...register('emergency_contact_name')}
                     placeholder="Ex: Maria (Esposa)"
-                    className="h-11"
+                    className="h-11 rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Telefone de Emergência</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Telefone de Emergência</Label>
                   <Input
                     {...register('emergency_contact_phone')}
                     onChange={(e) => setValue('emergency_contact_phone', maskPhone(e.target.value))}
                     placeholder="(00) 00000-0000"
-                    className="h-11"
+                    className="h-11 rounded-xl"
                   />
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Mobile Action Buttons (Stacked) */}
+          <div className="flex flex-col gap-3 pt-4 md:hidden">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-14 w-full bg-amber-600 hover:bg-amber-700 rounded-2xl shadow-xl shadow-amber-500/20 text-base font-black tracking-tight"
+            >
+              {loading ? (
+                <HebromSpinner size="sm" className="mr-2 brightness-200" />
+              ) : (
+                <Save className="mr-2 h-5 w-5" />
+              )}
+              Cadastrar Membro
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              className="h-12 w-full rounded-2xl text-slate-500 font-bold border-slate-200 dark:border-slate-800"
+            >
+              Cancelar e Sair
+            </Button>
+          </div>
         </form>
       </Tabs>
-
-      <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
-        <Button variant="outline" onClick={() => router.back()} className="h-11 px-8 rounded-xl">
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleSubmit(onSubmit)}
-          disabled={loading}
-          className="h-11 px-8 bg-amber-600 hover:bg-amber-700 rounded-xl shadow-lg shadow-amber-500/25"
-        >
-          {loading ? (
-            <HebromSpinner size="sm" className="mr-2 brightness-200" />
-          ) : (
-            <Save className="mr-2 h-4 w-4" />
-          )}
-          Cadastrar Membro
-        </Button>
-      </div>
     </div>
   )
 }

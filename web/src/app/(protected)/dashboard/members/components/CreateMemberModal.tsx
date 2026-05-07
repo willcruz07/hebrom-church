@@ -123,20 +123,20 @@ export function CreateMemberModal({ isOpen, onClose, onSuccess }: CreateMemberMo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px] rounded-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5 text-amber-600" />
+          <DialogTitle className="flex items-center gap-2 text-lg md:text-xl font-black text-slate-900 dark:text-white">
+            <UserPlus className="h-5 w-5 md:h-6 md:w-6 text-amber-600" />
             Novo Membro
           </DialogTitle>
-          <DialogDescription>
-            Preencha os dados abaixo para cadastrar um novo membro no sistema.
+          <DialogDescription className="text-slate-500 dark:text-slate-400">
+            Preencha os dados abaixo para cadastrar um novo membro no sistema de forma organizada.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="full_name">Nome Completo</Label>
-            <Input id="full_name" {...register('full_name')} placeholder="Ex: João Silva" />
-            {errors.full_name && <p className="text-xs text-red-500">{errors.full_name.message}</p>}
+          <div className="space-y-1">
+            <Label htmlFor="full_name" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome Completo</Label>
+            <Input id="full_name" {...register('full_name')} placeholder="Ex: João Silva" className="h-11 rounded-xl" />
+            {errors.full_name && <p className="text-xs font-medium text-red-500">{errors.full_name.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -223,13 +223,13 @@ export function CreateMemberModal({ isOpen, onClose, onSuccess }: CreateMemberMo
             </div>
           </div>
 
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading} className="bg-amber-600 hover:bg-amber-700">
-              {loading ? <HebromSpinner size="sm" className="mr-2 brightness-200" /> : null}
+          <DialogFooter className="pt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 h-11 rounded-xl font-black shadow-lg shadow-amber-200 dark:shadow-none order-first sm:order-last">
+              {loading ? <HebromSpinner size="sm" className="mr-2 brightness-200" /> : <Check className="mr-2 h-4 w-4" />}
               Cadastrar Membro
+            </Button>
+            <Button type="button" variant="ghost" onClick={onClose} className="w-full sm:w-auto h-11 rounded-xl font-bold text-slate-500">
+              Cancelar
             </Button>
           </DialogFooter>
         </form>

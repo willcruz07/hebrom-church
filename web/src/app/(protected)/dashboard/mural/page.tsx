@@ -84,7 +84,7 @@ export default function MuralPage() {
     <div className="mx-auto max-w-3xl space-y-8">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Feed da Igreja
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
@@ -237,7 +237,7 @@ export default function MuralPage() {
               )}
 
               <div className="mt-4 space-y-2">
-                <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                <h4 className="text-sm md:text-lg font-bold text-slate-800 dark:text-slate-100">
                   {post.title}
                 </h4>
                 <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">

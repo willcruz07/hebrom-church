@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/store/useAuth'
+import { prayerService } from '@/services/firebase/prayer'
 import {
   Heart,
   Plus,
@@ -18,6 +19,7 @@ import {
   CalendarIcon,
   Archive,
   ArchiveRestore,
+  Loader2,
 } from 'lucide-react'
 import {
   Dialog,
@@ -44,41 +46,11 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { PrayerRequest } from '@/types'
 
-// Mock data atualizado com a nova interface
-const mockPrayers: PrayerRequest[] = [
-  {
-    id: '1',
-    author_uid: 'user1',
-    author_name: 'João Silva',
-    request_text: 'Pela saúde da minha família e por emprego.',
-    is_confidential: false,
-    status: 'praying',
-    is_archived: false,
-    created_at: Date.now() - 1000 * 60 * 60 * 2, // 2h atrás
-    updated_at: Date.now() - 1000 * 60 * 60 * 1,
-    viewed_by_pastor: {
-      uid: 'pastor1',
-      name: 'Pastor André',
-    },
-    pastor_response: 'Estamos em oração por você, João! Deus proverá.',
-  },
-  {
-    id: '2',
-    author_uid: 'user2',
-    author_name: 'Maria Oliveira',
-    request_text: 'Pedido confidencial de intercessão por um problema familiar.',
-    is_confidential: true,
-    status: 'pending',
-    is_archived: false,
-    created_at: Date.now() - 1000 * 60 * 60 * 24, // 1 dia atrás
-    updated_at: Date.now() - 1000 * 60 * 60 * 24,
-  },
-]
-
 export default function PrayerPage() {
   const { permissions, isPastor, isSecretary } = usePermissions()
   const { currentUser } = useAuth()
-  const [prayers, setPrayers] = useState<PrayerRequest[]>(mockPrayers)
+  const [prayers, setPrayers] = useState<PrayerRequest[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isNewRequestOpen, setIsNewRequestOpen] = useState(false)
   const [isViewRequestOpen, setIsViewRequestOpen] = useState(false)
   const [selectedPrayer, setSelectedPrayer] = useState<PrayerRequest | null>(null)
@@ -88,6 +60,15 @@ export default function PrayerPage() {
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined)
   const [viewTab, setViewTab] = useState<'active' | 'archived'>('active')
   const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    const unsubscribe = prayerService.subscribeToPrayers((data) => {
+      setPrayers(data)
+      setIsLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   const filteredPrayers = prayers.filter((p) => {
     // Filtro de Arquivados vs Ativos
@@ -115,68 +96,78 @@ export default function PrayerPage() {
     return matchesSearch && matchesDate
   })
 
-  const handleCreateRequest = () => {
+  const handleCreateRequest = async () => {
     if (!newRequestText.trim()) return
 
-    const newRequest: PrayerRequest = {
-      id: Math.random().toString(36).substr(2, 9),
-      author_uid: currentUser?.uid || 'guest',
-      author_name: currentUser?.profile.full_name || 'Visitante',
-      request_text: newRequestText,
-      is_confidential: isConfidential,
-      status: 'pending',
-      is_archived: false,
-      created_at: Date.now(),
-      updated_at: Date.now(),
-    }
+    try {
+      await prayerService.createRequest({
+        author_uid: currentUser?.uid || 'guest',
+        author_name: currentUser?.profile.full_name || 'Visitante',
+        request_text: newRequestText,
+        is_confidential: isConfidential,
+        status: 'pending',
+        is_archived: false,
+      })
 
-    setPrayers([newRequest, ...prayers])
-    setNewRequestText('')
-    setIsConfidential(false)
-    setIsNewRequestOpen(false)
+      setNewRequestText('')
+      setIsConfidential(false)
+      setIsNewRequestOpen(false)
+    } catch (error) {
+      console.error('Failed to create request:', error)
+    }
   }
 
-  const handleOpenRequest = (prayer: PrayerRequest) => {
+  const handleOpenRequest = async (prayer: PrayerRequest) => {
     setSelectedPrayer(prayer)
     setIsViewRequestOpen(true)
     setPastorResponse(prayer.pastor_response || '')
 
     // Se for pastor e o pedido estiver pendente, marca como visualizado
     if (isPastor && prayer.status === 'pending') {
-      const updatedPrayers = prayers.map((p) =>
-        p.id === prayer.id
-          ? {
-              ...p,
-              status: 'viewed' as const,
-              viewed_by_pastor: {
-                uid: currentUser?.uid || '',
-                name: currentUser?.profile.full_name || 'Pastor',
-              },
-            }
-          : p,
-      )
-      setPrayers(updatedPrayers)
+      try {
+        await prayerService.updateRequest(prayer.id, {
+          status: 'viewed',
+          viewed_by_pastor: {
+            uid: currentUser?.uid || '',
+            name: currentUser?.profile.full_name || 'Pastor',
+          },
+        })
+      } catch (error) {
+        console.error('Failed to mark as viewed:', error)
+      }
     }
   }
 
-  const handlePastorResponse = () => {
+  const handlePastorResponse = async () => {
     if (!selectedPrayer || !isPastor) return
 
-    const updatedPrayers = prayers.map((p) =>
-      p.id === selectedPrayer.id
-        ? { ...p, pastor_response: pastorResponse, status: 'praying' as const }
-        : p,
-    )
-    setPrayers(updatedPrayers)
-    setIsViewRequestOpen(false)
+    try {
+      await prayerService.updateRequest(selectedPrayer.id, {
+        pastor_response: pastorResponse,
+        status: 'praying',
+      })
+      setIsViewRequestOpen(false)
+    } catch (error) {
+      console.error('Failed to respond:', error)
+    }
   }
 
-  const handleDeleteRequest = (id: string) => {
-    setPrayers(prayers.filter((p) => p.id !== id))
+  const handleDeleteRequest = async (id: string) => {
+    try {
+      await prayerService.deleteRequest(id)
+    } catch (error) {
+      console.error('Failed to delete request:', error)
+    }
   }
 
-  const handleToggleArchive = (id: string) => {
-    setPrayers(prayers.map((p) => (p.id === id ? { ...p, is_archived: !p.is_archived } : p)))
+  const handleToggleArchive = async (id: string, currentStatus: boolean) => {
+    try {
+      await prayerService.updateRequest(id, {
+        is_archived: !currentStatus,
+      })
+    } catch (error) {
+      console.error('Failed to toggle archive:', error)
+    }
   }
 
   const getStatusBadge = (status: PrayerRequest['status'], viewedBy?: any) => {
@@ -224,14 +215,22 @@ export default function PrayerPage() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-rose-500" />
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-lg md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Pedidos de Oração
           </h1>
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="text-sm md:text-base text-slate-500 dark:text-slate-400">
             Compartilhe suas necessidades e interceda pelos irmãos.
           </p>
         </div>
@@ -245,7 +244,9 @@ export default function PrayerPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold">Novo Pedido de Oração</DialogTitle>
+              <DialogTitle className="text-sm md:text-xl font-bold">
+                Novo Pedido de Oração
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -391,7 +392,7 @@ export default function PrayerPage() {
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleToggleArchive(prayer.id)
+                          handleToggleArchive(prayer.id, prayer.is_archived)
                         }}
                       >
                         {prayer.is_archived ? (
@@ -422,12 +423,10 @@ export default function PrayerPage() {
             </div>
 
             <p className="mt-4 text-slate-600 dark:text-slate-300 line-clamp-2 italic">
-              "
               {prayer.is_confidential &&
               !(isPastor || isSecretary || prayer.author_uid === currentUser?.uid)
                 ? 'Este pedido é confidencial e visível apenas para a liderança.'
                 : prayer.request_text}
-              "
             </p>
 
             {prayer.pastor_response && (
@@ -451,7 +450,7 @@ export default function PrayerPage() {
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
               <Heart className="h-10 w-10 text-slate-300" />
             </div>
-            <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
+            <h3 className="mt-4 text-sm md:text-lg font-bold text-slate-900 dark:text-white">
               Nenhum pedido encontrado
             </h3>
             <p className="text-slate-500">Seja o primeiro a pedir oração hoje!</p>
@@ -469,7 +468,7 @@ export default function PrayerPage() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500 text-white">
                     <Heart className="h-5 w-5" />
                   </div>
-                  <DialogTitle className="text-xl font-bold">
+                  <DialogTitle className="text-sm md:text-xl font-bold">
                     Pedido de {selectedPrayer.author_name}
                   </DialogTitle>
                 </div>
@@ -481,7 +480,7 @@ export default function PrayerPage() {
                     O Pedido:
                   </p>
                   <p className="text-slate-700 dark:text-slate-200 italic leading-relaxed">
-                    "{selectedPrayer.request_text}"
+                    {selectedPrayer.request_text}
                   </p>
                   <p className="mt-4 text-[10px] text-slate-400">
                     Enviado em {new Date(selectedPrayer.created_at).toLocaleString('pt-BR')}

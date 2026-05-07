@@ -205,7 +205,7 @@ export default function LoginPage() {
       {isRegisterOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-8 shadow-2xl">
-            <h2 className="mb-6 text-2xl font-bold text-slate-100 tracking-tight">
+            <h2 className="mb-6 text-base md:text-2xl font-bold text-slate-100 tracking-tight">
               Criar nova conta
             </h2>
             <form onSubmit={handleRegisterSubmit(onRegister)} className="space-y-4">

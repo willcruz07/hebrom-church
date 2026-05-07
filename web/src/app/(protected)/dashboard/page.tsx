@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import { getDailyWord } from '@/services/firebase/daily-word'
 import { DailyWord } from '@/types'
-import dayjs from 'dayjs'
+import dayjs from '@/lib/dayjs'
 import { useState } from 'react'
 import {
   Bar,
@@ -35,6 +35,12 @@ import {
   Pie,
   PieChart,
 } from 'recharts'
+import { onSnapshot, collection, query, orderBy, where, Timestamp } from 'firebase/firestore'
+import { db } from '@/services/firebase/config'
+import { prayerService } from '@/services/firebase/prayer'
+import { agendaService } from '@/services/firebase/agenda'
+import { getPosts } from '@/services/firebase/mural'
+import { AppUser, PrayerRequest, ChurchEvent, FeedPost } from '@/types'
 
 interface StatCardProps {
   title: string
@@ -63,7 +69,7 @@ const StatCard = ({
     <div className="relative z-10 flex items-start justify-between">
       <div>
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{title}</p>
-        <h3 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        <h3 className="mt-2 text-lg sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           <AnimatedNumber value={value} />
         </h3>
         {subValue !== undefined && (
@@ -138,8 +144,38 @@ export default function DashboardPage() {
   const { permissions } = usePermissions()
   const router = useRouter()
   const [dailyWord, setDailyWord] = useState<DailyWord | null>(null)
+  
+  // Dashboard states
+  const [members, setMembers] = useState<AppUser[]>([])
+  const [prayers, setPrayers] = useState<PrayerRequest[]>([])
+  const [events, setEvents] = useState<ChurchEvent[]>([])
+  const [posts, setPosts] = useState<FeedPost[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // 1. Listen to Users
+    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const usersData = snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as AppUser))
+      setMembers(usersData)
+    })
+
+    // 2. Listen to Prayer Requests
+    const unsubPrayers = prayerService.subscribeToPrayers((data) => {
+      setPrayers(data)
+    })
+
+    // 3. Listen to Events
+    const unsubEvents = agendaService.subscribeToEvents((data) => {
+      setEvents(data)
+    })
+
+    // 4. Listen to Posts (Mural)
+    const qPosts = query(collection(db, 'posts'), orderBy('created_at', 'desc'))
+    const unsubPosts = onSnapshot(qPosts, (snapshot) => {
+      const postsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as FeedPost))
+      setPosts(postsData)
+    })
+
     const fetchDailyWord = async () => {
       const today = dayjs().format('YYYY-MM-DD')
       const word = await getDailyWord(today)
@@ -151,20 +187,140 @@ export default function DashboardPage() {
     if (!permissions.canViewDashboardOverview) {
       router.replace(ROUTES.AUTHENTICATED.MURAL)
     }
+
+    return () => {
+      unsubUsers()
+      unsubPrayers()
+      unsubEvents()
+      unsubPosts()
+    }
   }, [permissions.canViewDashboardOverview, router])
+
+  const userName = currentUser?.profile.full_name || 'Usuário'
+  const firstName = userName.split(' ')[0]
+
+  // Stats Calculations
+  const stats = useMemo(() => {
+    const now = dayjs()
+    const lastMonth = now.subtract(1, 'month')
+
+    // Members Stats
+    const totalMembers = members.length
+    const activeMembers = members.filter(m => m.is_active).length
+    const newMembersThisMonth = members.filter(m => {
+      const createdAt = m.created_at instanceof Timestamp ? m.created_at.toDate() : m.created_at
+      return dayjs(createdAt).isAfter(now.startOf('month'))
+    }).length
+    const newMembersLastMonth = members.filter(m => {
+      const createdAt = m.created_at instanceof Timestamp ? m.created_at.toDate() : m.created_at
+      return dayjs(createdAt).isBetween(lastMonth.startOf('month'), lastMonth.endOf('month'))
+    }).length
+    const memberTrend = lastMonth.isBefore(now) ? (newMembersLastMonth === 0 ? (newMembersThisMonth > 0 ? 100 : 0) : Math.round(((newMembersThisMonth - newMembersLastMonth) / newMembersLastMonth) * 100)) : 0
+
+    // Prayer Stats
+    const totalPrayers = prayers.filter(p => !p.is_archived).length
+    const pendingPrayers = prayers.filter(p => p.status === 'pending' && !p.is_archived).length
+    const prayersThisMonth = prayers.filter(p => dayjs(p.created_at).isAfter(now.startOf('month'))).length
+    const prayersLastMonth = prayers.filter(p => dayjs(p.created_at).isBetween(lastMonth.startOf('month'), lastMonth.endOf('month'))).length
+    const prayerTrend = prayersLastMonth === 0 ? (prayersThisMonth > 0 ? 100 : 0) : Math.round(((prayersThisMonth - prayersLastMonth) / prayersLastMonth) * 100)
+
+    // Events Stats
+    const eventsThisMonth = events.filter(e => dayjs(e.date).isBetween(now.startOf('month'), now.endOf('month'))).length
+    const upcomingEvents = events.filter(e => dayjs(e.date).isAfter(now.startOf('day'))).length
+
+    // Mural Stats
+    const postsThisMonth = posts.filter(p => {
+      const createdAt = p.created_at instanceof Timestamp ? p.created_at.toMillis() : p.created_at
+      return dayjs(createdAt).isAfter(now.startOf('month'))
+    }).length
+    const postsLastMonth = posts.filter(p => {
+      const createdAt = p.created_at instanceof Timestamp ? p.created_at.toMillis() : p.created_at
+      return dayjs(createdAt).isBetween(lastMonth.startOf('month'), lastMonth.endOf('month'))
+    }).length
+    const muralTrend = postsLastMonth === 0 ? (postsThisMonth > 0 ? 100 : 0) : Math.round(((postsThisMonth - postsLastMonth) / postsLastMonth) * 100)
+
+    // Chart Data: Growth
+    const months = Array.from({ length: 6 }).map((_, i) => now.subtract(5 - i, 'month'))
+    const monthlyData = months.map(m => {
+      const membersInMonth = members.filter(user => {
+        const createdAt = user.created_at instanceof Timestamp ? user.created_at.toDate() : user.created_at
+        return dayjs(createdAt).isBefore(m.endOf('month'))
+      }).length
+      const prayersInMonth = prayers.filter(p => dayjs(p.created_at).isBetween(m.startOf('month'), m.endOf('month'))).length
+      
+      return {
+        month: m.format('MMM'),
+        membros: membersInMonth,
+        pedidos: prayersInMonth
+      }
+    })
+
+    // Chart Data: Categories
+    const menCount = members.filter(m => m.profile.gender === 'M').length
+    const womenCount = members.filter(m => m.profile.gender === 'F').length
+    const youthCount = members.filter(m => {
+      if (!m.profile.birth_date) return false
+      const age = now.diff(dayjs(m.profile.birth_date), 'year')
+      return age >= 12 && age <= 25
+    }).length
+    
+    const categoryData = [
+      { name: 'Homens', value: menCount },
+      { name: 'Mulheres', value: womenCount },
+      { name: 'Jovens', value: youthCount },
+    ].filter(c => c.value > 0)
+
+    // Birthdays
+    const birthdays = members.filter(m => {
+      if (!m.profile.birth_date) return false
+      const birth = dayjs(m.profile.birth_date)
+      return birth.month() === now.month()
+    }).sort((a, b) => {
+      const dayA = dayjs(a.profile.birth_date).date()
+      const dayB = dayjs(b.profile.birth_date).date()
+      return dayA - dayB
+    }).slice(0, 5).map(m => {
+      const birth = dayjs(m.profile.birth_date)
+      const isToday = birth.date() === now.date() && birth.month() === now.month()
+      const isTomorrow = birth.date() === now.add(1, 'day').date() && birth.month() === now.month()
+      
+      let dateLabel = birth.format('DD [de] MMM')
+      if (isToday) dateLabel = 'Hoje'
+      if (isTomorrow) dateLabel = 'Amanhã'
+
+      return {
+        name: m.profile.full_name,
+        date: dateLabel,
+        active: isToday
+      }
+    })
+
+    return {
+      totalMembers,
+      activeMembers,
+      memberTrend,
+      totalPrayers,
+      pendingPrayers,
+      prayerTrend,
+      eventsThisMonth,
+      upcomingEvents,
+      postsThisMonth,
+      muralTrend,
+      monthlyData,
+      categoryData,
+      birthdays
+    }
+  }, [members, prayers, events, posts])
 
   if (!permissions.canViewDashboardOverview) {
     return null
   }
 
-  const userName = currentUser?.profile.full_name || 'Usuário'
-  const firstName = userName.split(' ')[0]
-
   return (
     <div className="space-y-8 pb-10">
       <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-lg md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             Olá, {firstName}! 👋
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
@@ -186,39 +342,39 @@ export default function DashboardPage() {
         {permissions.canViewMetrics && (
           <StatCard
             title="Total de Membros"
-            value={1248}
+            value={stats.totalMembers}
             icon={Users}
-            trend={12}
+            trend={stats.memberTrend}
             colorClass="text-amber-500"
             subLabel="Ativos"
-            subValue={1150}
+            subValue={stats.activeMembers}
           />
         )}
         <StatCard
           title="Pedidos de Oração"
-          value={42}
+          value={stats.totalPrayers}
           icon={Heart}
-          trend={-5}
+          trend={stats.prayerTrend}
           colorClass="text-rose-500"
           subLabel="Pendentes"
-          subValue={8}
+          subValue={stats.pendingPrayers}
         />
         <StatCard
           title="Eventos este Mês"
-          value={12}
+          value={stats.eventsThisMonth}
           icon={Calendar}
           colorClass="text-amber-500"
-          subLabel="Próximo"
-          subValue={2}
+          subLabel="Próximos"
+          subValue={stats.upcomingEvents}
         />
         <StatCard
-          title="Novas Mensagens"
-          value={8}
+          title="Novos Avisos"
+          value={stats.postsThisMonth}
           icon={MessageSquare}
-          trend={25}
+          trend={stats.muralTrend}
           colorClass="text-emerald-500"
-          subLabel="No Mural"
-          subValue={3}
+          subLabel="Total este mês"
+          subValue={stats.postsThisMonth}
         />
       </div>
 
@@ -240,8 +396,8 @@ export default function DashboardPage() {
                   Palavra do Dia
                 </span>
               </div>
-              <blockquote className="text-xl md:text-2xl font-medium leading-relaxed italic">
-                "{dailyWord.content}"
+              <blockquote className="text-sm md:text-2xl font-medium leading-relaxed italic">
+                {dailyWord.content}
               </blockquote>
               <div className="flex items-center gap-3">
                 {dailyWord.reference && (
@@ -266,7 +422,7 @@ export default function DashboardPage() {
           <div className="rounded-2xl border border-slate-200 bg-white/50 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base md:text-lg font-bold text-slate-900 dark:text-white">
                   Crescimento de Membros
                 </h3>
                 <p className="text-sm text-slate-500">Evolução nos últimos 6 meses</p>
@@ -275,7 +431,7 @@ export default function DashboardPage() {
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={mockMonthlyData}
+                  data={stats.monthlyData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
                   <CartesianGrid
@@ -312,7 +468,7 @@ export default function DashboardPage() {
           <div className="rounded-2xl border border-slate-200 bg-white/50 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base md:text-lg font-bold text-slate-900 dark:text-white">
                   Distribuição por Perfil
                 </h3>
                 <p className="text-sm text-slate-500">Composição da congregação</p>
@@ -322,7 +478,7 @@ export default function DashboardPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={mockCategoryData}
+                    data={stats.categoryData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -330,7 +486,7 @@ export default function DashboardPage() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {mockCategoryData.map((entry, index) => (
+                    {stats.categoryData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -340,14 +496,14 @@ export default function DashboardPage() {
                     y="50%"
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className="fill-slate-900 dark:fill-white font-bold text-xl"
+                    className="fill-slate-900 dark:fill-white font-bold text-lg md:text-xl"
                   >
                     100%
                   </text>
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex flex-col gap-4 pr-4">
-                {mockCategoryData.map((item, index) => (
+                {stats.categoryData.map((item, index) => (
                   <div key={item.name} className="flex items-center gap-2">
                     <div
                       className="h-3 w-3 rounded-full"
@@ -356,7 +512,7 @@ export default function DashboardPage() {
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       {item.name}
                     </span>
-                    <span className="text-sm text-slate-500">{item.value}%</span>
+                    <span className="text-sm text-slate-500">{item.value}</span>
                   </div>
                 ))}
               </div>
@@ -368,7 +524,9 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white/50 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
           <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Ações Rápidas</h3>
+            <h3 className="text-base md:text-lg font-bold text-slate-900 dark:text-white">
+              Ações Rápidas
+            </h3>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {permissions.canManageUsers && (
@@ -413,26 +571,28 @@ export default function DashboardPage() {
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white/50 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
-          <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white">Aniversariantes</h3>
+          <h3 className="mb-4 text-base md:text-lg font-bold text-slate-900 dark:text-white">
+            Aniversariantes
+          </h3>
           <div className="space-y-4">
-            {[
-              { name: 'Maria Silva', date: 'Hoje', active: true },
-              { name: 'João Santos', date: 'Amanhã', active: false },
-              { name: 'Ana Oliveira', date: '29 de Jun', active: false },
-            ].map((person, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
-                  <UserCheck className="h-5 w-5" />
+            {stats.birthdays.length > 0 ? (
+              stats.birthdays.map((person, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
+                    <UserCheck className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      {person.name}
+                    </p>
+                    <p className="text-xs text-slate-500">{person.date}</p>
+                  </div>
+                  {person.active && <Badge className="bg-amber-500">Festa!</Badge>}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
-                    {person.name}
-                  </p>
-                  <p className="text-xs text-slate-500">{person.date}</p>
-                </div>
-                {person.active && <Badge className="bg-amber-500">Festa!</Badge>}
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-center py-4 text-sm text-slate-500">Nenhum aniversariante este mês.</p>
+            )}
           </div>
         </div>
       </div>

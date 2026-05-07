@@ -150,16 +150,18 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px] rounded-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Edit className="h-5 w-5 text-amber-600" />
+          <DialogTitle className="flex items-center gap-2 text-lg md:text-xl font-black text-slate-900 dark:text-white">
+            <Edit className="h-4 w-4 md:h-5 md:w-5 text-amber-600" />
             Editar Membro
           </DialogTitle>
-          <DialogDescription>Alterar informações de {member.profile.full_name}</DialogDescription>
+          <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+            Alterar informações de {member.profile.full_name}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="edit_full_name">Nome Completo</Label>
+          <div className="space-y-1">
+            <Label htmlFor="edit_full_name" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nome Completo</Label>
             <Input id="edit_full_name" {...register('full_name')} />
             {errors.full_name && <p className="text-xs text-red-500">{errors.full_name.message}</p>}
           </div>
@@ -277,13 +279,26 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
             </p>
           </div>
 
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading} className="bg-amber-600 hover:bg-amber-700">
-              {loading ? <HebromSpinner size="sm" className="mr-2 brightness-200" /> : null}
+          <DialogFooter className="pt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 h-11 rounded-xl font-black shadow-lg shadow-amber-200 dark:shadow-none order-first sm:order-last"
+            >
+              {loading ? (
+                <HebromSpinner size="sm" className="mr-2 brightness-200" />
+              ) : (
+                <Check className="mr-2 h-4 w-4" />
+              )}
               Salvar Alterações
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              className="w-full sm:w-auto h-11 rounded-xl text-slate-500 font-bold"
+            >
+              Cancelar
             </Button>
           </DialogFooter>
         </form>

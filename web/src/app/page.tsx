@@ -44,7 +44,7 @@ export default function LandingPage() {
                 >
                   <min.icon size={24} />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">{min.title}</h3>
+                <h3 className="text-lg md:text-xl font-bold text-white mb-2">{min.title}</h3>
                 <p className="text-sm text-slate-400">
                   Atividades dinâmicas e focadas no crescimento espiritual de cada grupo.
                 </p>
@@ -67,7 +67,7 @@ export default function LandingPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-slate-950/60 via-transparent to-transparent flex items-center p-12">
               <div className="max-w-md">
-                <h3 className="text-3xl font-bold text-white mb-4">Vibrante & Ativa</h3>
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">Vibrante & Ativa</h3>
                 <p className="text-slate-300 leading-relaxed mb-6">
                   De crianças a idosos, todos encontram seu lugar em nossa comunidade. Participamos
                   juntos de momentos que transformam vidas.
@@ -111,7 +111,7 @@ export default function LandingPage() {
                     />
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-1 group-hover:text-amber-500 transition-colors">
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-1 group-hover:text-amber-500 transition-colors">
                   {pastor.name}
                 </h3>
                 <p className="text-amber-500 font-medium uppercase tracking-wider text-xs">
@@ -136,7 +136,7 @@ export default function LandingPage() {
                   <MapPin size={28} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-white mb-2">Endereço</h4>
+                  <h4 className="text-lg md:text-xl font-bold text-white mb-2">Endereço</h4>
                   <p className="text-slate-400 leading-relaxed">
                     Rua Fileuterpe - N•830
                     <br />
@@ -158,7 +158,7 @@ export default function LandingPage() {
                   <Phone size={28} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-white mb-2">Contato</h4>
+                  <h4 className="text-lg md:text-xl font-bold text-white mb-2">Contato</h4>
                   <p className="text-slate-400">contato@hebromchurch.com.br</p>
                   <p className="text-slate-400">(21) 96940-9753</p>
                 </div>

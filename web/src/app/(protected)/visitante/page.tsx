@@ -59,16 +59,16 @@ export default function VisitantePage() {
 
   return (
     <div className="mx-auto max-w-2xl py-12">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-slate-100">Bem-vindo, Visitante!</h1>
-        <p className="mt-2 text-slate-400">
+      <div className="mb-8 text-center px-4">
+        <h1 className="text-lg md:text-3xl font-bold text-slate-100">Bem-vindo, Visitante!</h1>
+        <p className="mt-2 text-sm md:text-base text-slate-400">
           Para acessar todos os recursos do Hebrom Sys, como pedidos de oração e comunicados,
           solicite seu acesso como membro.
         </p>
       </div>
 
       <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6 shadow-xl">
-        <h2 className="mb-6 text-xl font-semibold text-slate-200">Solicitação de Acesso</h2>
+        <h2 className="mb-6 text-base md:text-xl font-semibold text-slate-200">Solicitação de Acesso</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>

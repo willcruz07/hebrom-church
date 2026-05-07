@@ -20,7 +20,7 @@ export default function PendentePage() {
           <Clock className="h-12 w-12 text-amber-500" />
         </div>
 
-        <h1 className="mb-4 text-3xl font-bold text-slate-100">Aprovação Pendente</h1>
+        <h1 className="mb-4 text-lg md:text-3xl font-bold text-slate-100">Aprovação Pendente</h1>
 
         <p className="mb-8 text-slate-400">
           Sua solicitação foi enviada para a secretaria da igreja. Assim que seu cadastro for

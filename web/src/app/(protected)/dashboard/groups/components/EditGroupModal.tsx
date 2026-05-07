@@ -70,11 +70,11 @@ export function EditGroupModal({ isOpen, onClose, onSuccess, group }: EditGroupM
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-base md:text-xl font-black uppercase tracking-tight">
             <Edit className="h-5 w-5 text-amber-600" />
             Editar Grupo / Ministério
           </DialogTitle>
-          <DialogDescription>Altere os dados do grupo {group.name}.</DialogDescription>
+          <DialogDescription className="text-[10px] md:text-sm font-medium">Altere os dados do grupo {group.name}.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -98,11 +98,11 @@ export function EditGroupModal({ isOpen, onClose, onSuccess, group }: EditGroupM
             />
           </div>
 
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={onClose}>
+          <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4">
+            <Button type="button" variant="ghost" onClick={onClose} className="w-full sm:w-auto rounded-xl font-bold">
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading} className="bg-amber-600 hover:bg-amber-700">
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto rounded-xl bg-amber-600 py-6 sm:py-2 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95">
               {loading ? <HebromSpinner size="sm" className="mr-2 brightness-200" /> : null}
               Salvar Alterações
             </Button>

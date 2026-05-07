@@ -4,8 +4,9 @@ import { usePathname } from 'next/navigation'
 import { useNavigation } from '@/hooks/useNavigation'
 import { usePermissions } from '@/hooks/usePermissions'
 import { ROUTES } from '@/paths'
+import { useNewUsersStore } from '@/store/useNewUsersStore'
 import clsx from 'clsx'
-import { MessageSquare, Heart, Calendar, Settings, Home } from 'lucide-react'
+import { MessageSquare, Heart, Calendar, Settings, Home, Users } from 'lucide-react'
 
 interface NavItem {
   name: string
@@ -29,6 +30,13 @@ const navigationItems: NavItem[] = [
     icon: Heart,
     isActive: (pathname) => pathname.startsWith(ROUTES.AUTHENTICATED.PRAYER),
     permission: 'canRequestPrayer',
+  },
+  {
+    name: 'Membros',
+    href: ROUTES.AUTHENTICATED.MEMBERS,
+    icon: Users,
+    isActive: (pathname) => pathname.startsWith(ROUTES.AUTHENTICATED.MEMBERS),
+    permission: 'canManageUsers',
   },
   {
     name: 'Início',
@@ -67,6 +75,9 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
   const pathname = usePathname()
   const { navigateTo } = useNavigation()
   const { permissions, isVisitor } = usePermissions()
+  const { pendingCount, visitorsCount } = useNewUsersStore()
+
+  const hasNotifications = pendingCount > 0 || visitorsCount > 0
 
   const handleNavigation = (href: string) => {
     navigateTo(href)
@@ -75,6 +86,11 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
   const filteredNavigation = navigationItems.filter((item) => {
     // Hide specific items for visitors: Home and Prayer
     if (isVisitor && (item.name === 'Início' || item.name === 'Oração')) {
+      return false
+    }
+
+    // Ocultar Oração para administradores para manter o limite de 5 itens no bottom nav
+    if (item.name === 'Oração' && (permissions as any).canManageUsers) {
       return false
     }
 
@@ -122,8 +138,6 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
                     'bg-amber-500/10 scale-110': isActive && !mainButton,
                     'group-hover:bg-slate-100 dark:group-hover:bg-slate-800':
                       !isActive && !mainButton,
-                    // '': mainButton,
-                    // '': mainButton && item.isActive && item.isActive(pathname),
                   })}
                 >
                   <Icon
@@ -133,6 +147,13 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
                       'scale-150': mainButton,
                     })}
                   />
+                  
+                  {/* Badge de Notificação para Membros */}
+                  {item.name === 'Membros' && hasNotifications && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-900">
+                      {pendingCount + visitorsCount}
+                    </span>
+                  )}
                 </div>
 
                 {!mainButton && (
@@ -160,3 +181,4 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
     </nav>
   )
 }
+

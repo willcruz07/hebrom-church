@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { toast } from 'sonner'
-import dayjs from 'dayjs'
+import dayjs from '@/lib/dayjs'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -186,11 +186,11 @@ export default function DailyWordPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <BookOpen className="h-8 w-8 text-amber-600" />
+          <h1 className="text-lg md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-amber-600" />
             Palavra do Dia
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 mt-1">
             Alimente sua fé diariamente com versículos e meditações.
           </p>
         </div>
@@ -298,11 +298,11 @@ export default function DailyWordPage() {
                   <Sparkles className="h-3 w-3" />
                   Palavra de Hoje
                 </div>
-                <CardTitle className="text-2xl md:text-4xl font-serif italic leading-relaxed text-slate-800 dark:text-white">
+                <CardTitle className="text-base md:text-4xl font-serif italic leading-relaxed text-slate-800 dark:text-white">
                   {todayWord.content}
                 </CardTitle>
                 {todayWord.reference && (
-                  <p className="mt-6 text-xl font-bold text-amber-600 dark:text-amber-400">
+                  <p className="mt-6 text-sm md:text-xl font-bold text-amber-600 dark:text-amber-400">
                     — {todayWord.reference}
                   </p>
                 )}
@@ -327,7 +327,7 @@ export default function DailyWordPage() {
                   <BookOpen className="h-8 w-8 text-slate-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">Nenhuma palavra lançada para hoje</h3>
+                  <h3 className="text-base md:text-lg font-semibold">Nenhuma palavra lançada para hoje</h3>
                   <p className="text-slate-500">Aguarde a atualização do pastor ou secretaria.</p>
                 </div>
               </CardContent>
@@ -357,7 +357,7 @@ export default function DailyWordPage() {
           {selectedTheme && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold flex items-center gap-2">
+                <h2 className="text-base md:text-xl font-bold flex items-center gap-2">
                   <Filter className="h-5 w-5 text-amber-600" />
                   Versículo sobre {THEMES.find((t) => t.id === selectedTheme)?.label}
                 </h2>
@@ -382,10 +382,10 @@ export default function DailyWordPage() {
                     <Quote className="h-24 w-24 rotate-180" />
                   </div>
                   <CardHeader className="pt-10 pb-6 px-8 text-center">
-                    <CardTitle className="text-xl md:text-3xl font-serif italic leading-relaxed">
+                    <CardTitle className="text-sm md:text-3xl font-serif italic leading-relaxed">
                       {selectedVerse.descricao}
                     </CardTitle>
-                    <p className="mt-6 text-xl font-bold text-amber-100">
+                    <p className="mt-6 text-sm md:text-xl font-bold text-amber-100">
                       — {selectedVerse.referencia}
                     </p>
                   </CardHeader>

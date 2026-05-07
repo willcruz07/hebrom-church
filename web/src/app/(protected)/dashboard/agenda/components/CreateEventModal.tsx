@@ -122,8 +122,8 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px] overflow-y-auto max-h-[90vh] rounded-3xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Novo Evento</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-base md:text-2xl font-black uppercase tracking-tight">Novo Evento</DialogTitle>
+          <DialogDescription className="text-[10px] md:text-sm font-medium">
             Preencha os dados abaixo para cadastrar um novo evento na agenda.
           </DialogDescription>
         </DialogHeader>
@@ -275,19 +275,19 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
             </div>
           </div>
 
-          <DialogFooter className="gap-3 sm:gap-0">
+          <DialogFooter className="flex flex-col sm:flex-row gap-3">
             <Button
               type="button"
               variant="ghost"
               onClick={handleClose}
-              className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="w-full sm:w-auto rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 font-bold"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting || isUploading}
-              className="rounded-xl bg-amber-600 px-8 font-bold text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
+              className="w-full sm:w-auto rounded-xl bg-amber-600 px-8 py-6 sm:py-2 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
             >
               {isSubmitting || isUploading ? (
                 <div className="flex items-center gap-2">

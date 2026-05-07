@@ -105,17 +105,17 @@ export default function GroupsPage() {
     <PermissionGuard permission="canManageUsers">
       <div className="space-y-6">
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <div className="space-y-1">
+            <h1 className="text-lg md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
               Grupos & Ministérios
             </h1>
-            <p className="text-slate-500 dark:text-slate-400">
+            <p className="text-[10px] md:text-sm font-medium text-slate-500 dark:text-slate-400">
               Gerencie os departamentos e grupos oficiais da igreja.
             </p>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 active:scale-95"
+            className="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 active:scale-95"
           >
             <Plus className="h-4 w-4" />
             Adicionar Novo Grupo
