@@ -1,5 +1,5 @@
 import { AppUser } from '@/types'
-import { auth as firebaseAuth, googleProvider, isFirebaseReady } from '@/services/firebase/config'
+import { auth as firebaseAuth, googleProvider, appleProvider, isFirebaseReady } from '@/services/firebase/config'
 import { createUser, getUserById, initializeUserDefaults } from '@/services/firebase/users'
 import {
   createUserWithEmailAndPassword,
@@ -24,6 +24,7 @@ interface UseAuthStore {
   signInWithEmail(email: string, password: string): Promise<void>
   signUpWithEmail(name: string, email: string, password: string): Promise<void>
   signInWithGoogle(): Promise<void>
+  signInWithApple(): Promise<void>
   signOut(): Promise<void>
 }
 
@@ -234,6 +235,56 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
 
       console.log(userData, 'USER DATA')
       console.log(user, 'USER')
+
+      if (userData) {
+        set({ currentUser: userData })
+      } else {
+        const newUser: AppUser = {
+          uid: user.uid,
+          email: user.email ?? '',
+          role: 'visitor',
+          sub_groups: [],
+          profile: {
+            full_name: user.displayName ?? '',
+            avatar_url: user.photoURL ?? '',
+            bio: '',
+            birth_date: '',
+            baptism_date: null,
+            phone: '',
+            is_profile_public: true,
+            address: '',
+            city: '',
+            state: '',
+            marital_status: 'single',
+            children_count: 0,
+          },
+          is_active: true,
+          created_at: Timestamp.now(),
+          updated_at: Timestamp.now(),
+        }
+        await createUser(newUser)
+        await initializeUserDefaults(user.uid)
+        set({ currentUser: newUser })
+      }
+
+      await setSessionCookie(await user.getIdToken())
+    } finally {
+      set((s) => ({ loading: { ...s.loading, signIn: false } }))
+    }
+  },
+
+  async signInWithApple() {
+    set((s) => ({ loading: { ...s.loading, signIn: true } }))
+
+    try {
+      if (!isFirebaseReady()) {
+        throw new Error('Firebase não configurado.')
+      }
+
+      const result = await signInWithPopup(firebaseAuth, appleProvider)
+      const user = result.user
+
+      const userData = await getUserById(user.uid)
 
       if (userData) {
         set({ currentUser: userData })
