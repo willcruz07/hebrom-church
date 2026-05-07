@@ -244,7 +244,7 @@ export function Sidebar({ className }: SidebarProps) {
               {item.name === 'Membros' && (pendingCount > 0 || visitorsCount > 0) && (
                 <div className="flex gap-1">
                   {pendingCount > 0 && (
-                    <div 
+                    <div
                       title={`${pendingCount} membros pendentes`}
                       className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-900 shadow-sm"
                     >
@@ -252,7 +252,7 @@ export function Sidebar({ className }: SidebarProps) {
                     </div>
                   )}
                   {visitorsCount > 0 && (
-                    <div 
+                    <div
                       title={`${visitorsCount} novos visitantes`}
                       className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-900 shadow-sm"
                     >

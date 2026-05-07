@@ -7,6 +7,7 @@ import { ROUTES } from '@/paths'
 import { useNewUsersStore } from '@/store/useNewUsersStore'
 import clsx from 'clsx'
 import { MessageSquare, Heart, Calendar, Settings, Home, Users } from 'lucide-react'
+import { useAuth } from '@/store/useAuth'
 
 interface NavItem {
   name: string
@@ -72,6 +73,7 @@ interface MobileBottomNavProps {
 }
 
 export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
+  const currentUser = useAuth((s) => s.currentUser)
   const pathname = usePathname()
   const { navigateTo } = useNavigation()
   const { permissions, isVisitor } = usePermissions()
@@ -112,9 +114,7 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
   const renderNavItem = (item: NavItem) => {
     const Icon = item.icon
     const isHome = item.name === 'Home'
-    const isActive = item.isActive
-      ? item.isActive(pathname) && !isHome
-      : pathname === item.href
+    const isActive = item.isActive ? item.isActive(pathname) && !isHome : pathname === item.href
 
     return (
       <button
@@ -124,10 +124,12 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
           'group relative flex flex-col items-center justify-center transition-all duration-200',
           {
             'text-amber-500': isActive,
-            'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white': !isActive,
-            'bg-slate-950 -mt-8 h-16 w-16 !rounded-full border-4 border-white shadow-xl z-50 dark:border-slate-950': isHome,
+            'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white':
+              !isActive,
+            'bg-slate-950 -mt-8 h-16 w-16 !rounded-full border-4 border-white shadow-xl z-50 dark:border-slate-950':
+              isHome,
             'w-16 space-y-1': !isHome,
-          }
+          },
         )}
       >
         <div
@@ -145,7 +147,7 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
               'text-slate-600 dark:text-slate-400': !isActive && !isHome,
             })}
           />
-          
+
           {item.name === 'Membros' && hasNotifications && (
             <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-900">
               {pendingCount + visitorsCount}
@@ -157,7 +159,7 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
           <span
             className={clsx(
               'w-full truncate px-1 text-center text-[10px] font-medium transition-all duration-200',
-              isActive ? 'font-semibold text-amber-500' : 'text-slate-500 dark:text-slate-400'
+              isActive ? 'font-semibold text-amber-500' : 'text-slate-500 dark:text-slate-400',
             )}
           >
             {item.name}
@@ -175,22 +177,28 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
     <nav
       className={clsx(
         'mobile-bottom-nav fixed bottom-0 left-0 right-0 z-40 rounded-t-[2.5rem] border-t border-slate-200 bg-white/95 pb-safe backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 lg:hidden',
-        className
+        className,
       )}
     >
       <div className="mx-auto max-w-md px-2">
         <div className="flex h-16 items-center justify-between">
-          <div className="flex flex-1 items-center justify-around">
-            {leftItems.map(renderNavItem)}
-          </div>
-          
-          <div className="flex w-20 justify-center">
-            {homeItem && renderNavItem(homeItem)}
-          </div>
+          {currentUser?.role && currentUser?.role !== 'visitor' ? (
+            <>
+              <div className="flex flex-1 items-center justify-around">
+                {leftItems.map(renderNavItem)}
+              </div>
 
-          <div className="flex flex-1 items-center justify-around">
-            {rightItems.map(renderNavItem)}
-          </div>
+              <div className="flex w-20 justify-center">{homeItem && renderNavItem(homeItem)}</div>
+
+              <div className="flex flex-1 items-center justify-around">
+                {rightItems.map(renderNavItem)}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-1 items-center justify-around">
+              {rightItems.map(renderNavItem)}
+            </div>
+          )}
         </div>
       </div>
 
@@ -198,4 +206,3 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
     </nav>
   )
 }
-
