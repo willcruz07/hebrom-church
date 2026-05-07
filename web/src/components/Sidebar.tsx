@@ -171,14 +171,14 @@ export function Sidebar({ className }: SidebarProps) {
             />
           </div>
 
-          {!menuIsFixed && (
+          {/* {!menuIsFixed && (
             <button
               onClick={() => setMenuIsOpen(false)}
               className="rounded-lg p-2 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <X className="h-5 w-5 text-slate-500" />
             </button>
-          )}
+          )} */}
         </div>
       </div>
 
@@ -267,6 +267,18 @@ export function Sidebar({ className }: SidebarProps) {
       </nav>
 
       <div className="border-t border-slate-200 p-4 dark:border-slate-800">
+        {(userRole === 'visitor' || userRole === 'pending_member') && (
+          <div className="mb-4 rounded-2xl bg-amber-50 p-4 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <p className="text-xs font-black text-amber-800 dark:text-amber-400 uppercase tracking-wider mb-1">
+              Acesso Limitado
+            </p>
+            <p className="text-[11px] font-medium text-amber-700/80 dark:text-amber-400/60 leading-relaxed">
+              {userRole === 'visitor'
+                ? 'Como visitante, você tem acesso ao mural e agenda. Procure a secretaria para se tornar um membro.'
+                : 'Seu cadastro está em análise. Em breve você terá acesso total às funcionalidades.'}
+            </p>
+          </div>
+        )}
         <button
           onClick={() => handleNavigation(ROUTES.AUTHENTICATED.PROFILE)}
           className="flex w-full cursor-pointer items-center space-x-3 rounded-xl px-4 py-3 text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"

@@ -102,10 +102,10 @@ export default function AgendaPage() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-lg md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Agenda
           </h1>
-          <p className="text-[10px] md:text-sm font-medium text-slate-500 dark:text-slate-400">
+          <p className="text-xs md:text-sm font-medium text-slate-500 dark:text-slate-400">
             Eventos, cultos e programações da nossa igreja.
           </p>
         </div>
@@ -120,31 +120,46 @@ export default function AgendaPage() {
         )}
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-12">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 md:gap-8">
         {/* Calendar Sidebar */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50 backdrop-blur-xl">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50 backdrop-blur-xl">
             <div className="mb-6 flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 dark:text-white capitalize">
-                {currentMonth.format('MMMM YYYY')}
-              </h3>
-              <div className="flex gap-2">
+              <div className="flex flex-col">
+                <h3 className="font-black text-slate-900 dark:text-white capitalize">
+                  {currentMonth.format('MMMM')}
+                </h3>
+                <span className="text-xs font-bold text-slate-400">
+                  {currentMonth.format('YYYY')}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <button
+                  onClick={() => {
+                    setCurrentMonth(dayjs())
+                    setSelectedDate(dayjs())
+                  }}
+                  className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                >
+                  Hoje
+                </button>
+                <div className="w-[1px] h-4 bg-slate-200 dark:bg-slate-700 mx-1" />
                 <button
                   onClick={prevMonth}
-                  className="rounded-lg p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="rounded-lg p-1.5 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-all active:scale-95 shadow-sm hover:shadow"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <button
                   onClick={nextMonth}
-                  className="rounded-lg p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="rounded-lg p-1.5 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-all active:scale-95 shadow-sm hover:shadow"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+            <div className="grid grid-cols-7 gap-1 text-center text-[11px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
               {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((d) => (
                 <div key={d} className="py-2">
                   {d}
@@ -166,7 +181,7 @@ export default function AgendaPage() {
                     key={dateStr}
                     onClick={() => setSelectedDate(day)}
                     className={cn(
-                      'group relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl text-sm transition-all duration-200',
+                      'group relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl text-xs md:text-sm transition-all duration-200',
                       isSelected
                         ? 'bg-amber-600 font-bold text-white shadow-lg shadow-amber-500/30 scale-105 z-10'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300',
@@ -214,11 +229,11 @@ export default function AgendaPage() {
               <h3 className="text-sm md:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">Filtros</h3>
               <Filter className="h-4 w-4 text-slate-400" />
             </div>
-            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide -mx-2 px-2 md:mx-0 md:px-0 md:flex-col md:space-y-2">
+            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide -mx-2 px-2 lg:mx-0 lg:px-0 lg:flex-col lg:space-y-2">
               <button
                 onClick={() => setFilter('Todos')}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl px-4 py-2.5 text-[10px] md:text-sm font-black uppercase tracking-wider transition-all whitespace-nowrap md:w-full',
+                  'flex items-center gap-3 rounded-xl px-4 py-2.5 text-[11px] lg:text-sm font-black uppercase tracking-wider transition-all whitespace-nowrap lg:w-full',
                   filter === 'Todos'
                     ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
                     : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400',
@@ -232,7 +247,7 @@ export default function AgendaPage() {
                   key={cat.name}
                   onClick={() => setFilter(cat.name)}
                   className={cn(
-                    'flex items-center gap-3 rounded-xl px-4 py-2.5 text-[10px] md:text-sm font-black uppercase tracking-wider transition-all whitespace-nowrap md:w-full',
+                    'flex items-center gap-3 rounded-xl px-4 py-2.5 text-[11px] lg:text-sm font-black uppercase tracking-wider transition-all whitespace-nowrap lg:w-full',
                     filter === cat.name
                       ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
                       : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400',
@@ -249,14 +264,14 @@ export default function AgendaPage() {
         {/* Events List */}
         <div className="lg:col-span-8 space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm md:text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">
+            <h3 className="text-lg md:text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">
               {selectedDate.isSame(dayjs(), 'day')
                 ? 'Atividades de Hoje'
                 : `Atividades em ${selectedDate.format('DD/MM')}`}
             </h3>
-            <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800/50">
               {filteredEvents.filter((e) => e.date === selectedDate.format('YYYY-MM-DD')).length}{' '}
-              eventos
+              {filteredEvents.filter((e) => e.date === selectedDate.format('YYYY-MM-DD')).length === 1 ? 'evento' : 'eventos'}
             </span>
           </div>
 

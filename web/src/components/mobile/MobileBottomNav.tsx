@@ -114,7 +114,7 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
   const renderNavItem = (item: NavItem) => {
     const Icon = item.icon
     const isHome = item.name === 'Home'
-    const isActive = item.isActive ? item.isActive(pathname) && !isHome : pathname === item.href
+    const isActive = item.isActive ? item.isActive(pathname) : pathname === item.href
 
     return (
       <button
@@ -126,7 +126,8 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
             'text-amber-500': isActive,
             'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white':
               !isActive,
-            'bg-slate-950 -mt-8 h-16 w-16 !rounded-full border-4 border-white shadow-xl z-50 dark:border-slate-950':
+            '!border-amber-500': isHome && isActive,
+            'bg-slate-950 -mt-8 h-16 w-16 !rounded-full border-1 shadow-xl z-50 border-slate-900':
               isHome,
             'w-16 space-y-1': !isHome,
           },
