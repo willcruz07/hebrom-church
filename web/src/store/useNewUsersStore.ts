@@ -15,14 +15,21 @@ export const useNewUsersStore = create<NewUsersState>((set, get) => ({
   startMonitoring: (canManageUsers) => {
     if (!canManageUsers || get().isMonitoring) return () => {}
 
-    const unsubPending = getPendingUsersCount((count) => set({ pendingCount: count }))
-    const unsubVisitors = getVisitorsCount((count) => set({ visitorsCount: count }))
-    
     set({ isMonitoring: true })
 
+    const fetchCounts = async () => {
+      try {
+        const pending = await getPendingUsersCount()
+        const visitors = await getVisitorsCount()
+        set({ pendingCount: pending, visitorsCount: visitors })
+      } catch (error) {
+        console.error('Erro ao buscar contagens:', error)
+      }
+    }
+
+    fetchCounts()
+
     return () => {
-      unsubPending()
-      unsubVisitors()
       set({ isMonitoring: false, pendingCount: 0, visitorsCount: 0 })
     }
   },

@@ -35,7 +35,7 @@ import {
   Pie,
   PieChart,
 } from 'recharts'
-import { onSnapshot, collection, query, orderBy, where, Timestamp } from 'firebase/firestore'
+import { getDocs, collection, query, orderBy, where, Timestamp } from 'firebase/firestore'
 import { db } from '@/services/firebase/config'
 import { prayerService } from '@/services/firebase/prayer'
 import { agendaService } from '@/services/firebase/agenda'
@@ -153,47 +153,47 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // 1. Listen to Users
-    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-      const usersData = snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as AppUser))
-      setMembers(usersData)
-    })
-
-    // 2. Listen to Prayer Requests
-    const unsubPrayers = prayerService.subscribeToPrayers((data) => {
-      setPrayers(data)
-    })
-
-    // 3. Listen to Events
-    const unsubEvents = agendaService.subscribeToEvents((data) => {
-      setEvents(data)
-    })
-
-    // 4. Listen to Posts (Mural)
-    const qPosts = query(collection(db, 'posts'), orderBy('created_at', 'desc'))
-    const unsubPosts = onSnapshot(qPosts, (snapshot) => {
-      const postsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as FeedPost))
-      setPosts(postsData)
-    })
-
-    const fetchDailyWord = async () => {
-      const today = dayjs().format('YYYY-MM-DD')
-      const word = await getDailyWord(today)
-      setDailyWord(word)
-    }
-
-    fetchDailyWord()
-
     if (!permissions.canViewDashboardOverview) {
       router.replace(ROUTES.AUTHENTICATED.MURAL)
+      return
     }
 
-    return () => {
-      unsubUsers()
-      unsubPrayers()
-      unsubEvents()
-      unsubPosts()
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
+
+        const [
+          usersSnapshot,
+          prayersData,
+          eventsData,
+          postsSnapshot,
+          dailyWordData
+        ] = await Promise.all([
+          getDocs(collection(db, 'users')),
+          prayerService.getPrayers(),
+          agendaService.getEvents(),
+          getDocs(query(collection(db, 'posts'), orderBy('created_at', 'desc'))),
+          getDailyWord(dayjs().format('YYYY-MM-DD'))
+        ])
+
+        const usersData = usersSnapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as AppUser))
+        setMembers(usersData)
+
+        setPrayers(prayersData)
+        setEvents(eventsData)
+
+        const postsData = postsSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as FeedPost))
+        setPosts(postsData)
+
+        setDailyWord(dailyWordData)
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
+
+    fetchDashboardData()
   }, [permissions.canViewDashboardOverview, router])
 
   const userName = currentUser?.profile.full_name || 'Usuário'

@@ -2,7 +2,7 @@ import { AppUser } from '@/types'
 import { Timestamp, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from './config'
-import { collection, getDocs, query, where, orderBy, onSnapshot } from 'firebase/firestore'
+import { collection, getDocs, query, where, orderBy, onSnapshot, getCountFromServer } from 'firebase/firestore'
 
 export const getUserById = async (userId: string): Promise<AppUser | null> => {
   try {
@@ -104,22 +104,20 @@ export const getUsers = async (): Promise<AppUser[]> => {
   }
 }
 
-export const getPendingUsersCount = (callback: (count: number) => void) => {
+export const getPendingUsersCount = async (): Promise<number> => {
   const usersRef = collection(db, 'users')
   const q = query(usersRef, where('role', '==', 'pending_member'))
 
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.size)
-  })
+  const snapshot = await getCountFromServer(q)
+  return snapshot.data().count
 }
 
-export const getVisitorsCount = (callback: (count: number) => void) => {
+export const getVisitorsCount = async (): Promise<number> => {
   const usersRef = collection(db, 'users')
   const q = query(usersRef, where('role', '==', 'visitor'))
 
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.size)
-  })
+  const snapshot = await getCountFromServer(q)
+  return snapshot.data().count
 }
 
 export const approveUser = async (uid: string): Promise<void> => {

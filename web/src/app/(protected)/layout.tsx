@@ -2,23 +2,27 @@
 
 import { Sidebar } from '@/components/Sidebar';
 import { MobileLayout } from '@/components/mobile/MobileLayout';
-import { useWindowSize } from 'usehooks-ts';
+import { useEffect, useState } from 'react';
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { width } = useWindowSize();
-  const isMobile = width < 1024;
+  const [mounted, setMounted] = useState(false);
 
-  if (isMobile) {
-    return (
-      <>
-        <MobileLayout>{children}</MobileLayout>
-        <Sidebar />
-      </>
-    );
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="h-screen bg-slate-950" />;
   }
 
   return (
-    <div className="h-screen lg:grid lg:grid-cols-[320px_1fr] bg-slate-950">
+    <>
+      <div className="block lg:hidden">
+        <MobileLayout>{children}</MobileLayout>
+        <Sidebar />
+      </div>
+
+      <div className="hidden h-screen lg:grid lg:grid-cols-[320px_1fr] bg-slate-950">
       <aside className="hidden overflow-hidden lg:block h-full">
         <Sidebar />
       </aside>
@@ -30,5 +34,6 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+    </>
   );
 }

@@ -66,24 +66,22 @@ export default function InstallPrompt() {
     setIsVisible(false)
   }
 
-  return null
-
-  // return (
-  //   <div className="fixed right-0 bottom-4 left-0 z-50 flex justify-center">
-  //     <div className="bg-background mx-4 flex w-full max-w-xl items-center justify-between gap-3 border p-3 shadow-lg">
-  //       <div className="text-sm">
-  //         <p className="font-medium">Instale o Hebrom Sys</p>
-  //         <p className="text-muted-foreground">Tenha acesso rápido com experiência de app.</p>
-  //       </div>
-  //       <div className="flex gap-2">
-  //         <Button variant="outline" size="sm" onClick={handleDismiss}>
-  //           Agora não
-  //         </Button>
-  //         <Button size="sm" onClick={handleInstall}>
-  //           Instalar
-  //         </Button>
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
+  return (
+    <div className="fixed right-0 bottom-4 left-0 z-50 flex justify-center">
+      <div className="bg-background mx-4 flex w-full max-w-xl items-center justify-between gap-3 border p-3 shadow-lg">
+        <div className="text-sm">
+          <p className="font-medium">Instale o Hebrom Sys</p>
+          <p className="text-muted-foreground">Tenha acesso rápido com experiência de app.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleDismiss}>
+            Agora não
+          </Button>
+          <Button size="sm" onClick={handleInstall}>
+            Instalar
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
 }

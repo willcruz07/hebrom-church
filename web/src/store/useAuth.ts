@@ -98,15 +98,15 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
           }
 
           set({ currentUser: userData })
-          await setSessionCookie(await user.getIdToken())
+          setSessionCookie(await user.getIdToken()).catch(console.error)
         } else {
           set({ currentUser: null })
-          await clearSessionCookie()
+          clearSessionCookie().catch(console.error)
         }
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error)
         set({ currentUser: null })
-        await clearSessionCookie()
+        clearSessionCookie().catch(console.error)
       } finally {
         set((s) => ({ loading: { ...s.loading, checkAuth: false } }))
       }
@@ -155,7 +155,7 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
         set({ currentUser: newUser })
       }
 
-      await setSessionCookie(await userCredential.user.getIdToken())
+      setSessionCookie(await userCredential.user.getIdToken()).catch(console.error)
     } catch (error: any) {
       console.error('ERRO CRÍTICO [Login/Firestore]:', {
         message: error.message,
@@ -207,7 +207,7 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
 
       set({ currentUser: newUser })
 
-      await setSessionCookie(await userCredential.user.getIdToken())
+      setSessionCookie(await userCredential.user.getIdToken()).catch(console.error)
     } catch (error: any) {
       console.error('ERRO CRÍTICO [Signup/Firestore]:', {
         message: error.message,
@@ -267,7 +267,7 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
         set({ currentUser: newUser })
       }
 
-      await setSessionCookie(await user.getIdToken())
+      setSessionCookie(await user.getIdToken()).catch(console.error)
     } finally {
       set((s) => ({ loading: { ...s.loading, signIn: false } }))
     }
@@ -317,7 +317,7 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
         set({ currentUser: newUser })
       }
 
-      await setSessionCookie(await user.getIdToken())
+      setSessionCookie(await user.getIdToken()).catch(console.error)
     } finally {
       set((s) => ({ loading: { ...s.loading, signIn: false } }))
     }
@@ -330,7 +330,7 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
         await firebaseSignOut(firebaseAuth)
       }
       set({ currentUser: null })
-      await clearSessionCookie()
+      clearSessionCookie().catch(console.error)
     } finally {
       set((s) => ({ loading: { ...s.loading, signOut: false } }))
     }

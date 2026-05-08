@@ -18,6 +18,23 @@ import { PrayerRequest } from '@/types';
 const COLLECTION_NAME = 'prayer_requests';
 
 export const prayerService = {
+  async getPrayers() {
+    try {
+      const q = query(
+        collection(db, COLLECTION_NAME), 
+        orderBy('created_at', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as PrayerRequest[];
+    } catch (error) {
+      console.error('Error getting prayers:', error);
+      throw error;
+    }
+  },
+
   async createRequest(requestData: Omit<PrayerRequest, 'id' | 'created_at' | 'updated_at'>) {
     try {
       const docRef = await addDoc(collection(db, COLLECTION_NAME), {
