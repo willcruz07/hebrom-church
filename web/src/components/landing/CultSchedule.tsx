@@ -1,7 +1,6 @@
 'use client'
 
 import { Clock, Calendar, Users } from 'lucide-react'
-import { motion } from 'framer-motion'
 
 const SCHEDULES = [
   {
@@ -31,10 +30,9 @@ export function CultSchedule() {
   return (
     <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
       {SCHEDULES.map((item, index) => (
-        <motion.div
+        <div
           key={index}
-          whileHover={{ y: -10 }}
-          className="group relative overflow-hidden rounded-3xl bg-slate-900/40 p-8 border border-slate-800/50 backdrop-blur-sm transition-all hover:border-amber-500/50 hover:bg-slate-900/60"
+          className="group relative overflow-hidden rounded-3xl bg-slate-900/40 p-8 border border-slate-800/50 backdrop-blur-sm transition-all duration-500 hover:border-amber-500/50 hover:bg-slate-900/60 hover:-translate-y-2 will-change-transform"
         >
           {/* Accent decoration */}
           <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-amber-500/5 blur-3xl transition-all group-hover:bg-amber-500/10" />
@@ -62,7 +60,7 @@ export function CultSchedule() {
             <span>Saiba mais</span>
             <div className="h-[2px] w-8 bg-amber-500" />
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   )

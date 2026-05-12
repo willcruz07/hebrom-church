@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ROUTES } from '@/paths'
 import { ChevronDown } from 'lucide-react'
@@ -20,12 +19,7 @@ export function Hero() {
       <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-slate-950 to-transparent opacity-60" />
 
       <div className="relative z-10 w-full max-w-5xl px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: 'easeOut' }}
-          className="mb-8 flex justify-center"
-        >
+        <div className="mb-8 flex justify-center animate-scale-up will-change-transform">
           <Image
             width={500}
             height={500}
@@ -33,13 +27,9 @@ export function Hero() {
             alt="Hebrom Church"
             className="h-auto w-2xl -mb-32 md:-mb-56 object-contain brightness-125 contrast-125 drop-shadow-[0_0_20px_rgba(245,158,11,0.3)]"
           />
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-        >
+        <div className="animate-fade-in-up [animation-delay:300ms] will-change-transform">
           <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl">
             Ano da <span className="text-amber-500">Edificação</span>
             <span className="block text-2xl sm:text-3xl lg:text-4xl mt-2 text-slate-300 font-light italic">
@@ -68,19 +58,17 @@ export function Hero() {
               Ver Horários
             </Link>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Scroll Indicator */}
-      <motion.div
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="absolute bottom-10 flex flex-col items-center gap-2 text-slate-500 cursor-pointer"
+      <div
+        className="absolute bottom-10 flex flex-col items-center gap-2 text-slate-500 cursor-pointer animate-bounce-subtle will-change-transform"
         onClick={() => document.getElementById('cultos')?.scrollIntoView({ behavior: 'smooth' })}
       >
         <span className="text-xs uppercase tracking-widest font-medium">Role para explorar</span>
         <ChevronDown size={24} />
-      </motion.div>
+      </div>
     </div>
   )
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 interface HebromSpinnerProps {
@@ -24,11 +23,9 @@ export function HebromSpinner({ size = 'md', className }: HebromSpinnerProps) {
       <div className="absolute inset-0 rounded-full bg-amber-500/5 blur-sm animate-pulse" />
 
       {/* Main Rotating Ring */}
-      <motion.svg
+      <svg
         viewBox="0 0 100 100"
-        className="absolute inset-0 h-full w-full"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-0 h-full w-full animate-spin-slow"
       >
         <circle
           cx="50"
@@ -41,14 +38,12 @@ export function HebromSpinner({ size = 'md', className }: HebromSpinnerProps) {
           strokeLinecap="round"
           className="text-amber-500"
         />
-      </motion.svg>
+      </svg>
 
       {/* Secondary Subtle Ring (Counter-rotating) */}
-      <motion.svg
+      <svg
         viewBox="0 0 100 100"
-        className="absolute inset-0 h-full w-full opacity-30"
-        animate={{ rotate: -360 }}
-        transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-0 h-full w-full opacity-30 animate-spin-reverse"
       >
         <circle
           cx="50"
@@ -61,21 +56,10 @@ export function HebromSpinner({ size = 'md', className }: HebromSpinnerProps) {
           strokeLinecap="round"
           className="text-amber-500"
         />
-      </motion.svg>
+      </svg>
       
       {/* Central Logo with Heartbeat animation */}
-      <motion.div
-        animate={{ 
-          scale: [0.9, 1.05, 0.9],
-          opacity: [0.8, 1, 0.8]
-        }}
-        transition={{ 
-          duration: 1.5, 
-          repeat: Infinity, 
-          ease: "easeInOut" 
-        }}
-        className="relative z-10 drop-shadow-sm"
-      >
+      <div className="relative z-10 drop-shadow-sm animate-heartbeat will-change-transform">
         <Image
           src="/hearth.png"
           alt="Loading"
@@ -83,7 +67,7 @@ export function HebromSpinner({ size = 'md', className }: HebromSpinnerProps) {
           height={image}
           className="object-contain"
         />
-      </motion.div>
+      </div>
     </div>
   )
 }
