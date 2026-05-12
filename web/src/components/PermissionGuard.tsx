@@ -2,7 +2,7 @@
 
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, startTransition } from 'react';
 import { ROUTES } from '@/paths';
 
 interface PermissionGuardProps {
@@ -16,7 +16,9 @@ export function PermissionGuard({ children, permission }: PermissionGuardProps) 
 
   useEffect(() => {
     if (permission && !permissions[permission]) {
-      router.replace(ROUTES.AUTHENTICATED.HOME);
+      startTransition(() => {
+        router.replace(ROUTES.AUTHENTICATED.HOME);
+      });
     }
   }, [permission, permissions, router]);
 

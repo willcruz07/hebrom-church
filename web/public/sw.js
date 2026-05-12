@@ -1,6 +1,6 @@
 // Service Worker for Push Notifications
-const CACHE_NAME = 'cifras-app-v1';
-const urlsToCache = ['/', '/offline.html', '/icon-192x192.png', '/icon-512x512.png'];
+const CACHE_NAME = 'hebrom-sys';
+const urlsToCache = ['/', '/logo.png'];
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
@@ -27,22 +27,22 @@ self.addEventListener('push', (event) => {
   console.log('Push event received:', event);
 
   let notificationData = {
-    title: 'Moni Kash',
+    title: 'Hebrom Sys',
     body: 'Você tem uma nova notificação!',
-    icon: '/icon-192x192.png',
-    badge: '/badge-72x72.png',
+    icon: '/logo.png',
+    badge: '/logo.png',
     tag: 'default',
     requireInteraction: false,
     actions: [
       {
         action: 'view',
         title: 'Ver',
-        icon: '/icon-view.png',
+        icon: '/logo.png',
       },
       {
         action: 'dismiss',
         title: 'Dispensar',
-        icon: '/icon-dismiss.png',
+        icon: '/logo.png',
       },
     ],
     data: {

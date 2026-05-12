@@ -166,6 +166,8 @@ export default function IdCardPage() {
                 alt="Hebrom"
                 width={256}
                 height={256}
+                priority
+                loading="eager"
                 className="w-auto -mb-28 -mt-28 md:-mb-32 md:-mt-32"
               />
             </div>
@@ -192,7 +194,9 @@ export default function IdCardPage() {
                     Cadastrado em
                   </span>
                 </div>
-                <p className="text-[10px] md:text-base font-bold text-slate-100">{registrationDate}</p>
+                <p className="text-[10px] md:text-base font-bold text-slate-100">
+                  {registrationDate}
+                </p>
               </div>
 
               <div className="space-y-1">

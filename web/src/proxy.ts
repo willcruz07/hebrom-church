@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticatedRoutes, KEYS, ROUTES, withoutAuthenticatedRoutes } from '@/paths';
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const session = request.cookies.get(KEYS.COOKIES.USER_SESSIONS)?.value ?? '';
 
