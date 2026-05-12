@@ -1,12 +1,13 @@
 // Service Worker for Push Notifications
-const CACHE_NAME = 'hebrom-sys';
+const CACHE_NAME = 'hebrom-sys-v2';
 const urlsToCache = ['/', '/logo.png'];
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Force activation of the new SW
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Opened cache');
+      console.log('Opened cache v2');
       return cache.addAll(urlsToCache);
     }),
   );
