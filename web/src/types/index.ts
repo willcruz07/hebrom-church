@@ -47,6 +47,17 @@ export interface AppUser {
   updated_at: Timestamp;
 }
 
+export interface PostComment {
+  id: string;
+  author: {
+    uid: string;
+    name: string;
+    avatar_url: string;
+  };
+  content: string;
+  created_at: number;
+}
+
 export interface FeedPost {
   id: string;
   author: {
@@ -59,6 +70,8 @@ export interface FeedPost {
   media_url?: string;
   target_groups: string[];
   created_at: number | Timestamp;
+  likes?: string[];
+  comments?: PostComment[];
 }
 
 export interface PrayerRequest {

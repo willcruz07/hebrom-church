@@ -3,15 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/store/useAuth'
-import {
-  MessageSquare,
-  Bell,
-  Filter,
-  Plus,
-  Heart,
-  MoreHorizontal,
-  Trash2,
-} from 'lucide-react'
+import { MessageSquare, Bell, Filter, Plus, Heart, MoreHorizontal, Trash2 } from 'lucide-react'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import {
   DropdownMenu,
@@ -21,9 +13,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { CreatePostModal } from './components/CreatePostModal'
-import { getPosts, deletePost } from '@/services/firebase/mural'
+import { PostComments } from './components/PostComments'
+import { subscribeToPosts, deletePost, toggleLike } from '@/services/firebase/mural'
 import { FeedPost } from '@/types'
-import { Timestamp } from 'firebase/firestore'
 import dayjs from '@/lib/dayjs'
 import { toast } from 'sonner'
 
@@ -35,22 +27,17 @@ export default function MuralPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'general' | 'groups'>('all')
 
-  const fetchPosts = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setIsLoading(true)
-    try {
-      const data = await getPosts()
-      setPosts(data)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Erro ao buscar posts'
-      toast.error(message)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const [selectedPostForComments, setSelectedPostForComments] = useState<FeedPost | null>(null)
 
   useEffect(() => {
-    fetchPosts()
-  }, [fetchPosts])
+    setIsLoading(true)
+    const unsubscribe = subscribeToPosts((data) => {
+      setPosts(data)
+      setIsLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   const filteredPosts = posts.filter((post) => {
     const isGeral = post.target_groups.length === 0
@@ -74,9 +61,19 @@ export default function MuralPage() {
     try {
       await deletePost(postId)
       toast.success('Aviso excluído com sucesso!')
-      fetchPosts()
     } catch (error) {
       toast.error('Erro ao excluir aviso')
+    }
+  }
+
+  const handleToggleLike = async (postId: string, likes: string[] = []) => {
+    if (!currentUser) return
+    const isLiked = likes.includes(currentUser.uid)
+
+    try {
+      await toggleLike(postId, currentUser.uid, isLiked)
+    } catch (error) {
+      toast.error('Erro ao processar curtida')
     }
   }
 
@@ -104,7 +101,6 @@ export default function MuralPage() {
             <CreatePostModal
               isOpen={isModalOpen}
               onClose={() => setIsModalOpen(false)}
-              onSuccess={() => fetchPosts(true)}
             />
           </>
         )}
@@ -246,13 +242,27 @@ export default function MuralPage() {
               </div>
 
               <div className="mt-6 flex items-center gap-6 border-t border-slate-50 pt-4 dark:border-slate-800/50">
-                <button className="flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-rose-500">
-                  <Heart className="h-4 w-4" />
-                  <span>0</span>
+                <button
+                  onClick={() => handleToggleLike(post.id, post.likes)}
+                  className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                    currentUser && post.likes?.includes(currentUser.uid)
+                      ? 'text-rose-500'
+                      : 'text-slate-500 hover:text-rose-500'
+                  }`}
+                >
+                  <Heart
+                    className={`h-4 w-4 ${
+                      currentUser && post.likes?.includes(currentUser.uid) ? 'fill-current' : ''
+                    }`}
+                  />
+                  <span>{post.likes?.length || 0}</span>
                 </button>
-                <button className="flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-amber-500">
+                <button
+                  onClick={() => setSelectedPostForComments(post)}
+                  className="flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-amber-500"
+                >
                   <MessageSquare className="h-4 w-4" />
-                  <span>0</span>
+                  <span>{post.comments?.length || 0}</span>
                 </button>
               </div>
             </article>
@@ -264,6 +274,14 @@ export default function MuralPage() {
           </div>
         )}
       </div>
+
+      {selectedPostForComments && (
+        <PostComments
+          post={selectedPostForComments}
+          isOpen={!!selectedPostForComments}
+          onClose={() => setSelectedPostForComments(null)}
+        />
+      )}
     </div>
   )
 }

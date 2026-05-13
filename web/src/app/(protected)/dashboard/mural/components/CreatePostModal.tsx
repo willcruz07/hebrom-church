@@ -5,15 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  X,
-  Image as ImageIcon,
-  Send,
-  Type,
-  AlignLeft,
-  Users,
-  AlertCircle,
-} from 'lucide-react'
+import { X, Image as ImageIcon, Send, Type, AlignLeft, Users, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/store/useAuth'
 import { createPost } from '@/services/firebase/mural'
@@ -46,7 +38,7 @@ type PostFormValues = z.infer<typeof postSchema>
 interface CreatePostModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess?: () => void
 }
 
 export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalProps) {
@@ -133,7 +125,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
       reset()
       setPreviewImage(null)
       setSelectedFile(null)
-      onSuccess()
+      onSuccess?.()
       onClose()
     } catch (error) {
       toast.error('Erro ao publicar aviso.')
