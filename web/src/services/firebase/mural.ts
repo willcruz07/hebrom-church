@@ -39,6 +39,17 @@ export const createPost = async (
     }
 
     await addDoc(collection(db, 'posts'), newPost)
+
+    // Disparar notificação push via API do servidor (Next.js)
+    fetch('/api/notifications/new-post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'Novo Aviso na Hebrom!',
+        body: newPost.title,
+        url: '/dashboard/mural',
+      }),
+    }).catch((err) => console.error('Erro ao disparar notificação:', err))
   } catch (error) {
     console.error('Erro ao criar post:', error)
     throw new Error('Não foi possível publicar o aviso.')
@@ -78,6 +89,22 @@ export const subscribeToPosts = (callback: (posts: FeedPost[]) => void) => {
     },
     (error) => {
       console.error('Erro no snapshot do mural:', error)
+    },
+  )
+}
+
+export const subscribeToPost = (postId: string, callback: (post: FeedPost) => void) => {
+  const postRef = doc(db, 'posts', postId)
+
+  return onSnapshot(
+    postRef,
+    (docSnap) => {
+      if (docSnap.exists()) {
+        callback({ id: docSnap.id, ...docSnap.data() } as FeedPost)
+      }
+    },
+    (error) => {
+      console.error('Erro no snapshot do post:', error)
     },
   )
 }

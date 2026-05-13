@@ -3,13 +3,22 @@
 import { Sidebar } from '@/components/Sidebar';
 import { MobileLayout } from '@/components/mobile/MobileLayout';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/store/useAuth';
+import { requestNotificationPermission, onForegroundMessage } from '@/services/firebase/messaging';
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
+  const { currentUser } = useAuth();
+
   useEffect(() => {
     setMounted(true);
-  }, []);
+    
+    if (currentUser) {
+      requestNotificationPermission(currentUser.uid);
+      onForegroundMessage();
+    }
+  }, [currentUser]);
 
   if (!mounted) {
     return <div className="h-screen bg-slate-950" />;

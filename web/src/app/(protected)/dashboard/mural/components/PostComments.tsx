@@ -1,21 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, Send, MessageSquare } from 'lucide-react'
 import { FeedPost } from '@/types'
 import { useAuth } from '@/store/useAuth'
-import { addComment } from '@/services/firebase/mural'
+import { addComment, subscribeToPost } from '@/services/firebase/mural'
 import { toast } from 'sonner'
 import dayjs from '@/lib/dayjs'
-import { Send } from 'lucide-react'
 
 interface PostCommentsProps {
   post: FeedPost
@@ -23,10 +15,22 @@ interface PostCommentsProps {
   onClose: () => void
 }
 
-export function PostComments({ post, isOpen, onClose }: PostCommentsProps) {
+export function PostComments({ post: initialPost, isOpen, onClose }: PostCommentsProps) {
   const { currentUser } = useAuth()
+  const [post, setPost] = useState<FeedPost>(initialPost)
   const [newComment, setNewComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Snapshot em tempo real para os comentários do post
+  useEffect(() => {
+    if (isOpen && initialPost.id) {
+      const unsubscribe = subscribeToPost(initialPost.id, (updatedPost) => {
+        setPost(updatedPost)
+      })
+      return () => unsubscribe()
+    }
+  }, [isOpen, initialPost.id])
 
   const sortedComments = [...(post.comments || [])].sort((a, b) => b.created_at - a.created_at)
 
@@ -39,13 +43,14 @@ export function PostComments({ post, isOpen, onClose }: PostCommentsProps) {
       await addComment(post.id, {
         author: {
           uid: currentUser.uid,
-          name: currentUser.profile.full_name,
+          name: currentUser.profile.full_name || currentUser.email,
           avatar_url: currentUser.profile.avatar_url || '',
         },
         content: newComment.trim(),
       })
       setNewComment('')
-      toast.success('Comentário enviado!')
+      // Scroll para o topo (onde o novo comentário aparece)
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (error) {
       toast.error('Erro ao enviar comentário')
     } finally {
@@ -54,76 +59,140 @@ export function PostComments({ post, isOpen, onClose }: PostCommentsProps) {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] flex flex-col max-h-[85vh] p-0 rounded-3xl overflow-hidden">
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="text-xl font-bold">Comentários</DialogTitle>
-        </DialogHeader>
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+          />
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-          {sortedComments.length > 0 ? (
-            sortedComments.map((comment) => (
-              <div key={comment.id} className="flex gap-3">
-                <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full border border-slate-100 dark:border-slate-800">
-                  {comment.author.avatar_url ? (
+          {/* Modal Content (Bottom Sheet no mobile) */}
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="relative flex h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-t-[32px] bg-white shadow-2xl dark:bg-slate-900 sm:h-[70vh] sm:rounded-[32px] border border-slate-200 dark:border-slate-800"
+          >
+            {/* Handle bar for visual sheet indicator */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="h-1.5 w-12 rounded-full bg-slate-200 dark:bg-slate-700" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-50 px-6 py-4 dark:border-slate-800/50">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-amber-500" />
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Comentários
+                </h2>
+                <span className="sr-only">
+                  Lista de interações e comentários deste aviso.
+                </span>
+              </div>
+              <button
+                onClick={onClose}
+                className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Input at the Top (Instagram style) */}
+            <div className="border-b border-slate-50 p-4 bg-slate-50/50 dark:bg-slate-800/30 dark:border-slate-800/50">
+              <form onSubmit={handleSubmit} className="relative flex items-center gap-3">
+                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 dark:border-slate-700">
+                  {currentUser?.profile.avatar_url ? (
                     <img
-                      src={comment.author.avatar_url}
-                      alt={comment.author.name}
+                      src={currentUser.profile.avatar_url}
+                      alt="Meu Perfil"
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-amber-500/10 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 font-bold text-xs">
-                      {comment.author.name[0]}
+                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400 font-bold text-xs dark:bg-slate-800">
+                      {currentUser?.profile.full_name?.[0] || '?'}
                     </div>
                   )}
                 </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                      {comment.author.name}
-                    </h4>
-                    <span className="text-[10px] text-slate-400">
-                      {dayjs(comment.created_at).fromNow()}
-                    </span>
-                  </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl rounded-tl-none">
-                    {comment.content}
-                  </p>
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Escreva um comentário..."
+                    className="w-full rounded-2xl border-none bg-white py-2.5 pl-4 pr-12 text-sm shadow-sm focus:ring-2 focus:ring-amber-500/20 dark:bg-slate-800 dark:text-white"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !newComment.trim()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-amber-600 transition-all hover:bg-amber-50 disabled:opacity-30 dark:hover:bg-amber-900/20"
+                  >
+                    <Send className="h-5 w-5" />
+                  </button>
                 </div>
-              </div>
-            ))
-          ) : (
-            <div className="flex flex-col items-center justify-center py-10 text-slate-400">
-              <p className="text-sm">Nenhum comentário ainda. Seja o primeiro!</p>
+              </form>
             </div>
-          )}
-        </div>
 
-        <div className="p-6 pt-2 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <form onSubmit={handleSubmit} className="relative flex items-end gap-2">
-            <Textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Escreva um comentário..."
-              className="min-h-[44px] max-h-[120px] rounded-2xl bg-slate-50 border-none focus-visible:ring-amber-500 pr-12 dark:bg-slate-800 resize-none py-3"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSubmit(e)
-                }
-              }}
-            />
-            <Button
-              type="submit"
-              size="icon"
-              disabled={isSubmitting || !newComment.trim()}
-              className="absolute right-1.5 bottom-1.5 h-8 w-8 rounded-xl bg-amber-600 hover:bg-amber-700 text-white"
+            {/* Comments List */}
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto px-6 py-4 space-y-6 scrollbar-hide"
             >
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
+              {sortedComments.length > 0 ? (
+                sortedComments.map((comment) => (
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    key={comment.id}
+                    className="flex gap-3"
+                  >
+                    <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 shadow-sm">
+                      {comment.author.avatar_url ? (
+                        <img
+                          src={comment.author.avatar_url}
+                          alt={comment.author.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-amber-500/10 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 font-bold text-sm">
+                          {comment.author.name[0]}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                          {comment.author.name}
+                        </h4>
+                        <span className="text-[10px] text-slate-400">
+                          • {dayjs(comment.created_at).fromNow()}
+                        </span>
+                      </div>
+                      <div className="relative rounded-2xl rounded-tl-none bg-slate-50 p-3 text-sm text-slate-600 shadow-sm dark:bg-slate-800/50 dark:text-slate-300">
+                        {comment.content}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                  <div className="mb-3 rounded-full bg-slate-100 p-4 dark:bg-slate-800">
+                    <MessageSquare className="h-8 w-8 opacity-20" />
+                  </div>
+                  <p className="text-sm font-medium">Nenhum comentário ainda.</p>
+                  <p className="text-xs">Seja o primeiro a interagir!</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+    </AnimatePresence>
   )
 }

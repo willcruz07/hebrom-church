@@ -20,6 +20,18 @@ export const createDailyWord = async (data: Omit<DailyWord, 'id' | 'created_at'>
     ...data,
     created_at: Timestamp.now(),
   })
+
+  // Disparar notificação push via API do servidor (Next.js)
+  fetch('/api/notifications/new-post', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: 'Palavra do Dia: ' + data.theme,
+      body: data.content.substring(0, 100) + (data.content.length > 100 ? '...' : ''),
+      url: '/dashboard/daily-word',
+    }),
+  }).catch((err) => console.error('Erro ao disparar notificação:', err))
+
   return docRef.id
 }
 

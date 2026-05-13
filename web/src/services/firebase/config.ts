@@ -24,4 +24,21 @@ const appleProvider = new OAuthProvider('apple.com')
 
 const isFirebaseReady = () => !!firebaseConfig.apiKey
 
-export { app, auth, db, storage, storageRef, googleProvider, appleProvider, isFirebaseReady }
+export {
+  app,
+  auth,
+  db,
+  storage,
+  storageRef,
+  googleProvider,
+  appleProvider,
+  isFirebaseReady,
+}
+
+// Client-side only Messaging initialization
+export const getFirebaseMessaging = async () => {
+  const { getMessaging, isSupported } = await import('firebase/messaging')
+  const supported = await isSupported()
+  if (supported) return getMessaging(app)
+  return null
+}

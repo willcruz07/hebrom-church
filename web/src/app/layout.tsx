@@ -50,7 +50,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" content="#3B82F6" />
       </head>
-      <body className={`${inter.variable} antialiased`}>
+      <body className={`${inter.variable} antialiased`} suppressHydrationWarning>
         <ThemeProvider enableSystem attribute="class" defaultTheme="dark" disableTransitionOnChange>
           <PwaManager />
           <InstallPrompt />
