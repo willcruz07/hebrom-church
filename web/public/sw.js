@@ -1,6 +1,6 @@
 // Service Worker for Push Notifications
 const CACHE_NAME = 'hebrom-sys-v2';
-const urlsToCache = ['/', '/logo.png'];
+const urlsToCache = ['/logo.png']; // '/' removido para evitar cache de redirect no Safari
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
@@ -15,10 +15,16 @@ self.addEventListener('install', (event) => {
 
 // Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
-  // Ignorar requisições para Firebase Storage, Firestore e métodos que não sejam GET (uploads)
+  // Ignorar requisições de navegação — Safari não aceita SW servindo redirects em navigate
+  if (event.request.mode === 'navigate') {
+    return;
+  }
+
+  // Ignorar Firebase Storage, Firestore e métodos que não sejam GET (uploads)
   if (
     event.request.url.includes('googleapis.com') ||
     event.request.url.includes('firebaseio.com') ||
+    event.request.url.includes('firebasestorage.googleapis.com') ||
     event.request.method !== 'GET'
   ) {
     return;
@@ -197,4 +203,3 @@ self.addEventListener('unhandledrejection', (event) => {
   console.error('Service Worker unhandled rejection:', event.reason);
 });
 
-console.log('Service Worker loaded successfully');
