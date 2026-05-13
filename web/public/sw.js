@@ -15,6 +15,15 @@ self.addEventListener('install', (event) => {
 
 // Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
+  // Ignorar requisições para Firebase Storage, Firestore e métodos que não sejam GET (uploads)
+  if (
+    event.request.url.includes('googleapis.com') ||
+    event.request.url.includes('firebaseio.com') ||
+    event.request.method !== 'GET'
+  ) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => {
       // Return cached version or fetch from network
@@ -138,8 +147,6 @@ self.addEventListener('notificationclose', (event) => {
 
 // Message event - handle messages from the main thread
 self.addEventListener('message', (event) => {
-  console.log('Service Worker received message:', event.data);
-
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }

@@ -24,10 +24,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { agendaService } from '@/services/firebase/agenda'
-import { storageService } from '@/services/firebase/storage'
 import { toast } from 'sonner'
 import { EventCategory } from '@/types'
 import { ImagePlus, X, UploadCloud, Loader2 } from 'lucide-react'
+import { useFirebaseStorage } from '@/services/firebase/storage'
 
 const eventSchema = z.object({
   title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres'),
@@ -48,6 +48,8 @@ interface CreateEventModalProps {
 }
 
 export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModalProps) {
+  const { uploadImage } = useFirebaseStorage()
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -94,7 +96,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
       if (selectedFile) {
         setIsUploading(true)
         const path = `events/${Date.now()}_${selectedFile.name}`
-        thumbnail_url = await storageService.uploadImage(selectedFile, path)
+        thumbnail_url = await uploadImage(selectedFile, path)
         setIsUploading(false)
       }
 
@@ -122,7 +124,9 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px] overflow-y-auto max-h-[90vh] rounded-3xl">
         <DialogHeader>
-          <DialogTitle className="text-base md:text-2xl font-black uppercase tracking-tight">Novo Evento</DialogTitle>
+          <DialogTitle className="text-base md:text-2xl font-black uppercase tracking-tight">
+            Novo Evento
+          </DialogTitle>
           <DialogDescription className="text-[10px] md:text-sm font-medium">
             Preencha os dados abaixo para cadastrar um novo evento na agenda.
           </DialogDescription>

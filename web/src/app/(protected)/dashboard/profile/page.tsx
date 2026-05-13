@@ -20,9 +20,12 @@ import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { updateUserProfile, uploadAvatar } from '@/services/firebase/users'
+import { updateUserProfile } from '@/services/firebase/users'
+import { useFirebaseStorage } from '@/services/firebase/storage'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import { maskPhone } from '@/lib/utils'
+import { ImageCropper } from '@/components/ui/ImageCropper'
 
 const profileSchema = z.object({
   full_name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
@@ -50,13 +53,25 @@ export default function ProfilePage() {
   const { currentUser, checkAuth } = useAuth()
   const { permissions, role: userRole } = usePermissions()
   const [isSaving, setIsSaving] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null)
+  const [newImageURL, setNewImageURL] = useState<string | null>(null)
+  const [isCropperOpen, setIsCropperOpen] = useState(false)
+  const [originalFileName, setOriginalFileName] = useState<string>('')
+
+  const {
+    loading: isUploading,
+    url: uploadUrl,
+    error: uploadError,
+    setStorage,
+  } = useFirebaseStorage()
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -70,13 +85,12 @@ export default function ProfilePage() {
     },
   })
 
-  // Sync form with user data
   useEffect(() => {
     if (currentUser) {
       reset({
         full_name: currentUser.profile.full_name || '',
         bio: currentUser.profile.bio || '',
-        phone: currentUser.profile.phone || '',
+        phone: maskPhone(currentUser.profile.phone || ''),
         address: currentUser.profile.address || '',
         birth_date: currentUser.profile.birth_date || '',
         baptism_date: currentUser.profile.baptism_date || '',
@@ -112,23 +126,59 @@ export default function ProfilePage() {
       return
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Arquivo muito grande', { description: 'A imagem deve ter no máximo 2MB.' })
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Arquivo muito grande', { description: 'A imagem deve ter no máximo 5MB.' })
       return
     }
 
-    setIsUploading(true)
-    try {
-      const downloadURL = await uploadAvatar(currentUser.uid, file)
-      await updateUserProfile(currentUser.uid, { avatar_url: downloadURL })
-      await checkAuth()
-      toast.success('Foto atualizada!')
-    } catch (error) {
-      toast.error('Erro no upload')
-    } finally {
-      setIsUploading(false)
+    setOriginalFileName(file.name)
+    const reader = new FileReader()
+    reader.addEventListener('load', () => {
+      setImageToCrop(reader.result as string)
+      setIsCropperOpen(true)
+    })
+    reader.readAsDataURL(file)
+  }
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!currentUser) return
+
+    setStorage({
+      fileBlob: croppedBlob,
+      fileCategory: 'avatar',
+      fileName: `avatar_${Date.now()}.${originalFileName.split('.').pop() || 'jpg'}`,
+      userId: currentUser.uid,
+    })
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
   }
+
+  // Handle successful upload
+  useEffect(() => {
+    const updateAvatar = async () => {
+      if (uploadUrl && currentUser) {
+        try {
+          await updateUserProfile(currentUser.uid, { avatar_url: uploadUrl })
+          await checkAuth()
+          setNewImageURL(uploadUrl)
+          toast.success('Foto de perfil atualizada!')
+        } catch (error) {
+          toast.error('Erro ao salvar URL da foto no perfil')
+        }
+      }
+    }
+
+    updateAvatar()
+  }, [uploadUrl, currentUser, checkAuth])
+
+  // Handle upload errors
+  useEffect(() => {
+    if (uploadError) {
+      toast.error('Erro no upload', { description: uploadError })
+    }
+  }, [uploadError])
 
   if (!currentUser) return null
 
@@ -146,15 +196,14 @@ export default function ProfilePage() {
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Main Info Card */}
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
               <div className="p-6">
                 <div className="flex flex-col gap-6 md:flex-row md:items-start">
-                  {/* Avatar Upload */}
                   <div className="relative group mx-auto md:mx-0">
                     <div className="h-32 w-32 overflow-hidden rounded-2xl border-4 border-slate-100 dark:border-slate-800 relative">
                       <img
                         src={
+                          newImageURL ||
                           currentUser.profile.avatar_url ||
                           `https://ui-avatars.com/api/?name=${currentUser.profile.full_name}&background=0D8ABC&color=fff&size=256`
                         }
@@ -258,7 +307,12 @@ export default function ProfilePage() {
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input
-                        {...register('phone')}
+                        {...register('phone', {
+                          onChange: (e) => {
+                            const masked = maskPhone(e.target.value)
+                            setValue('phone', masked)
+                          },
+                        })}
                         className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-amber-500 focus:outline-none dark:bg-slate-800 ${errors.phone ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
                         placeholder="(00) 00000-0000"
                       />
@@ -409,106 +463,6 @@ export default function ProfilePage() {
         </div>
 
         <div className="space-y-6">
-          {/* <div className="space-y-4">
-            <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-              <CreditCard className="h-5 w-5 text-amber-500" />
-              Sua Carteirinha
-            </h3>
-
-            {permissions.canViewProfileCard ? (
-              <motion.div
-                whileHover={{ y: -5 }}
-                className="relative aspect-[1.586/1] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-2xl shadow-amber-950/20"
-              >
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
-                <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
-
-                <div className="relative flex h-full flex-col justify-between">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-md">
-                        <img src="/logo.png" alt="Logo" className="brightness-200" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-sm leading-tight uppercase tracking-widest">
-                          Hebrom
-                        </h4>
-                        <p className="text-[8px] text-amber-400 font-bold uppercase">
-                          System Admin
-                        </p>
-                      </div>
-                    </div>
-                    <div className="rounded-full border border-white/20 bg-white/5 px-2 py-0.5 text-[8px] font-bold backdrop-blur-sm">
-                      ID: {currentUser.uid.slice(0, 8)}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-4">
-                      <div className="h-16 w-16 overflow-hidden rounded-xl border border-white/20 bg-white/5 p-0.5">
-                        <img
-                          src={
-                            currentUser.profile.avatar_url ||
-                            `https://ui-avatars.com/api/?name=${currentUser.profile.full_name}&background=0D8ABC&color=fff&size=128`
-                          }
-                          alt="Avatar"
-                          width={64}
-                          height={64}
-                          className="h-full w-full rounded-[10px] object-cover"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest opacity-70">
-                          Membro
-                        </p>
-                        <p className="font-bold text-lg leading-tight truncate max-w-[180px]">
-                          {currentUser.profile.full_name.toUpperCase()}
-                        </p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          Cargo: {userRole.toUpperCase()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-end justify-between border-t border-white/10 pt-3">
-                      <div className="flex gap-4">
-                        <div>
-                          <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">
-                            Validade
-                          </p>
-                          <p className="text-[10px] font-bold">12/2026</p>
-                        </div>
-                        <div>
-                          <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">
-                            Igreja
-                          </p>
-                          <p className="text-[10px] font-bold italic">Sede</p>
-                        </div>
-                      </div>
-                      <div className="h-12 w-12 rounded bg-white p-1">
-                        <div className="h-full w-full bg-slate-900" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900/30">
-                <Shield className="mx-auto h-10 w-10 text-slate-300" />
-                <p className="mt-4 text-xs text-slate-500">
-                  Sua carteirinha digital será gerada após a aprovação de sua membresia.
-                </p>
-              </div>
-            )}
-
-            <button
-              onClick={() => (window.location.href = '/dashboard/id-card')}
-              className="w-full rounded-xl border border-slate-200 bg-white py-3 text-sm font-bold text-slate-700 transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
-            >
-              Ver Carteira Completa
-            </button>
-          </div> */}
-
           <div className="rounded-2xl bg-gradient-to-br from-amber-600 to-indigo-700 p-6 text-white">
             <h4 className="font-bold">Dica de Perfil</h4>
             <p className="mt-2 text-sm text-amber-100">
@@ -518,6 +472,15 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {imageToCrop && (
+        <ImageCropper
+          image={imageToCrop}
+          open={isCropperOpen}
+          onOpenChange={setIsCropperOpen}
+          onCropComplete={handleCropComplete}
+        />
+      )}
     </div>
   )
 }
