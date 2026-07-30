@@ -1,6 +1,7 @@
 import { AppUser } from '@/types'
 import { auth as firebaseAuth, googleProvider, appleProvider, isFirebaseReady } from '@/services/firebase/config'
-import { createUser, getUserById, initializeUserDefaults } from '@/services/firebase/users'
+import { createUser, getUserById, initializeUserDefaults, updateUserProfile } from '@/services/firebase/users'
+import { isGooglePhotoUrl, mirrorAvatarPhoto } from '@/services/firebase/storage'
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -26,6 +27,47 @@ interface UseAuthStore {
   signInWithGoogle(): Promise<void>
   signInWithApple(): Promise<void>
   signOut(): Promise<void>
+}
+
+function buildDefaultAppUser(
+  uid: string,
+  email: string,
+  overrides: Partial<Pick<AppUser['profile'], 'full_name' | 'avatar_url'>> = {},
+): AppUser {
+  return {
+    uid,
+    email,
+    role: 'visitor',
+    sub_groups: [],
+    profile: {
+      full_name: overrides.full_name || '',
+      avatar_url: overrides.avatar_url ?? null,
+      bio: '',
+      birth_date: '',
+      baptism_date: null,
+      phone: '',
+      is_profile_public: true,
+      address: '',
+      city: '',
+      state: '',
+      marital_status: 'single',
+      children_count: 0,
+    },
+    is_active: true,
+    created_at: Timestamp.now(),
+    updated_at: Timestamp.now(),
+  }
+}
+
+async function resolveAvatarUrl(uid: string, photoURL: string | null | undefined): Promise<string | null> {
+  if (!isGooglePhotoUrl(photoURL)) return photoURL ?? null
+
+  try {
+    return await mirrorAvatarPhoto(uid, photoURL)
+  } catch (error) {
+    console.error('Erro ao espelhar foto do Google:', error)
+    return photoURL
+  }
 }
 
 async function setSessionCookie(token: string) {
@@ -70,31 +112,19 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
               'Usuário autenticado sem documento no Firestore. Criando agora...',
               user.uid,
             )
-            userData = {
-              uid: user.uid,
-              email: user.email || '',
-              role: 'visitor',
-              sub_groups: [],
-              profile: {
-                full_name: user.displayName || '',
-                avatar_url: user.photoURL || null,
-                bio: '',
-                birth_date: '',
-                baptism_date: null,
-                phone: '',
-                is_profile_public: true,
-                address: '',
-                city: '',
-                state: '',
-                marital_status: 'single',
-                children_count: 0,
-              },
-              is_active: true,
-              created_at: Timestamp.now(),
-              updated_at: Timestamp.now(),
-            }
+            userData = buildDefaultAppUser(user.uid, user.email || '', {
+              full_name: user.displayName || '',
+              avatar_url: await resolveAvatarUrl(user.uid, user.photoURL),
+            })
             await createUser(userData)
             await initializeUserDefaults(user.uid)
+          } else if (isGooglePhotoUrl(userData.profile.avatar_url)) {
+            // Membro antigo com avatar_url ainda apontando pro Google — espelha pro Storage
+            const mirroredUrl = await resolveAvatarUrl(user.uid, userData.profile.avatar_url)
+            if (mirroredUrl && mirroredUrl !== userData.profile.avatar_url) {
+              await updateUserProfile(user.uid, { avatar_url: mirroredUrl })
+              userData = { ...userData, profile: { ...userData.profile, avatar_url: mirroredUrl } }
+            }
           }
 
           set({ currentUser: userData })
@@ -127,29 +157,7 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
       if (user) {
         set({ currentUser: user })
       } else {
-        const newUser: AppUser = {
-          uid: userCredential.user.uid,
-          email: userCredential.user.email ?? '',
-          role: 'visitor',
-          sub_groups: [],
-          profile: {
-            full_name: '',
-            avatar_url: null,
-            bio: '',
-            birth_date: '',
-            baptism_date: null,
-            phone: '',
-            is_profile_public: true,
-            address: '',
-            city: '',
-            state: '',
-            marital_status: 'single',
-            children_count: 0,
-          },
-          is_active: true,
-          created_at: Timestamp.now(),
-          updated_at: Timestamp.now(),
-        }
+        const newUser = buildDefaultAppUser(userCredential.user.uid, userCredential.user.email ?? '')
         await createUser(newUser)
         await initializeUserDefaults(newUser.uid)
         set({ currentUser: newUser })
@@ -178,29 +186,7 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
 
       const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password)
 
-      const newUser: AppUser = {
-        uid: userCredential.user.uid,
-        email: userCredential.user.email ?? email,
-        role: 'visitor',
-        sub_groups: [],
-        profile: {
-          full_name: '',
-          avatar_url: null,
-          bio: '',
-          birth_date: '',
-          baptism_date: null,
-          phone: '',
-          is_profile_public: true,
-          address: '',
-          city: '',
-          state: '',
-          marital_status: 'single',
-          children_count: 0,
-        },
-        is_active: true,
-        created_at: Timestamp.now(),
-        updated_at: Timestamp.now(),
-      }
+      const newUser = buildDefaultAppUser(userCredential.user.uid, userCredential.user.email ?? email)
 
       await createUser(newUser)
       await initializeUserDefaults(newUser.uid)
@@ -231,37 +217,22 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
       const result = await signInWithPopup(firebaseAuth, googleProvider)
       const user = result.user
 
-      const userData = await getUserById(user.uid)
-
-      console.log(userData, 'USER DATA')
-      console.log(user, 'USER')
+      let userData = await getUserById(user.uid)
 
       if (userData) {
+        if (isGooglePhotoUrl(userData.profile.avatar_url)) {
+          const mirroredUrl = await resolveAvatarUrl(user.uid, userData.profile.avatar_url)
+          if (mirroredUrl && mirroredUrl !== userData.profile.avatar_url) {
+            await updateUserProfile(user.uid, { avatar_url: mirroredUrl })
+            userData = { ...userData, profile: { ...userData.profile, avatar_url: mirroredUrl } }
+          }
+        }
         set({ currentUser: userData })
       } else {
-        const newUser: AppUser = {
-          uid: user.uid,
-          email: user.email ?? '',
-          role: 'visitor',
-          sub_groups: [],
-          profile: {
-            full_name: user.displayName ?? '',
-            avatar_url: user.photoURL ?? '',
-            bio: '',
-            birth_date: '',
-            baptism_date: null,
-            phone: '',
-            is_profile_public: true,
-            address: '',
-            city: '',
-            state: '',
-            marital_status: 'single',
-            children_count: 0,
-          },
-          is_active: true,
-          created_at: Timestamp.now(),
-          updated_at: Timestamp.now(),
-        }
+        const newUser = buildDefaultAppUser(user.uid, user.email ?? '', {
+          full_name: user.displayName ?? '',
+          avatar_url: await resolveAvatarUrl(user.uid, user.photoURL),
+        })
         await createUser(newUser)
         await initializeUserDefaults(user.uid)
         set({ currentUser: newUser })
@@ -289,29 +260,10 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
       if (userData) {
         set({ currentUser: userData })
       } else {
-        const newUser: AppUser = {
-          uid: user.uid,
-          email: user.email ?? '',
-          role: 'visitor',
-          sub_groups: [],
-          profile: {
-            full_name: user.displayName ?? '',
-            avatar_url: user.photoURL ?? '',
-            bio: '',
-            birth_date: '',
-            baptism_date: null,
-            phone: '',
-            is_profile_public: true,
-            address: '',
-            city: '',
-            state: '',
-            marital_status: 'single',
-            children_count: 0,
-          },
-          is_active: true,
-          created_at: Timestamp.now(),
-          updated_at: Timestamp.now(),
-        }
+        const newUser = buildDefaultAppUser(user.uid, user.email ?? '', {
+          full_name: user.displayName ?? '',
+          avatar_url: user.photoURL ?? '',
+        })
         await createUser(newUser)
         await initializeUserDefaults(user.uid)
         set({ currentUser: newUser })

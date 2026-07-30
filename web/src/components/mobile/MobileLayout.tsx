@@ -4,11 +4,12 @@ import { ReactNode, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { MobileBottomNav } from './MobileBottomNav'
 import { useAuth } from '@/store/useAuth'
-import { User, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { useMenuState } from '@/store/useMenuState'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useNewUsersStore } from '@/store/useNewUsersStore'
 import Image from 'next/image'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 interface MobileLayoutProps {
   children: ReactNode
@@ -66,17 +67,12 @@ export function MobileLayout({
           <Image src="/logo_sb.png" alt="Hebrom" width={124} height={124} className=" w-auto" />
         </div>
 
-        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-amber-500/10">
-          {currentUser?.profile.avatar_url ? (
-            <img
-              src={currentUser.profile.avatar_url}
-              alt="Profile"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <User className="h-5 w-5 text-amber-500" />
-          )}
-        </div>
+        <UserAvatar
+          src={currentUser?.profile.avatar_url}
+          name={currentUser?.profile.full_name}
+          size={40}
+          textClassName="text-sm"
+        />
       </header>
 
       <main

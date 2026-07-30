@@ -8,6 +8,8 @@ import { useAuth } from '@/store/useAuth'
 import { addComment, subscribeToPost } from '@/services/firebase/mural'
 import { toast } from 'sonner'
 import dayjs from '@/lib/dayjs'
+import { toJsDate } from '@/lib/utils'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 interface PostCommentsProps {
   post: FeedPost
@@ -32,7 +34,9 @@ export function PostComments({ post: initialPost, isOpen, onClose }: PostComment
     }
   }, [isOpen, initialPost.id])
 
-  const sortedComments = [...(post.comments || [])].sort((a, b) => b.created_at - a.created_at)
+  const sortedComments = [...(post.comments || [])].sort(
+    (a, b) => toJsDate(b.created_at).getTime() - toJsDate(a.created_at).getTime(),
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -106,19 +110,13 @@ export function PostComments({ post: initialPost, isOpen, onClose }: PostComment
             {/* Input at the Top (Instagram style) */}
             <div className="border-b border-slate-50 p-4 bg-slate-50/50 dark:bg-slate-800/30 dark:border-slate-800/50">
               <form onSubmit={handleSubmit} className="relative flex items-center gap-3">
-                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 dark:border-slate-700">
-                  {currentUser?.profile.avatar_url ? (
-                    <img
-                      src={currentUser.profile.avatar_url}
-                      alt="Meu Perfil"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400 font-bold text-xs dark:bg-slate-800">
-                      {currentUser?.profile.full_name?.[0] || '?'}
-                    </div>
-                  )}
-                </div>
+                <UserAvatar
+                  src={currentUser?.profile.avatar_url}
+                  name={currentUser?.profile.full_name || currentUser?.email}
+                  size={40}
+                  className="border border-slate-200 dark:border-slate-700"
+                  textClassName="text-xs"
+                />
                 <div className="relative flex-1">
                   <input
                     type="text"
@@ -152,26 +150,20 @@ export function PostComments({ post: initialPost, isOpen, onClose }: PostComment
                     key={comment.id}
                     className="flex gap-3"
                   >
-                    <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-slate-100 dark:border-slate-800 shadow-sm">
-                      {comment.author.avatar_url ? (
-                        <img
-                          src={comment.author.avatar_url}
-                          alt={comment.author.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-amber-500/10 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 font-bold text-sm">
-                          {comment.author.name[0]}
-                        </div>
-                      )}
-                    </div>
+                    <UserAvatar
+                      src={comment.author.avatar_url}
+                      name={comment.author.name}
+                      size={36}
+                      className="border border-slate-100 dark:border-slate-800 shadow-sm"
+                      textClassName="text-sm"
+                    />
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center gap-2">
                         <h4 className="text-xs font-bold text-slate-900 dark:text-white">
                           {comment.author.name}
                         </h4>
                         <span className="text-[10px] text-slate-400">
-                          • {dayjs(comment.created_at).fromNow()}
+                          • {dayjs(toJsDate(comment.created_at)).fromNow()}
                         </span>
                       </div>
                       <div className="relative rounded-2xl rounded-tl-none bg-slate-50 p-3 text-sm text-slate-600 shadow-sm dark:bg-slate-800/50 dark:text-slate-300">

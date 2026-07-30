@@ -1,7 +1,7 @@
 import { AppUser } from '@/types'
 import { Timestamp, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from './config'
+import { db } from './config'
+import { uploadFile } from './storage'
 import { collection, getDocs, query, where, orderBy, onSnapshot, getCountFromServer } from 'firebase/firestore'
 
 export const getUserById = async (userId: string): Promise<AppUser | null> => {
@@ -69,12 +69,7 @@ export const uploadAvatar = async (uid: string, file: File): Promise<string> => 
   try {
     // Referência única baseada no UID e timestamp
     const fileExtension = file.name.split('.').pop()
-    const fileRef = ref(storage, `avatars/${uid}_${Date.now()}.${fileExtension}`)
-
-    await uploadBytes(fileRef, file)
-    const downloadURL = await getDownloadURL(fileRef)
-
-    return downloadURL
+    return await uploadFile(`avatars/${uid}_${Date.now()}.${fileExtension}`, file)
   } catch (error) {
     console.error('Erro ao fazer upload da imagem:', error)
     throw new Error('Erro ao processar imagem de perfil.')

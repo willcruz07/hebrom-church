@@ -1,32 +1,64 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { Timestamp } from "firebase/firestore"
 import dayjs from './dayjs'
-
-interface FirestoreTimestamp {
-  seconds: number;
-  nanoseconds: number;
-}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 export function formatDate(
-  date: Date | string | number | FirestoreTimestamp | null | undefined, 
+  date: Date | string | number | Timestamp | null | undefined,
   format = "DD/MM/YYYY"
 ) {
   if (!date) return '-'
-  
-  // Handle Firestore Timestamp
-  if (date && typeof date === 'object' && 'seconds' in date) {
-    return dayjs.unix((date as FirestoreTimestamp).seconds).format(format)
+
+  if (date instanceof Timestamp) {
+    return dayjs(date.toDate()).format(format)
   }
-  
-  // Handle native Date, string or number
-  const d = dayjs(date as Date | string | number)
+
+  const d = dayjs(date)
   if (!d.isValid()) return '-'
-  
+
   return d.format(format)
+}
+
+/**
+ * Converte campos created_at/updated_at para Date de forma segura.
+ * Documentos do Firestore criados antes da convenção de Timestamp podem
+ * não ter o campo, ou tê-lo em outro formato — trata isso como época (data mínima)
+ * em vez de estourar, já que TypeScript não garante o formato do dado já persistido.
+ */
+export function toJsDate(value: Timestamp | Date | string | number | null | undefined): Date {
+  if (!value) return new Date(0)
+  if (value instanceof Timestamp) return value.toDate()
+  if (value instanceof Date) return value
+
+  const d = new Date(value)
+  return isNaN(d.getTime()) ? new Date(0) : d
+}
+
+const AVATAR_COLORS = [
+  'bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
+  'bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400',
+  'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400',
+  'bg-rose-100 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400',
+  'bg-purple-100 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400',
+  'bg-sky-100 text-sky-600 dark:bg-sky-900/20 dark:text-sky-400',
+  'bg-teal-100 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400',
+  'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400',
+]
+
+/**
+ * Cor determinística (com base num seed, ex. nome/uid) para avatares de fallback.
+ * Mesma pessoa sempre cai na mesma cor, mas cores variam entre pessoas diferentes.
+ */
+export function getAvatarColor(seed: string): string {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
 
 export function formatPhone(phone?: string) {

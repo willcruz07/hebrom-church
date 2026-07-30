@@ -26,6 +26,7 @@ import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { maskPhone } from '@/lib/utils'
 import { ImageCropper } from '@/components/ui/ImageCropper'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 const profileSchema = z.object({
   full_name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
@@ -201,14 +202,11 @@ export default function ProfilePage() {
                 <div className="flex flex-col gap-6 md:flex-row md:items-start">
                   <div className="relative group mx-auto md:mx-0">
                     <div className="h-32 w-32 overflow-hidden rounded-2xl border-4 border-slate-100 dark:border-slate-800 relative">
-                      <img
-                        src={
-                          newImageURL ||
-                          currentUser.profile.avatar_url ||
-                          `https://ui-avatars.com/api/?name=${currentUser.profile.full_name}&background=0D8ABC&color=fff&size=256`
-                        }
-                        alt="Avatar"
-                        className="object-cover w-full"
+                      <UserAvatar
+                        src={newImageURL || currentUser.profile.avatar_url}
+                        name={currentUser.profile.full_name}
+                        className="h-full w-full rounded-2xl"
+                        textClassName="text-4xl"
                       />
                       <AnimatePresence>
                         {isUploading && (

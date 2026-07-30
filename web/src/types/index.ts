@@ -55,7 +55,7 @@ export interface PostComment {
     avatar_url: string;
   };
   content: string;
-  created_at: number;
+  created_at: Timestamp;
 }
 
 export interface FeedPost {
@@ -69,7 +69,7 @@ export interface FeedPost {
   content: string;
   media_url?: string;
   target_groups: string[];
-  created_at: number | Timestamp;
+  created_at: Timestamp;
   likes?: string[];
   comments?: PostComment[];
 }
@@ -87,15 +87,16 @@ export interface PrayerRequest {
   };
   pastor_response?: string;
   is_archived: boolean;
-  created_at: number;
-  updated_at: number;
+  created_at: Timestamp;
+  updated_at: Timestamp;
 }
 export interface ChurchGroup {
   id: string;
   name: string;
   description?: string;
   leader_uid?: string;
-  created_at: number;
+  created_at: Timestamp;
+  updated_at?: Timestamp;
 }
 
 export type EventCategory = 'Culto' | 'Homens' | 'Mulheres' | 'Jovens' | 'Imersão' | 'Batismo' | 'Outro';
@@ -109,8 +110,8 @@ export interface ChurchEvent {
   location: string;
   category: EventCategory;
   thumbnail_url?: string;
-  created_at: Timestamp | number;
-  updated_at?: Timestamp | number;
+  created_at: Timestamp;
+  updated_at?: Timestamp;
 }
 
 export interface DailyWord {
@@ -121,5 +122,5 @@ export interface DailyWord {
   author_uid: string;
   author_name: string;
   publish_date: string; // YYYY-MM-DD
-  created_at: Timestamp | number;
+  created_at: Timestamp;
 }

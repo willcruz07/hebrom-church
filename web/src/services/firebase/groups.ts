@@ -48,7 +48,7 @@ export const createGroup = async (name: string, description?: string): Promise<v
     await addDoc(collection(db, 'groups'), {
       name,
       description: description || '',
-      created_at: Date.now()
+      created_at: serverTimestamp()
     });
   } catch (error) {
     console.error('Erro ao criar grupo:', error);

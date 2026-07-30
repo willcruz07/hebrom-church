@@ -21,13 +21,13 @@ import {
   Heart,
   Calendar,
   Users,
-  User,
   X,
   Layers,
   IdCard,
 } from 'lucide-react'
 import { useWindowSize } from 'usehooks-ts'
 import { Sheet, SheetContent } from './ui/sheet'
+import { UserAvatar } from './ui/UserAvatar'
 
 interface SidebarProps {
   className?: string
@@ -184,20 +184,12 @@ export function Sidebar({ className }: SidebarProps) {
 
       <div className="border-b border-slate-200 p-6 dark:border-slate-800">
         <div className="flex items-center space-x-3">
-          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-100 to-amber-200 dark:from-slate-700 dark:to-slate-600">
-            {currentUser?.profile.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={currentUser.profile.avatar_url}
-                alt={currentUser.profile.full_name || currentUser.email || 'Usuário'}
-                width={48}
-                height={48}
-                className="h-12 w-12 rounded-full object-cover"
-              />
-            ) : (
-              <User className="h-6 w-6 text-amber-600 dark:text-slate-300" />
-            )}
-          </div>
+          <UserAvatar
+            src={currentUser?.profile.avatar_url}
+            name={currentUser?.profile.full_name || currentUser?.email}
+            size={48}
+            textClassName="text-lg"
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium text-slate-900 dark:text-white">
               {currentUser?.profile.full_name || 'Usuário'}

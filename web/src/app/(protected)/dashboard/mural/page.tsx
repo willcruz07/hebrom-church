@@ -17,7 +17,9 @@ import { PostComments } from './components/PostComments'
 import { subscribeToPosts, deletePost, toggleLike } from '@/services/firebase/mural'
 import { FeedPost } from '@/types'
 import dayjs from '@/lib/dayjs'
+import { toJsDate } from '@/lib/utils'
 import { toast } from 'sonner'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 export default function MuralPage() {
   const { permissions } = usePermissions()
@@ -156,17 +158,13 @@ export default function MuralPage() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  {post.author.avatar_url ? (
-                    <img
-                      src={post.author.avatar_url}
-                      alt={post.author.name}
-                      className="h-12 w-12 rounded-2xl object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 font-bold text-lg">
-                      {post.author.name[0]}
-                    </div>
-                  )}
+                  <UserAvatar
+                    src={post.author.avatar_url}
+                    name={post.author.name}
+                    size={48}
+                    className="rounded-2xl"
+                    textClassName="text-lg"
+                  />
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-slate-900 dark:text-white">
@@ -179,11 +177,7 @@ export default function MuralPage() {
                       )}
                     </div>
                     <p className="text-xs text-slate-500">
-                      {dayjs(
-                        typeof post.created_at === 'number'
-                          ? post.created_at
-                          : post.created_at.toMillis(),
-                      ).fromNow()}
+                      {dayjs(toJsDate(post.created_at)).fromNow()}
                     </p>
                   </div>
                 </div>

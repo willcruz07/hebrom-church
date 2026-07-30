@@ -45,6 +45,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { PrayerRequest } from '@/types'
+import { toJsDate } from '@/lib/utils'
 
 export default function PrayerPage() {
   const { permissions, isPastor, isSecretary } = usePermissions()
@@ -83,7 +84,7 @@ export default function PrayerPage() {
     // Filtro de data
     let matchesDate = true
     if (dateFilter) {
-      const prayerDate = new Date(p.created_at)
+      const prayerDate = toJsDate(p.created_at)
       matchesDate = prayerDate.toDateString() === dateFilter.toDateString()
     }
 
@@ -366,8 +367,8 @@ export default function PrayerPage() {
                     )}
                   </div>
                   <p className="text-xs text-slate-500">
-                    {new Date(prayer.created_at).toLocaleDateString('pt-BR')} às{' '}
-                    {new Date(prayer.created_at).toLocaleTimeString('pt-BR', {
+                    {toJsDate(prayer.created_at).toLocaleDateString('pt-BR')} às{' '}
+                    {toJsDate(prayer.created_at).toLocaleTimeString('pt-BR', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
@@ -483,7 +484,7 @@ export default function PrayerPage() {
                     {selectedPrayer.request_text}
                   </p>
                   <p className="mt-4 text-[10px] text-slate-400">
-                    Enviado em {new Date(selectedPrayer.created_at).toLocaleString('pt-BR')}
+                    Enviado em {toJsDate(selectedPrayer.created_at).toLocaleString('pt-BR')}
                   </p>
                 </div>
 

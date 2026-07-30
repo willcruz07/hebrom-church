@@ -29,6 +29,7 @@ import {
 import { CreateMemberModal } from './components/CreateMemberModal'
 import { cn, formatDate } from '@/lib/utils'
 import { DataTable, Column } from '@/components/DataTable'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 const roleLabels: Record<UserRole, string> = {
   pastor: 'Pastor',
@@ -117,14 +118,13 @@ export default function MembersPage() {
       meta: { isTitle: true, isAvatar: true },
       cell: (member) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-slate-800 dark:text-slate-400 font-bold overflow-hidden border border-slate-200 dark:border-slate-700">
-            {member.profile.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={member.profile.avatar_url} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <span className="text-sm uppercase">{member.profile.full_name[0]}</span>
-            )}
-          </div>
+          <UserAvatar
+            src={member.profile.avatar_url}
+            name={member.profile.full_name}
+            size={40}
+            className="rounded-xl border border-slate-200 dark:border-slate-700"
+            textClassName="text-sm"
+          />
           <div className="flex flex-col min-w-0">
             <span className="truncate font-bold text-slate-900 dark:text-white">
               {member.profile.full_name}
@@ -262,7 +262,7 @@ export default function MembersPage() {
             />
           </div>
 
-          <div className="w-full md:w-auto overflow-x-auto scrollbar-hide py-1 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
+          <div className="w-full md:w-auto overflow-x-auto no-scrollbar py-1 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
             <div className="flex items-center gap-2 min-w-max">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                 <Filter className="h-4 w-4" />
@@ -272,7 +272,7 @@ export default function MembersPage() {
                   <button
                     key={role}
                     onClick={() => setRoleFilter(role)}
-                    className={`whitespace-nowrap px-4 py-2.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider transition-all active:scale-95 ${
+                    className={`shrink-0 whitespace-nowrap px-4 py-2.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider transition-all active:scale-95 ${
                       roleFilter === role
                         ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20 dark:shadow-none'
                         : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400'
@@ -298,17 +298,13 @@ export default function MembersPage() {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative shrink-0">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-slate-800 dark:text-slate-400 font-bold overflow-hidden border-2 border-white dark:border-slate-700 shadow-sm ring-1 ring-slate-100 dark:ring-slate-800">
-                      {member.profile.avatar_url ? (
-                        <img
-                          src={member.profile.avatar_url}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-lg uppercase">{member.profile.full_name[0]}</span>
-                      )}
-                    </div>
+                    <UserAvatar
+                      src={member.profile.avatar_url}
+                      name={member.profile.full_name}
+                      size={48}
+                      className="rounded-2xl border-2 border-white dark:border-slate-700 shadow-sm ring-1 ring-slate-100 dark:ring-slate-800"
+                      textClassName="text-lg"
+                    />
                     {(member.role === 'pending_member' || member.role === 'visitor') && (
                       <div
                         className={cn(

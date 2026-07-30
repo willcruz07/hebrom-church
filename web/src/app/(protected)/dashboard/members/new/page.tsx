@@ -188,7 +188,7 @@ export default function MemberCreatePage() {
       </header>
 
       <Tabs defaultValue="auth" className="w-full">
-        <div className="w-full overflow-x-auto scrollbar-hide mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="w-full overflow-x-auto no-scrollbar mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
           <TabsList className="flex w-max min-w-full md:grid md:w-full md:grid-cols-7 rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
             <TabsTrigger
               value="auth"

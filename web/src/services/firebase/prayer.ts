@@ -39,8 +39,8 @@ export const prayerService = {
     try {
       const docRef = await addDoc(collection(db, COLLECTION_NAME), {
         ...requestData,
-        created_at: Date.now(),
-        updated_at: Date.now(),
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
       });
       return docRef.id;
     } catch (error) {
@@ -54,7 +54,7 @@ export const prayerService = {
       const requestRef = doc(db, COLLECTION_NAME, id);
       await updateDoc(requestRef, {
         ...requestData,
-        updated_at: Date.now(),
+        updated_at: serverTimestamp(),
       });
     } catch (error) {
       console.error('Error updating prayer request:', error);

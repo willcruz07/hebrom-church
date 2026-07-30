@@ -7,14 +7,16 @@ import {
   getDocs,
   where,
   Timestamp,
+  serverTimestamp,
   onSnapshot,
   doc,
   updateDoc,
   arrayUnion,
   arrayRemove,
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from './config'
+import { db } from './config'
+import { uploadFile } from './storage'
+import { notifyNewPost } from './notify'
 
 export const createPost = async (
   postData: Omit<FeedPost, 'id' | 'created_at'>,
@@ -26,30 +28,18 @@ export const createPost = async (
     if (imageFile) {
       const fileExtension = imageFile.name.split('.').pop()
       const fileName = `posts/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExtension}`
-      const storageRef = ref(storage, fileName)
-
-      await uploadBytes(storageRef, imageFile)
-      mediaUrl = await getDownloadURL(storageRef)
+      mediaUrl = await uploadFile(fileName, imageFile)
     }
 
     const newPost = {
       ...postData,
       media_url: mediaUrl || postData.media_url || '',
-      created_at: Date.now(), // Usando timestamp numérico conforme a interface FeedPost
+      created_at: serverTimestamp(),
     }
 
     await addDoc(collection(db, 'posts'), newPost)
 
-    // Disparar notificação push via API do servidor (Next.js)
-    fetch('/api/notifications/new-post', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: 'Novo Aviso na Hebrom!',
-        body: newPost.title,
-        url: '/dashboard/mural',
-      }),
-    }).catch((err) => console.error('Erro ao disparar notificação:', err))
+    notifyNewPost('Novo Aviso na Hebrom!', newPost.title, '/dashboard/mural')
   } catch (error) {
     console.error('Erro ao criar post:', error)
     throw new Error('Não foi possível publicar o aviso.')
@@ -134,7 +124,7 @@ export const addComment = async (
     const newComment: PostComment = {
       ...comment,
       id: Math.random().toString(36).substring(7),
-      created_at: Date.now(),
+      created_at: Timestamp.now(),
     }
 
     await updateDoc(postRef, {

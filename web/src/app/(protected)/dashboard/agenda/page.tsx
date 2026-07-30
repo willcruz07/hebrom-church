@@ -229,11 +229,11 @@ export default function AgendaPage() {
               <h3 className="text-sm md:text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">Filtros</h3>
               <Filter className="h-4 w-4 text-slate-400" />
             </div>
-            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide -mx-2 px-2 lg:mx-0 lg:px-0 lg:flex-col lg:space-y-2">
+            <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar -mx-2 px-2 lg:mx-0 lg:px-0 lg:flex-col lg:space-y-2 w-max min-w-full lg:w-full">
               <button
                 onClick={() => setFilter('Todos')}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl px-4 py-2.5 text-[11px] lg:text-sm font-black uppercase tracking-wider transition-all whitespace-nowrap lg:w-full',
+                  'flex items-center gap-3 rounded-xl px-4 py-2.5 text-[11px] lg:text-sm font-black uppercase tracking-wider transition-all whitespace-nowrap shrink-0 lg:w-full',
                   filter === 'Todos'
                     ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
                     : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400',
@@ -247,7 +247,7 @@ export default function AgendaPage() {
                   key={cat.name}
                   onClick={() => setFilter(cat.name)}
                   className={cn(
-                    'flex items-center gap-3 rounded-xl px-4 py-2.5 text-[11px] lg:text-sm font-black uppercase tracking-wider transition-all whitespace-nowrap lg:w-full',
+                    'flex items-center gap-3 rounded-xl px-4 py-2.5 text-[11px] lg:text-sm font-black uppercase tracking-wider transition-all whitespace-nowrap shrink-0 lg:w-full',
                     filter === cat.name
                       ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
                       : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400',

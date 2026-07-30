@@ -22,6 +22,7 @@ import {
 import { getDailyWord } from '@/services/firebase/daily-word'
 import { DailyWord } from '@/types'
 import dayjs from '@/lib/dayjs'
+import { toJsDate } from '@/lib/utils'
 import { useState } from 'react'
 import {
   Bar,
@@ -35,7 +36,7 @@ import {
   Pie,
   PieChart,
 } from 'recharts'
-import { getDocs, collection, query, orderBy, where, Timestamp } from 'firebase/firestore'
+import { getDocs, collection, query, orderBy, where } from 'firebase/firestore'
 import { db } from '@/services/firebase/config'
 import { prayerService } from '@/services/firebase/prayer'
 import { agendaService } from '@/services/firebase/agenda'
@@ -208,20 +209,18 @@ export default function DashboardPage() {
     const totalMembers = members.length
     const activeMembers = members.filter(m => m.is_active).length
     const newMembersThisMonth = members.filter(m => {
-      const createdAt = m.created_at instanceof Timestamp ? m.created_at.toDate() : m.created_at
-      return dayjs(createdAt).isAfter(now.startOf('month'))
+      return dayjs(toJsDate(m.created_at)).isAfter(now.startOf('month'))
     }).length
     const newMembersLastMonth = members.filter(m => {
-      const createdAt = m.created_at instanceof Timestamp ? m.created_at.toDate() : m.created_at
-      return dayjs(createdAt).isBetween(lastMonth.startOf('month'), lastMonth.endOf('month'))
+      return dayjs(toJsDate(m.created_at)).isBetween(lastMonth.startOf('month'), lastMonth.endOf('month'))
     }).length
     const memberTrend = lastMonth.isBefore(now) ? (newMembersLastMonth === 0 ? (newMembersThisMonth > 0 ? 100 : 0) : Math.round(((newMembersThisMonth - newMembersLastMonth) / newMembersLastMonth) * 100)) : 0
 
     // Prayer Stats
     const totalPrayers = prayers.filter(p => !p.is_archived).length
     const pendingPrayers = prayers.filter(p => p.status === 'pending' && !p.is_archived).length
-    const prayersThisMonth = prayers.filter(p => dayjs(p.created_at).isAfter(now.startOf('month'))).length
-    const prayersLastMonth = prayers.filter(p => dayjs(p.created_at).isBetween(lastMonth.startOf('month'), lastMonth.endOf('month'))).length
+    const prayersThisMonth = prayers.filter(p => dayjs(toJsDate(p.created_at)).isAfter(now.startOf('month'))).length
+    const prayersLastMonth = prayers.filter(p => dayjs(toJsDate(p.created_at)).isBetween(lastMonth.startOf('month'), lastMonth.endOf('month'))).length
     const prayerTrend = prayersLastMonth === 0 ? (prayersThisMonth > 0 ? 100 : 0) : Math.round(((prayersThisMonth - prayersLastMonth) / prayersLastMonth) * 100)
 
     // Events Stats
@@ -230,12 +229,10 @@ export default function DashboardPage() {
 
     // Mural Stats
     const postsThisMonth = posts.filter(p => {
-      const createdAt = p.created_at instanceof Timestamp ? p.created_at.toMillis() : p.created_at
-      return dayjs(createdAt).isAfter(now.startOf('month'))
+      return dayjs(toJsDate(p.created_at)).isAfter(now.startOf('month'))
     }).length
     const postsLastMonth = posts.filter(p => {
-      const createdAt = p.created_at instanceof Timestamp ? p.created_at.toMillis() : p.created_at
-      return dayjs(createdAt).isBetween(lastMonth.startOf('month'), lastMonth.endOf('month'))
+      return dayjs(toJsDate(p.created_at)).isBetween(lastMonth.startOf('month'), lastMonth.endOf('month'))
     }).length
     const muralTrend = postsLastMonth === 0 ? (postsThisMonth > 0 ? 100 : 0) : Math.round(((postsThisMonth - postsLastMonth) / postsLastMonth) * 100)
 
@@ -243,10 +240,9 @@ export default function DashboardPage() {
     const months = Array.from({ length: 6 }).map((_, i) => now.subtract(5 - i, 'month'))
     const monthlyData = months.map(m => {
       const membersInMonth = members.filter(user => {
-        const createdAt = user.created_at instanceof Timestamp ? user.created_at.toDate() : user.created_at
-        return dayjs(createdAt).isBefore(m.endOf('month'))
+        return dayjs(toJsDate(user.created_at)).isBefore(m.endOf('month'))
       }).length
-      const prayersInMonth = prayers.filter(p => dayjs(p.created_at).isBetween(m.startOf('month'), m.endOf('month'))).length
+      const prayersInMonth = prayers.filter(p => dayjs(toJsDate(p.created_at)).isBetween(m.startOf('month'), m.endOf('month'))).length
       
       return {
         month: m.format('MMM'),

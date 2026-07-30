@@ -45,6 +45,7 @@ import { getGroups } from '@/services/firebase/groups'
 import { doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/services/firebase/config'
 import { maskPhone, maskCPF, maskCEP, cn } from '@/lib/utils'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 const memberSchema = z.object({
   // Pessoal
@@ -243,17 +244,12 @@ export default function MemberEditPage() {
           </div> */}
 
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 relative z-10">
-            <div className="flex h-20 w-20 md:h-24 md:w-24 shrink-0 items-center justify-center rounded-3xl bg-amber-100 text-amber-600 dark:bg-slate-800 dark:text-slate-400 font-black overflow-hidden border-4 border-white dark:border-slate-800 shadow-xl ring-1 ring-slate-100 dark:ring-slate-700">
-              {member?.profile.avatar_url ? (
-                <img
-                  src={member.profile.avatar_url}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="text-3xl uppercase">{member?.profile.full_name[0]}</span>
-              )}
-            </div>
+            <UserAvatar
+              src={member?.profile.avatar_url}
+              name={member?.profile.full_name}
+              className="h-20 w-20 md:h-24 md:w-24 rounded-3xl border-4 border-white dark:border-slate-800 shadow-xl ring-1 ring-slate-100 dark:ring-slate-700"
+              textClassName="text-3xl"
+            />
 
             <div className="flex-1 space-y-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -325,7 +321,7 @@ export default function MemberEditPage() {
 
       <Tabs defaultValue="personal" className="w-full">
         <div className="relative w-full overflow-x-auto mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
-          <TabsList className="overflow-x-auto scrollbar-hide inline-flex h-11 w-max min-w-full items-center justify-start rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
+          <TabsList className="overflow-x-auto no-scrollbar inline-flex h-11 w-max min-w-full items-center justify-start rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
             <TabsTrigger
               value="personal"
               className="rounded-lg px-4 py-2 text-xs font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 whitespace-nowrap shrink-0"
