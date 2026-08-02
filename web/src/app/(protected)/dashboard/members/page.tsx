@@ -130,7 +130,7 @@ export default function MembersPage() {
               {member.profile.full_name}
             </span>
             <span className="truncate text-[10px] text-slate-500 dark:text-slate-400">
-              {member.role === 'visitor' ? 'Visitante' : member.profile.church_position || 'Membro'}
+              {member.role === 'visitor' ? 'Visitante' : member.atribuicao_principal || 'Membro'}
             </span>
           </div>
         </div>
@@ -327,9 +327,9 @@ export default function MembersPage() {
                       >
                         {roleLabels[member.role]}
                       </span>
-                      {member.profile.church_position && (
+                      {member.atribuicao_principal && (
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                          {member.profile.church_position}
+                          {member.atribuicao_principal}
                         </span>
                       )}
                     </div>

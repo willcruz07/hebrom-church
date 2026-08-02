@@ -5,33 +5,20 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Image as ImageIcon, Send, Type, AlignLeft, Users, AlertCircle } from 'lucide-react'
+import { X, Image as ImageIcon, Send, Type, AlignLeft, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/store/useAuth'
 import { createPost } from '@/services/firebase/mural'
 import { getGroups } from '@/services/firebase/groups'
 import { ChurchGroup } from '@/types'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
+import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
 
-const postSchema = z
-  .object({
-    title: z.string().min(5, 'O título deve ter pelo menos 5 caracteres'),
-    content: z.string().min(10, 'O conteúdo deve ter pelo menos 10 caracteres'),
-    type: z.enum(['Geral', 'Grupo']),
-    target_group: z.string().optional().or(z.literal('')),
-  })
-  .refine(
-    (data) => {
-      if (data.type === 'Grupo' && !data.target_group) {
-        return false
-      }
-      return true
-    },
-    {
-      message: 'Selecione um grupo para este aviso',
-      path: ['target_group'],
-    },
-  )
+const postSchema = z.object({
+  title: z.string().min(5, 'O título deve ter pelo menos 5 caracteres'),
+  content: z.string().min(10, 'O conteúdo deve ter pelo menos 10 caracteres'),
+  target_groups: z.array(z.string()),
+})
 
 type PostFormValues = z.infer<typeof postSchema>
 
@@ -54,17 +41,17 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
     register,
     handleSubmit,
     watch,
+    setValue,
     reset,
     formState: { errors },
   } = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
     defaultValues: {
-      type: 'Geral',
-      target_group: '',
+      target_groups: [],
     },
   })
 
-  const postType = watch('type')
+  const selectedGroups = watch('target_groups')
 
   useEffect(() => {
     if (isOpen) {
@@ -116,7 +103,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
             name: currentUser.profile.full_name || currentUser.email,
             avatar_url: currentUser.profile.avatar_url || '',
           },
-          target_groups: data.type === 'Grupo' && data.target_group ? [data.target_group] : [],
+          target_groups: data.target_groups,
         },
         selectedFile || undefined,
       )
@@ -221,56 +208,29 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
                 )}
               </div>
 
-              {/* Type & Group Selection */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                    Tipo de Alcance
-                  </label>
-                  <select
-                    {...register('type')}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none dark:border-slate-700 dark:bg-slate-800"
-                  >
-                    <option value="Geral">🌍 Geral (Todos)</option>
-                    <option value="Grupo">👥 Grupo Específico</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                    <Users
-                      className={`h-4 w-4 ${postType === 'Grupo' ? 'text-amber-500' : 'text-slate-400'}`}
-                    />
-                    Vínculo de Grupo
-                  </label>
-                  <select
-                    {...register('target_group')}
-                    disabled={postType === 'Geral' || isLoadingGroups}
-                    className={`w-full rounded-xl border bg-slate-50 px-4 py-2.5 text-sm transition-all focus:outline-none dark:bg-slate-800 ${
-                      postType === 'Geral'
-                        ? 'opacity-50 grayscale'
-                        : 'border-slate-200 dark:border-slate-700'
-                    } ${errors.target_group ? 'border-red-500' : ''}`}
-                  >
-                    <option value="">Selecione um grupo...</option>
-                    {groups.map((group) => (
-                      <option key={group.id} value={group.name}>
-                        {group.name}
-                      </option>
-                    ))}
-                  </select>
-                  {postType === 'Grupo' && groups.length === 0 && !isLoadingGroups && (
-                    <p className="text-[10px] text-amber-600 flex items-center gap-1 mt-1">
-                      <AlertCircle className="h-3 w-3" />
-                      Nenhum grupo cadastrado nas configurações.
-                    </p>
-                  )}
-                  {errors.target_group && (
-                    <p className="text-xs text-red-500 font-medium">
-                      {errors.target_group.message}
-                    </p>
-                  )}
-                </div>
+              {/* Alcance */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-amber-500" />
+                  Alcance (Grupos)
+                </label>
+                <ChipMultiSelect
+                  title="Alcance do Aviso"
+                  triggerLabel="Geral (todos) + grupos"
+                  emptyMessage={
+                    isLoadingGroups
+                      ? 'Carregando grupos...'
+                      : 'Nenhum grupo cadastrado nas configurações.'
+                  }
+                  options={groups.map((group) => ({ id: group.name, label: group.name }))}
+                  selected={selectedGroups || []}
+                  onChange={(next) =>
+                    setValue('target_groups', next as PostFormValues['target_groups'])
+                  }
+                />
+                <p className="text-[10px] text-slate-500">
+                  Nenhum grupo selecionado = aviso Geral (visível a todos).
+                </p>
               </div>
 
               {/* Description Input */}

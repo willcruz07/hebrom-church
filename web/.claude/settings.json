@@ -19,5 +19,20 @@
       "Read(./hebrom-sys-firebase-adminsdk-*.json)",
       "Read(./.env*)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/lint-check.mjs",
+            "timeout": 30,
+            "statusMessage": "Checando eslint no arquivo editado..."
+          }
+        ]
+      }
+    ]
   }
 }

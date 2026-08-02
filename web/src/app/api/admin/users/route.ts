@@ -1,10 +1,21 @@
 import { NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/services/firebase/admin-config';
 import { Timestamp } from 'firebase-admin/firestore';
+import { resolveAttributionGroupIds } from '@/lib/ministry-attributions';
 
 export async function POST(request: Request) {
   try {
-    const { email, password, role, sub_groups, ...profileData } = await request.json();
+    const {
+      email,
+      password,
+      role,
+      atribuicao_principal,
+      atribuicoes_secundarias,
+      can_post_mural,
+      ...profileData
+    } = await request.json();
+
+    const sub_groups = resolveAttributionGroupIds(atribuicao_principal, atribuicoes_secundarias);
 
     // 1. Criar usuário no Firebase Auth
     const userRecord = await adminAuth.createUser({
@@ -17,7 +28,10 @@ export async function POST(request: Request) {
     const userData = {
       email,
       role: role || 'member',
-      sub_groups: sub_groups || [],
+      sub_groups,
+      atribuicao_principal: atribuicao_principal || null,
+      atribuicoes_secundarias: atribuicoes_secundarias || [],
+      can_post_mural: role === 'secretary' || role === 'pastor' ? true : Boolean(can_post_mural),
       profile: {
         ...profileData,
         avatar_url: profileData.avatar_url || null,

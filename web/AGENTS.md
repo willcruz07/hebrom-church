@@ -33,6 +33,18 @@ Tudo em `src/services/firebase/*`, um arquivo por domínio (`agenda.ts`, `groups
 ## Jobs agendados e triggers de backend
 Ficam em `../backend` (Cloud Functions), não em `src/app/api/**`. Este repositório (`web`) é a subpasta do monorepo em `D:\Code\hebrom-sys`; `backend/` é sibling dela. Cloud Functions usa credenciais padrão do projeto (sem precisar de `FIREBASE_CLIENT_EMAIL`/`FIREBASE_PRIVATE_KEY`) e suporta triggers reativos do Firestore/Storage, que o Next.js/Vercel não conseguem oferecer. Exemplo: `backend/src/birthdays.ts` roda todo dia às 08:00 (America/Sao_Paulo), cria o aviso de aniversariantes do dia no mural e dispara a notificação. Deploy via `cd backend && npm run deploy` (usa `firebase-tools`).
 
+## Módulos de domínio
+O ecossistema do Hebrom Sys cobre membresia, secretaria e pastoral de uma igreja. Cada módulo abaixo tem uma spec de design-alvo em `specs/` e um skill de guardrail correspondente em `.claude/skills/` — leia a spec antes de mexer no módulo, o skill carrega sozinho quando a tarefa bate com a descrição dele.
+
+| Módulo | O que cobre | Spec | Skill |
+|---|---|---|---|
+| Papéis e permissões | 4 níveis de acesso (visitante/membro/secretaria/admin-pastor) + líder de grupo como moderador por ministério | `specs/roles-permissoes.md` | `roles-permissoes` |
+| Ministérios e carteirinha | ~15 ministérios, atribuição primária/secundária por usuário, tema visual da carteirinha | `specs/ministerios-carteirinha.md` | `ministerios-carteirinha` |
+| Mural e grupos | Feed geral vs. feed por grupo (fórum), moderação do líder de grupo | `specs/mural-grupos.md` | `mural-grupos` |
+| Arquitetura de dados / Firestore | Estratégia de `onSnapshot`, cache local, janelas de tempo, paginação — para minimizar custo de leitura | `specs/firestore-arquitetura-dados.md` | `firestore-cache` |
+
+**Importante**: as specs descrevem o **design-alvo** (muitas dessas features ainda não existem no código hoje). Elas são referência para conversas futuras, não uma ordem para implementar ou refatorar nada agora — só mexa em código a partir delas quando o usuário pedir explicitamente.
+
 ## Não fazer
 - Não commitar `.env*` ou o JSON de credenciais do Firebase Admin (já cobertos pelo `.gitignore`).
 - Não usar `git push --force`.

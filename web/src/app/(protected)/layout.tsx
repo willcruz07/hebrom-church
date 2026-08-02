@@ -5,6 +5,7 @@ import { MobileLayout } from '@/components/mobile/MobileLayout';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/store/useAuth';
 import { requestNotificationPermission, onForegroundMessage } from '@/services/firebase/messaging';
+import { seedFixedGroups } from '@/services/firebase/groups';
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -13,10 +14,19 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     setMounted(true);
-    
+
     if (currentUser) {
       requestNotificationPermission(currentUser.uid);
       onForegroundMessage();
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    // Garante que os 20 grupos fixos por atribuição existam — ver specs/mural-grupos.md
+    if (currentUser && (currentUser.role === 'secretary' || currentUser.role === 'pastor')) {
+      seedFixedGroups().catch((error) => {
+        console.error('Erro ao configurar grupos padrão:', error);
+      });
     }
   }, [currentUser]);
 

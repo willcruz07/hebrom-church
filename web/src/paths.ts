@@ -15,7 +15,6 @@ export const ROUTES = {
     MURAL: '/dashboard/mural',
     PRAYER: '/dashboard/prayer',
     AGENDA: '/dashboard/agenda',
-    GROUPS: '/dashboard/groups',
     PROFILE: '/dashboard/profile',
     ID_CARD: '/dashboard/id-card',
     DAILY_WORD: '/dashboard/daily-word',

@@ -17,8 +17,6 @@ import {
   Save,
   Trash2,
   AlertCircle,
-  Users,
-  CheckCircle2,
   Heart,
   Baby,
   UserCheck,
@@ -39,13 +37,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { AppUser, ChurchGroup } from '@/types'
+import { AppUser } from '@/types'
 import { getUserById, updateUserProfile, deleteUser } from '@/services/firebase/users'
-import { getGroups } from '@/services/firebase/groups'
 import { doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/services/firebase/config'
 import { maskPhone, maskCPF, maskCEP, cn } from '@/lib/utils'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { MINISTRY_ATTRIBUTIONS, resolveAttributionGroupIds } from '@/lib/ministry-attributions'
+import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
+import { Switch } from '@/components/ui/switch'
 
 const memberSchema = z.object({
   // Pessoal
@@ -78,13 +78,14 @@ const memberSchema = z.object({
   // Eclesiástico
   communion_date: z.string().optional(),
   baptism_date: z.string().optional(),
-  sub_groups: z.array(z.string()),
+  atribuicao_principal: z.enum(MINISTRY_ATTRIBUTIONS).optional(),
+  atribuicoes_secundarias: z.array(z.enum(MINISTRY_ATTRIBUTIONS)),
+  can_post_mural: z.boolean(),
 
   // Saúde/Emergência
   emergency_contact_name: z.string().optional(),
   emergency_contact_phone: z.string().optional(),
   blood_type: z.string().optional(),
-  church_position: z.string().optional(),
 })
 
 type MemberFormData = z.infer<typeof memberSchema>
@@ -95,7 +96,6 @@ export default function MemberEditPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [member, setMember] = useState<AppUser | null>(null)
-  const [groups, setGroups] = useState<ChurchGroup[]>([])
 
   const {
     register,
@@ -107,16 +107,19 @@ export default function MemberEditPage() {
   } = useForm<MemberFormData>({
     resolver: zodResolver(memberSchema) as any,
     defaultValues: {
-      sub_groups: [],
+      atribuicoes_secundarias: [],
+      can_post_mural: false,
     },
   })
 
-  const selectedGroups = watch('sub_groups')
+  const selectedAttribution = watch('atribuicao_principal')
+  const selectedSecondaryAttributions = watch('atribuicoes_secundarias')
+  const selectedRole = watch('role')
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [userData, groupsData] = await Promise.all([getUserById(uid), getGroups()])
+        const userData = await getUserById(uid)
 
         if (!userData) {
           toast.error('Membro não encontrado')
@@ -125,7 +128,6 @@ export default function MemberEditPage() {
         }
 
         setMember(userData)
-        setGroups(groupsData)
 
         // Populate form
         reset({
@@ -152,11 +154,12 @@ export default function MemberEditPage() {
           zip_code: userData.profile.zip_code || '',
           communion_date: userData.profile.communion_date || '',
           baptism_date: userData.profile.baptism_date || '',
-          sub_groups: userData.sub_groups || [],
+          atribuicao_principal: userData.atribuicao_principal,
+          atribuicoes_secundarias: userData.atribuicoes_secundarias || [],
+          can_post_mural: userData.can_post_mural ?? false,
           emergency_contact_name: userData.profile.emergency_contact_name || '',
           emergency_contact_phone: userData.profile.emergency_contact_phone || '',
           blood_type: userData.profile.blood_type || '',
-          church_position: userData.profile.church_position || '',
         })
       } catch (error) {
         toast.error('Erro ao carregar dados')
@@ -172,14 +175,25 @@ export default function MemberEditPage() {
     setSaving(true)
     try {
       // Split data for profile and user document
-      const { role, sub_groups, ...profileFields } = data
+      const {
+        role,
+        atribuicao_principal,
+        atribuicoes_secundarias,
+        can_post_mural,
+        ...profileFields
+      } = data
 
       await updateUserProfile(uid, profileFields)
+
+      const sub_groups = resolveAttributionGroupIds(atribuicao_principal, atribuicoes_secundarias)
 
       const userRef = doc(db, 'users', uid)
       await updateDoc(userRef, {
         role,
         sub_groups,
+        atribuicao_principal: atribuicao_principal ?? null,
+        atribuicoes_secundarias,
+        can_post_mural: role === 'secretary' || role === 'pastor' ? true : can_post_mural,
         updated_at: Timestamp.now(),
       })
 
@@ -189,18 +203,6 @@ export default function MemberEditPage() {
       toast.error('Erro ao salvar alterações')
     } finally {
       setSaving(false)
-    }
-  }
-
-  const toggleGroup = (groupId: string) => {
-    const current = selectedGroups || []
-    if (current.includes(groupId)) {
-      setValue(
-        'sub_groups',
-        current.filter((id) => id !== groupId),
-      )
-    } else {
-      setValue('sub_groups', [...current, groupId])
     }
   }
 
@@ -274,7 +276,7 @@ export default function MemberEditPage() {
               <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm text-slate-500 font-medium">
                 <div className="flex items-center gap-1.5">
                   <Briefcase className="h-3.5 w-3.5 text-amber-500" />
-                  {member?.profile.church_position || 'Membro'}
+                  {member?.atribuicao_principal || 'Membro'}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Phone className="h-3.5 w-3.5 text-amber-500" />
@@ -593,12 +595,24 @@ export default function MemberEditPage() {
               <CardContent className="space-y-8">
                 <div className="grid gap-6 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label>Cargo Eclesiástico</Label>
-                    <Input
-                      {...register('church_position')}
-                      placeholder="Ex: Diácono, Presbítero, Obreiro"
-                      className="h-11"
-                    />
+                    <Label>Cargo principal</Label>
+                    <Select
+                      onValueChange={(v) =>
+                        setValue('atribuicao_principal', v as MemberFormData['atribuicao_principal'])
+                      }
+                      defaultValue={member?.atribuicao_principal}
+                    >
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Nenhum" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MINISTRY_ATTRIBUTIONS.map((attribution) => (
+                          <SelectItem key={attribution} value={attribution}>
+                            {attribution}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>Permissão do Sistema</Label>
@@ -628,42 +642,39 @@ export default function MemberEditPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Ministérios e Grupos</Label>
-                    <span className="text-[10px] text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
-                      {selectedGroups?.length || 0} selecionados
-                    </span>
+                <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <Label className="text-sm font-semibold">Atribuições extras</Label>
+                  <ChipMultiSelect
+                    title="Atribuições extras"
+                    triggerLabel="Selecionar atribuições extras"
+                    options={MINISTRY_ATTRIBUTIONS.filter((a) => a !== selectedAttribution).map(
+                      (a) => ({ id: a, label: a }),
+                    )}
+                    selected={selectedSecondaryAttributions || []}
+                    onChange={(next) =>
+                      setValue(
+                        'atribuicoes_secundarias',
+                        next as MemberFormData['atribuicoes_secundarias'],
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                  <div>
+                    <Label className="text-sm font-semibold">Pode postar/gerenciar no mural</Label>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Já é automático para Secretaria/Pastor. Ative aqui para dar esse acesso a um
+                      membro específico.
+                    </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                    {groups.map((group) => (
-                      <button
-                        key={group.id}
-                        type="button"
-                        onClick={() => toggleGroup(group.id)}
-                        className={cn(
-                          'flex items-center gap-2 px-3 py-3 rounded-xl text-xs font-semibold transition-all border text-left',
-                          selectedGroups?.includes(group.id)
-                            ? 'bg-amber-600 border-amber-600 text-white shadow-md shadow-amber-200 dark:shadow-none'
-                            : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400',
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                            selectedGroups?.includes(group.id)
-                              ? 'bg-white/20 border-white/40'
-                              : 'border-slate-300 dark:border-slate-700',
-                          )}
-                        >
-                          {selectedGroups?.includes(group.id) && (
-                            <CheckCircle2 className="h-3 w-3" />
-                          )}
-                        </div>
-                        <span className="truncate">{group.name}</span>
-                      </button>
-                    ))}
-                  </div>
+                  <Switch
+                    checked={
+                      selectedRole === 'secretary' || selectedRole === 'pastor' || watch('can_post_mural')
+                    }
+                    disabled={selectedRole === 'secretary' || selectedRole === 'pastor'}
+                    onCheckedChange={(checked) => setValue('can_post_mural', checked)}
+                  />
                 </div>
               </CardContent>
             </Card>

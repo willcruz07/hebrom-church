@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/store/useAuth'
-import { MessageSquare, Bell, Filter, Plus, Heart, MoreHorizontal, Trash2 } from 'lucide-react'
+import { MessageSquare, Bell, Plus, Heart, MoreHorizontal, Trash2 } from 'lucide-react'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import {
   DropdownMenu,
@@ -15,11 +15,15 @@ import {
 import { CreatePostModal } from './components/CreatePostModal'
 import { PostComments } from './components/PostComments'
 import { subscribeToPosts, deletePost, toggleLike } from '@/services/firebase/mural'
-import { FeedPost } from '@/types'
+import { getGroups } from '@/services/firebase/groups'
+import { FeedPost, ChurchGroup } from '@/types'
 import dayjs from '@/lib/dayjs'
 import { toJsDate } from '@/lib/utils'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
+
+const GENERAL_FILTER_ID = '__general__'
 
 export default function MuralPage() {
   const { permissions } = usePermissions()
@@ -27,7 +31,8 @@ export default function MuralPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [posts, setPosts] = useState<FeedPost[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'general' | 'groups'>('all')
+  const [myGroups, setMyGroups] = useState<ChurchGroup[]>([])
+  const [activeFilters, setActiveFilters] = useState<string[]>([])
 
   const [selectedPostForComments, setSelectedPostForComments] = useState<FeedPost | null>(null)
 
@@ -41,20 +46,35 @@ export default function MuralPage() {
     return () => unsubscribe()
   }, [])
 
+  useEffect(() => {
+    if (!currentUser?.sub_groups?.length) {
+      setMyGroups([])
+      return
+    }
+    getGroups().then((all) =>
+      setMyGroups(all.filter((g) => currentUser.sub_groups.includes(g.id))),
+    )
+  }, [currentUser?.sub_groups])
+
   const filteredPosts = posts.filter((post) => {
     const isGeral = post.target_groups.length === 0
-    const isFromMyGroup =
-      currentUser &&
-      post.target_groups.some((group) => (currentUser.sub_groups || []).includes(group))
+    const isFromMyGroup = myGroups.some((g) => post.target_groups.includes(g.name))
 
-    if (filter === 'general') return isGeral
-    if (filter === 'groups') return isFromMyGroup
-
-    // Default 'all' logic
-    if (permissions.canViewGroupFeed) {
+    if (activeFilters.length === 0) {
+      // Default: geral + grupos que participa
       return isGeral || isFromMyGroup || post.author.uid === currentUser?.uid
     }
-    return isGeral
+
+    const wantsGeneral = activeFilters.includes(GENERAL_FILTER_ID)
+    const wantsGroupNames = activeFilters
+      .filter((f) => f !== GENERAL_FILTER_ID)
+      .map((id) => myGroups.find((g) => g.id === id)?.name)
+      .filter((name): name is string => Boolean(name))
+
+    return (
+      (wantsGeneral && isGeral) ||
+      post.target_groups.some((groupName) => wantsGroupNames.includes(groupName))
+    )
   })
 
   const handleDeletePost = async (postId: string) => {
@@ -108,40 +128,27 @@ export default function MuralPage() {
         )}
       </header>
 
-      <div className="flex items-center gap-4 border-b border-slate-200 pb-4 dark:border-slate-800">
-        <button
-          onClick={() => setFilter('all')}
-          className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-            filter === 'all'
-              ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
-              : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-          }`}
-        >
-          <Filter className="h-4 w-4" />
-          Todos
-        </button>
-        <button
-          onClick={() => setFilter('general')}
-          className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-            filter === 'general'
-              ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
-              : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-          }`}
-        >
-          Geral
-        </button>
-        {permissions.canViewGroupFeed && (
-          <button
-            onClick={() => setFilter('groups')}
-            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              filter === 'groups'
-                ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
-                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-            }`}
-          >
-            Meus Grupos
-          </button>
-        )}
+      <div className="flex flex-col gap-2 border-b border-slate-200 pb-4 dark:border-slate-800">
+        <ChipMultiSelect
+          title="Filtrar Feed"
+          triggerLabel="Filtrar"
+          options={[
+            { id: GENERAL_FILTER_ID, label: 'Geral' },
+            ...myGroups.map((g) => ({ id: g.id, label: g.name })),
+          ]}
+          selected={activeFilters}
+          onChange={setActiveFilters}
+        />
+        <p className="text-xs font-medium text-slate-500">
+          {activeFilters.length === 0
+            ? 'Mostrando: Geral + grupos que você participa'
+            : `Filtro ativo: ${activeFilters
+                .map((id) =>
+                  id === GENERAL_FILTER_ID ? 'Geral' : myGroups.find((g) => g.id === id)?.name,
+                )
+                .filter(Boolean)
+                .join(', ')}`}
+        </p>
       </div>
 
       <div className="grid gap-6">

@@ -1,4 +1,5 @@
 import { Timestamp } from 'firebase/firestore';
+import { MinistryAttribution } from '@/lib/ministry-attributions';
 
 export type UserRole = 'visitor' | 'pending_member' | 'member' | 'secretary' | 'pastor';
 
@@ -8,6 +9,11 @@ export interface AppUser {
   role: UserRole;
   is_active: boolean;
   sub_groups: string[];
+  // Atribuição ministerial — só secretaria/admin-pastor edita (ver specs/ministerios-carteirinha.md)
+  atribuicao_principal?: MinistryAttribution;
+  atribuicoes_secundarias?: MinistryAttribution[];
+  // Permissão independente da atribuição — ver specs/mural-grupos.md
+  can_post_mural?: boolean;
   profile: {
     full_name: string;
     avatar_url: string | null;
@@ -39,8 +45,7 @@ export interface AppUser {
     emergency_contact_name?: string;
     emergency_contact_phone?: string;
     blood_type?: string;
-    church_position?: string;
-    
+
     is_profile_public: boolean;
   };
   created_at: Timestamp;
@@ -95,6 +100,7 @@ export interface ChurchGroup {
   name: string;
   description?: string;
   leader_uid?: string;
+  is_fixed?: boolean;
   created_at: Timestamp;
   updated_at?: Timestamp;
 }

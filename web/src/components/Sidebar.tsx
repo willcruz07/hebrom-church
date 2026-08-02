@@ -22,7 +22,6 @@ import {
   Calendar,
   Users,
   X,
-  Layers,
   IdCard,
 } from 'lucide-react'
 import { useWindowSize } from 'usehooks-ts'
@@ -67,13 +66,6 @@ const navigationItems = [
     href: ROUTES.AUTHENTICATED.MEMBERS,
     icon: Users,
     description: 'Banco de membros',
-    permission: 'canManageUsers',
-  },
-  {
-    name: 'Grupos',
-    href: ROUTES.AUTHENTICATED.GROUPS,
-    icon: Layers,
-    description: 'Segmentações',
     permission: 'canManageUsers',
   },
   {

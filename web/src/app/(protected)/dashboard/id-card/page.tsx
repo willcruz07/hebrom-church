@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react'
 import { formatPhone, formatDate, cn } from '@/lib/utils'
 import Image from 'next/image'
 import { useNavigation } from '@/hooks/useNavigation'
+import { MINISTRY_ATTRIBUTION_THEME, MINISTRY_LEADER_ACCENT } from '@/lib/ministry-attributions'
 
 /**
  * IdCardPage Component
@@ -56,6 +57,10 @@ export default function IdCardPage() {
   const displayRole = roleLabels[userRole]
 
   const registrationDate = currentUser?.created_at ? formatDate(currentUser.created_at) : '---'
+
+  const attributionTheme = currentUser?.atribuicao_principal
+    ? MINISTRY_ATTRIBUTION_THEME[currentUser.atribuicao_principal]
+    : null
 
   return (
     <div
@@ -155,6 +160,35 @@ export default function IdCardPage() {
                 </span>
               </div>
             </div>
+
+            {/* Ministry Attribution Badge */}
+            {attributionTheme && (
+              <div className="mt-3 w-full px-2 md:px-4">
+                <div
+                  className="flex items-center justify-center gap-1.5 py-1.5 rounded-xl border backdrop-blur-md text-center"
+                  style={{
+                    borderColor: `${attributionTheme.bg}4D`,
+                    backgroundColor: `${attributionTheme.bg}1A`,
+                  }}
+                >
+                  {attributionTheme.isLeader && (
+                    <span
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{
+                        backgroundColor: MINISTRY_LEADER_ACCENT,
+                        boxShadow: `0 0 6px ${MINISTRY_LEADER_ACCENT}`,
+                      }}
+                    />
+                  )}
+                  <span
+                    className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.15em] md:tracking-[0.25em]"
+                    style={{ color: attributionTheme.bg }}
+                  >
+                    {currentUser?.atribuicao_principal}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* RIGHT PANEL: Identity & Church Details */}

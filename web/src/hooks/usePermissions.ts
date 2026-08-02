@@ -23,7 +23,7 @@ export const usePermissions = () => {
 
   const canManageUsers = isSecretary || isPastor;
   const canManageAgenda = isSecretary || isPastor;
-  const canPostTargetedFeed = isSecretary || isPastor;
+  const canPostTargetedFeed = isSecretary || isPastor || Boolean(currentUser?.can_post_mural);
   const canViewMetrics = isSecretary || isPastor;
 
   const canViewAllPrayers = isPastor;
