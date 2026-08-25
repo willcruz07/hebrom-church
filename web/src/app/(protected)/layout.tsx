@@ -2,9 +2,10 @@
 
 import { Sidebar } from '@/components/Sidebar';
 import { MobileLayout } from '@/components/mobile/MobileLayout';
+import NotificationPrompt from '@/components/notifications/NotificationPrompt';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/store/useAuth';
-import { requestNotificationPermission, onForegroundMessage } from '@/services/firebase/messaging';
+import { onForegroundMessage } from '@/services/firebase/messaging';
 import { seedFixedGroups } from '@/services/firebase/groups';
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +17,6 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     setMounted(true);
 
     if (currentUser) {
-      requestNotificationPermission(currentUser.uid);
       onForegroundMessage();
     }
   }, [currentUser]);
@@ -53,6 +53,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+      <NotificationPrompt />
     </>
   );
 }

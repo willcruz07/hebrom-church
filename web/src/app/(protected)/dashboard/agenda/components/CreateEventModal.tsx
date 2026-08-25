@@ -102,7 +102,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
 
       await agendaService.createEvent({
         ...data,
-        thumbnail_url: thumbnail_url || undefined,
+        ...(thumbnail_url ? { thumbnail_url } : {}),
       })
 
       toast.success('Evento criado com sucesso!')
@@ -133,54 +133,6 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
-          {/* Thumbnail Upload Area */}
-          <div className="space-y-2">
-            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-              Thumbnail do Evento
-            </Label>
-            <div
-              onClick={() => !previewUrl && fileInputRef.current?.click()}
-              className={
-                z.string().safeParse(previewUrl).success
-                  ? 'relative h-48 w-full overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all dark:border-slate-800 dark:bg-slate-900/50'
-                  : 'group relative flex h-48 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all hover:border-amber-500/50 hover:bg-amber-50/50 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-amber-500/30 dark:hover:bg-amber-900/10'
-              }
-            >
-              {previewUrl ? (
-                <>
-                  <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeFile()
-                    }}
-                    className="absolute top-2 right-2 rounded-full bg-red-500 p-1.5 text-white shadow-lg transition-transform hover:scale-110 active:scale-95"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </>
-              ) : (
-                <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-amber-600 transition-colors">
-                  <div className="rounded-full bg-white p-3 shadow-sm dark:bg-slate-800">
-                    <UploadCloud className="h-6 w-6" />
-                  </div>
-                  <span className="text-sm font-medium">Clique para enviar uma foto</span>
-                  <span className="text-[10px] uppercase tracking-wider opacity-60">
-                    PNG, JPG ou WEBP
-                  </span>
-                </div>
-              )}
-            </div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-          </div>
-
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title" className="font-bold">
@@ -275,6 +227,57 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
                 {...register('description')}
                 placeholder="Detalhes importantes sobre a programação..."
                 className="min-h-[100px] rounded-xl border-slate-200 focus:ring-amber-500 dark:border-slate-800"
+              />
+            </div>
+
+            {/* Thumbnail Upload Area */}
+            <div className="space-y-2">
+              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                Thumbnail do Evento (Opcional)
+              </Label>
+              <div
+                onClick={() => !previewUrl && fileInputRef.current?.click()}
+                className={
+                  z.string().safeParse(previewUrl).success
+                    ? 'relative h-32 w-full overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all dark:border-slate-800 dark:bg-slate-900/50'
+                    : 'group relative flex h-32 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all hover:border-amber-500/50 hover:bg-amber-50/50 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-amber-500/30 dark:hover:bg-amber-900/10'
+                }
+              >
+                {previewUrl ? (
+                  <>
+                    <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeFile()
+                      }}
+                      className="absolute top-2 right-2 rounded-full bg-red-500 p-1.5 text-white shadow-lg transition-transform hover:scale-110 active:scale-95"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center gap-1.5 text-slate-400 group-hover:text-amber-600 transition-colors">
+                    <div className="rounded-full bg-white p-2.5 shadow-sm dark:bg-slate-800">
+                      <UploadCloud className="h-5 w-5" />
+                    </div>
+                    <span className="text-xs font-medium">Clique para enviar uma foto</span>
+                    <span className="text-[10px] uppercase tracking-wider opacity-60">
+                      PNG, JPG ou WEBP
+                    </span>
+                  </div>
+                )}
+              </div>
+              <p className="text-[11px] font-medium text-slate-400">
+                Sem foto, o evento aparece na agenda só com data, título e descrição.
+              </p>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
               />
             </div>
           </div>

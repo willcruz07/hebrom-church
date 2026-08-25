@@ -23,3 +23,9 @@ export const ROUTES = {
 
 export const authenticatedRoutes: string[] = Object.values(ROUTES.AUTHENTICATED);
 export const withoutAuthenticatedRoutes: string[] = Object.values(ROUTES.NO_AUTH);
+
+export const matchesRoute = (route: string, path: string): boolean => {
+  if (route === path) return true
+  const normalized = route.endsWith('/') ? route : route + '/'
+  return path.startsWith(normalized)
+}

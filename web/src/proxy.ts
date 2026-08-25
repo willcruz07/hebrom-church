@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authenticatedRoutes, KEYS, ROUTES, withoutAuthenticatedRoutes } from '@/paths'
+import { authenticatedRoutes, KEYS, matchesRoute, ROUTES, withoutAuthenticatedRoutes } from '@/paths'
 
 export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
   const session = request.cookies.get(KEYS.COOKIES.USER_SESSIONS)?.value ?? ''
-
-  const matchesRoute = (route: string, p: string) => {
-    if (route === p) return true
-    const normalized = route.endsWith('/') ? route : route + '/'
-    return p.startsWith(normalized)
-  }
 
   const isProtected = authenticatedRoutes.some((route) => matchesRoute(route, path))
   const isPublic = withoutAuthenticatedRoutes.some((route) => route === path)

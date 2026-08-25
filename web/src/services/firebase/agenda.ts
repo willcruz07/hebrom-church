@@ -13,6 +13,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from './config';
+import { notifyNewPost } from './notify';
 import { ChurchEvent } from '@/types';
 
 const COLLECTION_NAME = 'events';
@@ -60,6 +61,9 @@ export const agendaService = {
         ...eventData,
         created_at: serverTimestamp()
       });
+
+      notifyNewPost('Novo Evento na Agenda!', eventData.title, '/dashboard/agenda');
+
       return docRef.id;
     } catch (error) {
       console.error('Error creating event:', error);
