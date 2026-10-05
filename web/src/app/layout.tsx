@@ -15,7 +15,16 @@ const inter = Inter({
   subsets: ['latin'],
 })
 
+// Base para resolver URLs relativas do Open Graph (ex.: /logo.png) em URLs absolutas.
+// VERCEL_PROJECT_PRODUCTION_URL é preenchida automaticamente pela Vercel (sem protocolo).
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : 'http://localhost:3000')
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'Hebrom Sys',
   description: 'Sistema de Gestão - Hebrom',
   icons: {

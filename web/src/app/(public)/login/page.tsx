@@ -1,17 +1,16 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useAuth } from '@/store/useAuth'
-import { ROUTES } from '@/paths'
 import Image from 'next/image'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
 
 export default function LoginPage() {
   const { signInWithGoogle, signInWithApple, loading } = useAuth()
-  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
 
+  // Não navega aqui: o AuthSession leva para /dashboard quando o currentUser
+  // (com cookie de sessão já gravado) estiver pronto.
   const handleLogin = async (method: 'google' | 'apple') => {
     setError(null)
     try {
@@ -20,7 +19,6 @@ export default function LoginPage() {
       } else {
         await signInWithApple()
       }
-      router.replace(ROUTES.AUTHENTICATED.HOME)
     } catch (err: any) {
       console.error(err)
       setError(`Falha na autenticação com ${method === 'google' ? 'Google' : 'Apple'}.`)

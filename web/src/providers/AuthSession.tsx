@@ -19,8 +19,8 @@ export function AuthSession({ children }: IAuthSessionProps) {
     checkAuth()
   }, [checkAuth])
 
-  // Rede de segurança: reage ao currentUser em vez de depender só do router.replace
-  // dentro do handler de login, que pode nunca resolver no mesmo contexto no iOS.
+  // Único ponto de navegação pós-login: reage ao currentUser em vez de depender do
+  // handler do botão, que no iOS pode nunca resolver (popup) ou nem existir (redirect).
   useEffect(() => {
     if (loading.checkAuth) return
 
@@ -28,7 +28,9 @@ export function AuthSession({ children }: IAuthSessionProps) {
     const isPublic = withoutAuthenticatedRoutes.some((route) => route === pathname)
 
     if (currentUser && isPublic) {
-      router.replace(ROUTES.AUTHENTICATED.HOME)
+      // Navegação completa (não client-side): o currentUser só é setado depois do cookie
+      // de sessão gravado, então o proxy.ts já libera /dashboard nesta requisição.
+      window.location.replace(ROUTES.AUTHENTICATED.HOME)
     } else if (!currentUser && isProtected) {
       router.replace(ROUTES.NO_AUTH.SIGN_IN)
     }
