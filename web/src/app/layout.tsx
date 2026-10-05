@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthSession } from '@/providers/AuthSession'
@@ -23,8 +23,28 @@ const siteUrl =
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : 'http://localhost:3000')
 
+// Declarado aqui (e não com <meta> manual): o Next injeta o próprio viewport depois do
+// manual, e o dele sem `viewport-fit=cover` fazia o iOS reservar a faixa da status bar.
+// Com `cover` + status bar `black-translucent`, o conteúdo desenha por baixo da status
+// bar; cada tela compensa com env(safe-area-inset-top) onde precisa.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  // Mesma cor da barra superior do app (MobileLayout): white / slate-900
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+  ],
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  appleWebApp: {
+    capable: true,
+    title: 'Hebrom Sys',
+    statusBarStyle: 'black-translucent',
+  },
   title: 'Hebrom Sys',
   description: 'Sistema de Gestão - Hebrom',
   icons: {
@@ -54,10 +74,8 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        {/* O Next só gera `mobile-web-app-capable`; o iOS ainda lê a versão apple- */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#3B82F6" />
       </head>
       <body className={`${inter.variable} antialiased`} suppressHydrationWarning>
         <ThemeProvider enableSystem attribute="class" defaultTheme="dark" disableTransitionOnChange>
@@ -68,7 +86,13 @@ export default function RootLayout({
               <MessagesProvider>
                 {children}
                 <AppMessageDialog />
-                <Toaster richColors position="top-right" />
+                <Toaster
+                  richColors
+                  position="top-right"
+                  // Não deixa o toast nascer por baixo da status bar no iOS
+                  offset={{ top: 'calc(env(safe-area-inset-top) + 24px)' }}
+                  mobileOffset={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}
+                />
               </MessagesProvider>
             </TooltipProvider>
           </AuthSession>

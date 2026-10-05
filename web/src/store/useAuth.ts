@@ -16,6 +16,7 @@ import {
 } from 'firebase/auth'
 import { Timestamp } from 'firebase/firestore'
 import { create } from 'zustand'
+import { ROUTES } from '@/paths'
 
 interface LoadingState {
   checkAuth: boolean
@@ -272,11 +273,17 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
   async signOut() {
     set((s) => ({ loading: { ...s.loading, signOut: true } }))
     try {
+      // Cookie primeiro: se o currentUser zerar antes, o proxy.ts ainda vê a sessão e
+      // devolve /login → /dashboard, prendendo o usuário (mesma corrida do login).
+      await clearSessionCookie().catch(console.error)
       if (isFirebaseReady()) {
         await firebaseSignOut(firebaseAuth)
       }
       set({ currentUser: null })
-      clearSessionCookie().catch(console.error)
+
+      // Navegação completa: além de garantir o proxy sem cookie, derruba os listeners
+      // onSnapshot e os stores do usuário anterior.
+      window.location.replace(ROUTES.NO_AUTH.SIGN_IN)
     } finally {
       set((s) => ({ loading: { ...s.loading, signOut: false } }))
     }

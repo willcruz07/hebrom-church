@@ -4,7 +4,7 @@
 'use client'
 
 import Image from 'next/image'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import { useMessages } from '@/hooks/useMessages'
 import { useNavigation } from '@/hooks/useNavigation'
@@ -89,7 +89,6 @@ export function Sidebar({ className }: SidebarProps) {
   const { onShowMessage } = useMessages()
   const { navigateTo } = useNavigation()
   const { permissions, role: userRole } = usePermissions()
-  const router = useRouter()
   const pathname = usePathname()
   const { width } = useWindowSize()
   const { menuIsOpen, setMenuIsOpen } = useMenuState()
@@ -135,11 +134,13 @@ export function Sidebar({ className }: SidebarProps) {
       title: 'Confirmar Saída',
       description: 'Deseja realmente sair da aplicação?',
       onConfirm: async () => {
+        // Fecha a gaveta antes: Sheet + Dialog abertos durante a navegação podem deixar
+        // o body com pointer-events: none. O signOut já redireciona para /login.
+        setMenuIsOpen(false)
         await signOut()
-        router.replace(ROUTES.NO_AUTH.SIGN_IN)
       },
     })
-  }, [onShowMessage, router, signOut])
+  }, [onShowMessage, setMenuIsOpen, signOut])
 
   const handleNavigation = (href: string) => {
     navigateTo(href)
@@ -291,7 +292,11 @@ export function Sidebar({ className }: SidebarProps) {
 
   return (
     <Sheet open={menuIsOpen} onOpenChange={setMenuIsOpen}>
-      <SheetContent side="left" className="w-80 p-0 border-none">
+      <SheetContent
+        side="left"
+        // A gaveta ocupa a tela toda: afasta o conteúdo da status bar e da home indicator
+        className="w-80 p-0 border-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+      >
         <SidebarContent />
       </SheetContent>
     </Sheet>

@@ -26,7 +26,9 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-slate-950">
+    // O fundo (absolute inset-0) sobe até o topo da tela, por baixo da status bar; só o
+    // conteúdo respeita a safe area, para o card não encostar nela em telas baixas.
+    <main className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-slate-950 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {/* Background with Ambient Light */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-amber-600/20 blur-[120px]" />

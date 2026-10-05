@@ -38,8 +38,9 @@ export function MobileLayout({
 
   return (
     <div className={cn('flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950', className)}>
-      {/* Mobile Top Header */}
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
+      {/* Mobile Top Header — estende o fundo por baixo da status bar do iOS (safe-area-inset-top)
+          para a status bar ter a mesma cor da barra; o conteúdo continua numa faixa de 4rem. */}
+      <header className="sticky top-0 z-30 flex h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b border-slate-200 bg-white/80 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
         {!isVisitor ? (
           <button
             onClick={() => setMenuIsOpen(true)}

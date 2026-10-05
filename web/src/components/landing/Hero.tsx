@@ -7,7 +7,8 @@ import Image from 'next/image'
 
 export function Hero() {
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">
+    // Imagem de fundo (absolute inset-0) cobre também a status bar; só o conteúdo respeita a safe area
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden pt-[env(safe-area-inset-top)]">
       {/* Background with Overlay */}
       <div
         className="absolute inset-0 bg-[url('/church_hero.png')] bg-cover bg-center bg-no-repeat"

@@ -2,15 +2,13 @@
 
 import { useAuth } from '@/store/useAuth'
 import { LogOut, Clock } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 
 export default function PendentePage() {
   const { signOut } = useAuth()
-  const router = useRouter()
 
+  // O signOut já redireciona para /login
   const handleSignOut = async () => {
     await signOut()
-    router.replace('/login')
   }
 
   return (
