@@ -1,5 +1,5 @@
 // Service Worker for Push Notifications
-const CACHE_NAME = 'hebrom-sys-v3';
+const CACHE_NAME = 'hebrom-sys-v4';
 const urlsToCache = ['/logo.png'];
 
 // Install event - cache resources
@@ -7,7 +7,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Opened cache v3');
+      console.log('Opened cache v4');
       return cache.addAll(urlsToCache);
     }),
   );
@@ -37,12 +37,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Ignorar Firebase, não-GET e cross-origin requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  const url = new URL(event.request.url);
+
+  // Só mesma origem (descarta chrome-extension://, Firebase, CDNs etc.)
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Em dev os chunks mudam a cada recompilação: servir cópia do cache gera
+  // ChunkLoadError e o Next recarrega a página em loop.
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    return;
+  }
+
+  // Nunca cachear payload RSC, API nem o runtime do Next — uma resposta velha
+  // aponta para chunks que já não existem no deploy atual.
   if (
-    event.request.url.includes('googleapis.com') ||
-    event.request.url.includes('firebaseio.com') ||
-    event.request.url.includes('firebasestorage.googleapis.com') ||
-    event.request.method !== 'GET'
+    url.pathname.startsWith('/_next/') ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/__/') ||
+    url.searchParams.has('_rsc') ||
+    event.request.headers.get('RSC') === '1'
   ) {
     return;
   }

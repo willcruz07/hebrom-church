@@ -47,7 +47,7 @@ export default function LoginPage() {
                 width={300}
                 height={120}
                 alt="Hebrom Sys"
-                priority
+                loading="eager"
                 className="h-auto w-48 object-contain drop-shadow-2xl"
               />
             </div>
