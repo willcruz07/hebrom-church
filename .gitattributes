@@ -1,0 +1,14 @@
+# Sempre LF no checkout, em qualquer SO. O ESLint do backend exige LF
+# (linebreak-style) e roda no predeploy das Cloud Functions.
+* text=auto eol=lf
+
+# Binários: nunca converter
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

@@ -6,7 +6,7 @@ import NotificationPrompt from '@/components/notifications/NotificationPrompt';
 import { useEffect, useState } from 'react';
 import { useMediaQuery } from 'usehooks-ts';
 import { useAuth } from '@/store/useAuth';
-import { onForegroundMessage } from '@/services/firebase/messaging';
+import { onForegroundMessage, syncNotificationToken } from '@/services/firebase/messaging';
 import { seedFixedGroups } from '@/services/firebase/groups';
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -21,8 +21,11 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
     if (currentUser) {
       onForegroundMessage();
+      syncNotificationToken(currentUser.uid);
     }
-  }, [currentUser]);
+    // Só quando troca de usuário — o objeto currentUser muda a cada atualização de perfil
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.uid]);
 
   useEffect(() => {
     // Garante que os 20 grupos fixos por atribuição existam — ver specs/mural-grupos.md

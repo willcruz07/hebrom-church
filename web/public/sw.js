@@ -1,5 +1,5 @@
 // Service Worker for Push Notifications
-const CACHE_NAME = 'hebrom-sys-v4';
+const CACHE_NAME = 'hebrom-sys-v5';
 const urlsToCache = ['/logo.png'];
 
 // Install event - cache resources
@@ -7,7 +7,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Opened cache v4');
+      console.log('Opened cache v5');
       return cache.addAll(urlsToCache);
     }),
   );
@@ -126,7 +126,17 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       const pushData = event.data.json();
-      notificationData = { ...notificationData, ...pushData };
+      // Formato do FCM (Admin SDK): { notification: { title, body }, data: { url } }
+      const fcmNotification = pushData.notification || {};
+      notificationData = {
+        ...notificationData,
+        title: fcmNotification.title || pushData.title || notificationData.title,
+        body: fcmNotification.body || pushData.body || notificationData.body,
+        data: {
+          ...notificationData.data,
+          url: (pushData.data && pushData.data.url) || pushData.url || notificationData.data.url,
+        },
+      };
     } catch (error) {
       console.error('Error parsing push data:', error);
       notificationData.body = event.data.text() || notificationData.body;
@@ -161,13 +171,18 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
-  const urlToOpen = action === 'view' ? notificationData.url || '/' : '/';
+  // Toque no corpo da notificação (action vazia) também abre o destino dela
+  const urlToOpen = new URL(notificationData.url || '/', self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // App já aberto (comum no PWA): reaproveita a janela em vez de abrir outra
       for (const client of clientList) {
-        if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus();
+        if ('focus' in client) {
+          return client
+            .focus()
+            .then((focused) => (focused.url === urlToOpen ? focused : focused.navigate(urlToOpen)))
+            .catch(() => clients.openWindow && clients.openWindow(urlToOpen));
         }
       }
       if (clients.openWindow) {
