@@ -35,6 +35,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { maskPhone, maskCPF, maskCEP } from '@/lib/utils'
 import { MINISTRY_ATTRIBUTIONS } from '@/lib/ministry-attributions'
 import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
+import { SelectField } from '@/components/ui/select-field'
+import {
+  BLOOD_TYPE_OPTIONS,
+  GENDER_OPTIONS,
+  MARITAL_STATUS_OPTIONS,
+  ROLE_OPTIONS,
+} from '@/lib/member-options'
 import { Switch } from '@/components/ui/switch'
 
 const memberSchema = z.object({
@@ -281,6 +288,7 @@ export default function MemberCreatePage() {
                   <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Telefone</Label>
                   <Input
                     {...register('phone')}
+                    numeric
                     onChange={(e) => setValue('phone', maskPhone(e.target.value))}
                     placeholder="(00) 00000-0000"
                     className="h-11 rounded-xl"
@@ -298,19 +306,14 @@ export default function MemberCreatePage() {
                     className="h-11 rounded-xl"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Sexo</Label>
-                  <Select onValueChange={(v) => setValue('gender', v as any)} defaultValue="M">
-                    <SelectTrigger className="h-11 rounded-xl">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="M">Masculino</SelectItem>
-                      <SelectItem value="F">Feminino</SelectItem>
-                      <SelectItem value="O">Outro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  label="Sexo"
+                  labelClassName="text-xs font-bold text-slate-700 dark:text-slate-300"
+                  options={GENDER_OPTIONS}
+                  onValueChange={(v) => setValue('gender', v)}
+                  defaultValue="M"
+                  triggerClassName="h-11 rounded-xl"
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -331,27 +334,17 @@ export default function MemberCreatePage() {
                   <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome da Mãe</Label>
                   <Input {...register('mother_name')} placeholder="Nome da mãe" className="h-11 rounded-xl" />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Estado Civil</Label>
-                  <Select
-                    onValueChange={(v) => setValue('marital_status', v as any)}
-                    defaultValue="single"
-                  >
-                    <SelectTrigger className="h-11 rounded-xl">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="single">Solteiro(a)</SelectItem>
-                      <SelectItem value="married">Casado(a)</SelectItem>
-                      <SelectItem value="divorced">Divorciado(a)</SelectItem>
-                      <SelectItem value="widowed">Viúvo(a)</SelectItem>
-                      <SelectItem value="separated">Separado(a)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  label="Estado Civil"
+                  labelClassName="text-xs font-bold text-slate-700 dark:text-slate-300"
+                  options={MARITAL_STATUS_OPTIONS}
+                  onValueChange={(v) => setValue('marital_status', v)}
+                  defaultValue="single"
+                  triggerClassName="h-11 rounded-xl"
+                />
                 <div className="space-y-2">
                   <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Quantidade de Filhos</Label>
-                  <Input type="number" {...register('children_count')} className="h-11 rounded-xl" />
+                  <Input type="number" numeric {...register('children_count')} className="h-11 rounded-xl" />
                 </div>
                 {watch('marital_status') === 'married' && (
                   <div className="space-y-2 md:col-span-2">
@@ -379,6 +372,7 @@ export default function MemberCreatePage() {
                   <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">CEP</Label>
                   <Input
                     {...register('zip_code')}
+                    numeric
                     onChange={(e) => setValue('zip_code', maskCEP(e.target.value))}
                     placeholder="00000-000"
                     className="h-11 rounded-xl"
@@ -433,6 +427,7 @@ export default function MemberCreatePage() {
                   <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">CPF</Label>
                   <Input
                     {...register('cpf')}
+                    numeric
                     onChange={(e) => setValue('cpf', maskCPF(e.target.value))}
                     placeholder="000.000.000-00"
                     className="h-11 rounded-xl"
@@ -482,21 +477,14 @@ export default function MemberCreatePage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Permissão do Sistema</Label>
-                    <Select onValueChange={(v) => setValue('role', v as any)} defaultValue="member">
-                      <SelectTrigger className="h-11 rounded-xl">
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="member">Membro</SelectItem>
-                        <SelectItem value="secretary">Secretária</SelectItem>
-                        <SelectItem value="pastor">Pastor</SelectItem>
-                        <SelectItem value="visitor">Visitante</SelectItem>
-                        <SelectItem value="pending_member">Pendente</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <SelectField
+                    label="Permissão do Sistema"
+                    labelClassName="text-xs font-bold text-slate-700 dark:text-slate-300"
+                    options={ROLE_OPTIONS}
+                    onValueChange={(v) => setValue('role', v)}
+                    defaultValue="member"
+                    triggerClassName="h-11 rounded-xl"
+                  />
                   <div className="space-y-2">
                     <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Data de Batismo</Label>
                     <Input type="date" {...register('baptism_date')} className="h-11 rounded-xl" />
@@ -557,21 +545,14 @@ export default function MemberCreatePage() {
                 <CardDescription className="text-[10px]">Informações cruciais para segurança do membro.</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Tipo Sanguíneo</Label>
-                  <Select onValueChange={(v) => setValue('blood_type', v)} defaultValue="O+">
-                    <SelectTrigger className="h-11 rounded-xl">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  label="Tipo Sanguíneo"
+                  labelClassName="text-xs font-bold text-slate-700 dark:text-slate-300"
+                  options={BLOOD_TYPE_OPTIONS}
+                  onValueChange={(v) => setValue('blood_type', v)}
+                  defaultValue="O+"
+                  triggerClassName="h-11 rounded-xl"
+                />
                 <div className="space-y-2">
                   <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome do Contato de Emergência</Label>
                   <Input
@@ -584,6 +565,7 @@ export default function MemberCreatePage() {
                   <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Telefone de Emergência</Label>
                   <Input
                     {...register('emergency_contact_phone')}
+                    numeric
                     onChange={(e) => setValue('emergency_contact_phone', maskPhone(e.target.value))}
                     placeholder="(00) 00000-0000"
                     className="h-11 rounded-xl"

@@ -5,6 +5,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  /* Tipografia fluida: escala com a largura da tela (20px em 320px → 30px em 1280px).
+     Em rem para respeitar o tamanho de fonte que o usuário configurou no sistema. */
+  --text-fluid-title: clamp(1.25rem, 1.042rem + 1.042vw, 1.875rem);
+  --text-fluid-title--line-height: 1.15;
+
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
 

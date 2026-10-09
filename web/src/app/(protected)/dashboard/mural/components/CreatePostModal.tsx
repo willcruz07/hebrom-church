@@ -257,7 +257,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700 transition-all hover:bg-slate-50 dark:border-slate-800 dark:text-white"
+                  className="flex-1  bg-red-700  rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700 transition-all hover:bg-slate-50 dark:border-slate-800 dark:text-white"
                 >
                   Cancelar
                 </button>

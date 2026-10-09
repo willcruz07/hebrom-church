@@ -14,13 +14,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { SelectField } from '@/components/ui/select-field'
+import { ROLE_OPTIONS } from '@/lib/member-options'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Edit, Check, UserMinus, UserCheck, Trash2 } from 'lucide-react'
@@ -167,27 +162,15 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Cargo / Permissão</Label>
-              <Select
-                onValueChange={(v) => setValue('role', v as FormData['role'])}
-                defaultValue={member.role}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="member">Membro</SelectItem>
-                  <SelectItem value="secretary">Secretária</SelectItem>
-                  <SelectItem value="pastor">Pastor</SelectItem>
-                  <SelectItem value="visitor">Visitante</SelectItem>
-                  <SelectItem value="pending_member">Pendente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <SelectField
+              label="Cargo / Permissão"
+              options={ROLE_OPTIONS}
+              onValueChange={(v) => setValue('role', v)}
+              defaultValue={member.role}
+            />
             <div className="space-y-2">
               <Label htmlFor="edit_phone">Telefone</Label>
-              <Input id="edit_phone" {...register('phone')} onChange={handlePhoneChange} />
+              <Input id="edit_phone" numeric {...register('phone')} onChange={handlePhoneChange} />
             </div>
           </div>
 

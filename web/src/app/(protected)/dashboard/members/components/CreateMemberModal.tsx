@@ -14,16 +14,11 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { SelectField } from '@/components/ui/select-field'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { UserPlus, Check } from 'lucide-react'
+import { ROLE_OPTIONS, type Option } from '@/lib/member-options'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { getGroups } from '@/services/firebase/groups'
 import { ChurchGroup } from '@/types'
@@ -40,6 +35,10 @@ const schema = z.object({
 })
 
 type FormData = z.infer<typeof schema>
+
+const CREATE_ROLE_OPTIONS = ROLE_OPTIONS.filter(
+  (o): o is Option<FormData['role']> => o.value !== 'pending_member',
+)
 
 interface CreateMemberModalProps {
   isOpen: boolean
@@ -158,27 +157,17 @@ export function CreateMemberModal({ isOpen, onClose, onSuccess }: CreateMemberMo
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Cargo / Role</Label>
-              <Select
-                onValueChange={(v) => setValue('role', v as FormData['role'])}
-                defaultValue="member"
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="member">Membro</SelectItem>
-                  <SelectItem value="secretary">Secretária</SelectItem>
-                  <SelectItem value="pastor">Pastor</SelectItem>
-                  <SelectItem value="visitor">Visitante</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <SelectField
+              label="Cargo / Role"
+              options={CREATE_ROLE_OPTIONS}
+              onValueChange={(v) => setValue('role', v)}
+              defaultValue="member"
+            />
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
               <Input
                 id="phone"
+                numeric
                 {...register('phone')}
                 onChange={handlePhoneChange}
                 placeholder="(00) 00000-0000"

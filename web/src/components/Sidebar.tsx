@@ -294,6 +294,7 @@ export function Sidebar({ className }: SidebarProps) {
     <Sheet open={menuIsOpen} onOpenChange={setMenuIsOpen}>
       <SheetContent
         side="left"
+        aria-describedby={undefined}
         // A gaveta ocupa a tela toda: afasta o conteúdo da status bar e da home indicator
         className="w-80 p-0 border-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
       >

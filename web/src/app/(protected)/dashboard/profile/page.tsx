@@ -305,6 +305,7 @@ export default function ProfilePage() {
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input
+                        inputMode="numeric"
                         {...register('phone', {
                           onChange: (e) => {
                             const masked = maskPhone(e.target.value)

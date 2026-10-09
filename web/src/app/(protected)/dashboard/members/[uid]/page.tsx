@@ -45,6 +45,13 @@ import { maskPhone, maskCPF, maskCEP, cn } from '@/lib/utils'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 import { MINISTRY_ATTRIBUTIONS, resolveAttributionGroupIds } from '@/lib/ministry-attributions'
 import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
+import { SelectField } from '@/components/ui/select-field'
+import {
+  BLOOD_TYPE_OPTIONS,
+  GENDER_OPTIONS,
+  MARITAL_STATUS_OPTIONS,
+  ROLE_OPTIONS,
+} from '@/lib/member-options'
 import { Switch } from '@/components/ui/switch'
 import { useMembersStore } from '@/store/useMembersStore'
 
@@ -257,41 +264,41 @@ export default function MemberEditPage() {
             <User className="h-24 w-24 md:h-32 md:w-32" />
           </div> */}
 
-          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 relative z-10">
-            <UserAvatar
-              src={member?.profile.avatar_url}
-              name={member?.profile.full_name}
-              className="h-20 w-20 md:h-24 md:w-24 rounded-3xl border-4 border-white dark:border-slate-800 shadow-xl ring-1 ring-slate-100 dark:ring-slate-700"
-              textClassName="text-3xl"
-            />
+          <div className="flex items-center gap-4 md:gap-6 relative z-10">
+            <div className="flex shrink-0 flex-col items-center gap-2">
+              <UserAvatar
+                src={member?.profile.avatar_url}
+                name={member?.profile.full_name}
+                className="h-16 w-16 md:h-24 md:w-24 rounded-3xl border-4 border-white dark:border-slate-800 shadow-xl ring-1 ring-slate-100 dark:ring-slate-700"
+                textClassName="text-2xl md:text-3xl"
+              />
+              <span
+                className={cn(
+                  'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap',
+                  member?.role === 'pastor'
+                    ? 'bg-purple-100 text-purple-700'
+                    : member?.role === 'secretary'
+                      ? 'bg-blue-100 text-blue-700'
+                      : member?.role === 'visitor'
+                        ? 'bg-slate-100 text-slate-700'
+                        : 'bg-emerald-100 text-emerald-700',
+                )}
+              >
+                {member?.role && member.role.replace('_', ' ')}
+              </span>
+            </div>
 
-            <div className="flex-1 space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white">
-                  {member?.profile.full_name}
-                </h2>
-                <span
-                  className={cn(
-                    'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest',
-                    member?.role === 'pastor'
-                      ? 'bg-purple-100 text-purple-700'
-                      : member?.role === 'secretary'
-                        ? 'bg-blue-100 text-blue-700'
-                        : member?.role === 'visitor'
-                          ? 'bg-slate-100 text-slate-700'
-                          : 'bg-emerald-100 text-emerald-700',
-                  )}
-                >
-                  {member?.role && member.role.replace('_', ' ')}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm text-slate-500 font-medium">
-                <div className="flex items-center gap-1.5">
-                  <Briefcase className="h-3.5 w-3.5 text-amber-500" />
-                  {member?.atribuicao_principal || 'Membro'}
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <h2 className="text-fluid-title font-black text-slate-900 dark:text-white break-words">
+                {member?.profile.full_name}
+              </h2>
+              <div className="flex flex-col gap-1 text-xs md:text-sm text-slate-500 font-medium">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Briefcase className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                  <span className="truncate">{member?.atribuicao_principal || 'Membro'}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Phone className="h-3.5 w-3.5 text-amber-500" />
+                  <Phone className="h-3.5 w-3.5 shrink-0 text-amber-500" />
                   {member?.profile.phone || 'Sem telefone'}
                 </div>
               </div>
@@ -379,8 +386,8 @@ export default function MemberEditPage() {
           <TabsContent value="personal">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-2">
-                <CardTitle className="text-base md:text-base font-black">
+              <CardHeader>
+                <CardTitle className="text-xl md:text-base font-black">
                   Informações Básicas
                 </CardTitle>
                 <CardDescription className="text-sm">
@@ -407,6 +414,7 @@ export default function MemberEditPage() {
                   <Label>Telefone</Label>
                   <Input
                     {...register('phone')}
+                    numeric
                     onChange={(e) => setValue('phone', maskPhone(e.target.value))}
                     placeholder="(00) 00000-0000"
                     className="h-11"
@@ -424,22 +432,13 @@ export default function MemberEditPage() {
                     className="h-11"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Sexo</Label>
-                  <Select
-                    onValueChange={(v) => setValue('gender', v as any)}
-                    defaultValue={watch('gender')}
-                  >
-                    <SelectTrigger className="h-11 w-full">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="M">Masculino</SelectItem>
-                      <SelectItem value="F">Feminino</SelectItem>
-                      <SelectItem value="O">Outro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  label="Sexo"
+                  options={GENDER_OPTIONS}
+                  onValueChange={(v) => setValue('gender', v)}
+                  defaultValue={watch('gender')}
+                  triggerClassName="h-11"
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -447,8 +446,8 @@ export default function MemberEditPage() {
           <TabsContent value="family">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-base md:text-base font-black">
+              <CardHeader>
+                <CardTitle className="text-xl md:text-base font-black">
                   Família e Relacionamento
                 </CardTitle>
                 <CardDescription className="text-sm">
@@ -464,27 +463,16 @@ export default function MemberEditPage() {
                   <Label>Nome da Mãe</Label>
                   <Input {...register('mother_name')} placeholder="Nome da mãe" className="h-11" />
                 </div>
-                <div className="space-y-2">
-                  <Label>Estado Civil</Label>
-                  <Select
-                    onValueChange={(v) => setValue('marital_status', v as any)}
-                    defaultValue={watch('marital_status')}
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="single">Solteiro(a)</SelectItem>
-                      <SelectItem value="married">Casado(a)</SelectItem>
-                      <SelectItem value="divorced">Divorciado(a)</SelectItem>
-                      <SelectItem value="widowed">Viúvo(a)</SelectItem>
-                      <SelectItem value="separated">Separado(a)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  label="Estado Civil"
+                  options={MARITAL_STATUS_OPTIONS}
+                  onValueChange={(v) => setValue('marital_status', v)}
+                  defaultValue={watch('marital_status')}
+                  triggerClassName="h-11"
+                />
                 <div className="space-y-2">
                   <Label>Quantidade de Filhos</Label>
-                  <Input type="number" {...register('children_count')} className="h-11" />
+                  <Input type="number" numeric {...register('children_count')} className="h-11" />
                 </div>
                 {watch('marital_status') === 'married' && (
                   <div className="space-y-2 md:col-span-2">
@@ -503,8 +491,8 @@ export default function MemberEditPage() {
           <TabsContent value="address">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-base md:text-base font-black">
+              <CardHeader>
+                <CardTitle className="text-xl md:text-base font-black">
                   Endereço Residencial
                 </CardTitle>
                 <CardDescription className="text-sm">
@@ -516,6 +504,7 @@ export default function MemberEditPage() {
                   <Label>CEP</Label>
                   <Input
                     {...register('zip_code')}
+                    numeric
                     onChange={(e) => setValue('zip_code', maskCEP(e.target.value))}
                     placeholder="00000-000"
                     className="h-11"
@@ -561,8 +550,8 @@ export default function MemberEditPage() {
           <TabsContent value="docs">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-base md:text-base font-black">Documentação</CardTitle>
+              <CardHeader>
+                <CardTitle className="text-xl md:text-base font-black">Documentação</CardTitle>
                 <CardDescription className="text-sm">
                   Documentos de identificação oficial.
                 </CardDescription>
@@ -572,6 +561,7 @@ export default function MemberEditPage() {
                   <Label>CPF</Label>
                   <Input
                     {...register('cpf')}
+                    numeric
                     onChange={(e) => setValue('cpf', maskCPF(e.target.value))}
                     placeholder="000.000.000-00"
                     className="h-11"
@@ -596,10 +586,8 @@ export default function MemberEditPage() {
           <TabsContent value="church">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-base md:text-base font-black">
-                  Vida Eclesiástica
-                </CardTitle>
+              <CardHeader>
+                <CardTitle className="text-xl md:text-base font-black">Vida Eclesiástica</CardTitle>
                 <CardDescription className="text-sm">
                   Histórico ministerial e grupos.
                 </CardDescription>
@@ -610,7 +598,10 @@ export default function MemberEditPage() {
                     <Label>Cargo principal</Label>
                     <Select
                       onValueChange={(v) =>
-                        setValue('atribuicao_principal', v as MemberFormData['atribuicao_principal'])
+                        setValue(
+                          'atribuicao_principal',
+                          v as MemberFormData['atribuicao_principal'],
+                        )
                       }
                       defaultValue={member?.atribuicao_principal}
                     >
@@ -626,24 +617,13 @@ export default function MemberEditPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Permissão do Sistema</Label>
-                    <Select
-                      onValueChange={(v) => setValue('role', v as any)}
-                      defaultValue={member?.role}
-                    >
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="member">Membro</SelectItem>
-                        <SelectItem value="secretary">Secretária</SelectItem>
-                        <SelectItem value="pastor">Pastor</SelectItem>
-                        <SelectItem value="visitor">Visitante</SelectItem>
-                        <SelectItem value="pending_member">Pendente</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <SelectField
+                    label="Permissão do Sistema"
+                    options={ROLE_OPTIONS}
+                    onValueChange={(v) => setValue('role', v)}
+                    defaultValue={member?.role}
+                    triggerClassName="h-11"
+                  />
                   <div className="space-y-2">
                     <Label>Data de Batismo</Label>
                     <Input type="date" {...register('baptism_date')} className="h-11" />
@@ -682,7 +662,9 @@ export default function MemberEditPage() {
                   </div>
                   <Switch
                     checked={
-                      selectedRole === 'secretary' || selectedRole === 'pastor' || watch('can_post_mural')
+                      selectedRole === 'secretary' ||
+                      selectedRole === 'pastor' ||
+                      watch('can_post_mural')
                     }
                     disabled={selectedRole === 'secretary' || selectedRole === 'pastor'}
                     onCheckedChange={(checked) => setValue('can_post_mural', checked)}
@@ -695,33 +677,20 @@ export default function MemberEditPage() {
           <TabsContent value="health">
             <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
               <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-base md:text-base font-black">
-                  Saúde e Cuidados
-                </CardTitle>
+              <CardHeader>
+                <CardTitle className="text-xl md:text-base font-black">Saúde e Cuidados</CardTitle>
                 <CardDescription className="text-sm">
                   Informações importantes para casos de emergência.
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Tipo Sanguíneo</Label>
-                  <Select
-                    onValueChange={(v) => setValue('blood_type', v)}
-                    defaultValue={watch('blood_type')}
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  label="Tipo Sanguíneo"
+                  options={BLOOD_TYPE_OPTIONS}
+                  onValueChange={(v) => setValue('blood_type', v)}
+                  defaultValue={watch('blood_type')}
+                  triggerClassName="h-11"
+                />
                 <div className="space-y-2">
                   <Label>Nome do Contato de Emergência</Label>
                   <Input
@@ -734,6 +703,7 @@ export default function MemberEditPage() {
                   <Label>Telefone de Emergência</Label>
                   <Input
                     {...register('emergency_contact_phone')}
+                    numeric
                     onChange={(e) => setValue('emergency_contact_phone', maskPhone(e.target.value))}
                     placeholder="(00) 00000-0000"
                     className="h-11"
@@ -745,7 +715,7 @@ export default function MemberEditPage() {
         </form>
 
         {/* Mobile Actions */}
-        <div className="flex flex-col gap-3 mt-8 md:hidden">
+        <div className=" flex flex-col gap-4 md:hidden">
           <Button
             className="w-full bg-amber-600 hover:bg-amber-700 h-12 rounded-xl text-base font-black shadow-lg shadow-amber-500/25 dark:shadow-none"
             onClick={handleSubmit(onSubmit)}
@@ -761,7 +731,7 @@ export default function MemberEditPage() {
 
           <Button
             variant="outline"
-            className="w-full text-red-600 border-red-200 hover:bg-red-50 h-12 rounded-xl text-sm font-bold"
+            className="w-full bg-red-700 text-red-100  hover:bg-red-50 h-12 rounded-xl text-sm font-bold"
             onClick={async () => {
               if (confirm('Deseja realmente excluir este membro?')) {
                 try {

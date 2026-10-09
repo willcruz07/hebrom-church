@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/store/useAuth'
-import { MessageSquare, Bell, Plus, Heart, MoreHorizontal, Trash2 } from 'lucide-react'
+import { MessageSquare, Bell, ScrollText, Heart, MoreHorizontal, Trash2 } from 'lucide-react'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import {
   DropdownMenu,
@@ -51,9 +51,7 @@ export default function MuralPage() {
       setMyGroups([])
       return
     }
-    getGroups().then((all) =>
-      setMyGroups(all.filter((g) => currentUser.sub_groups.includes(g.id))),
-    )
+    getGroups().then((all) => setMyGroups(all.filter((g) => currentUser.sub_groups.includes(g.id))))
   }, [currentUser?.sub_groups])
 
   const filteredPosts = posts.filter((post) => {
@@ -106,7 +104,7 @@ export default function MuralPage() {
           <h1 className="text-xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Feed da Igreja
           </h1>
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="text-slate-500 max-w-2/3 dark:text-slate-400">
             Fique por dentro de tudo que acontece na Hebrom.
           </p>
         </div>
@@ -114,16 +112,13 @@ export default function MuralPage() {
           <>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 active:scale-95"
+              className="w-36 flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 transition-all hover:bg-amber-700 active:scale-95"
             >
-              <Plus className="h-4 w-4" />
+              <ScrollText className="h-6 w-6" />
               Novo Aviso
             </button>
 
-            <CreatePostModal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-            />
+            <CreatePostModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
           </>
         )}
       </header>

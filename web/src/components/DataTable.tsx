@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button'
 import { MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SwipeableRow } from '@/components/ui/SwipeableRow'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
 export interface DataAction<T> {
   label: string
@@ -326,6 +326,7 @@ export function DataTable<T>({
                 <SheetTitle className="truncate pr-8">
                   {sheetItem && getActionsTitle ? getActionsTitle(sheetItem) : 'Ações'}
                 </SheetTitle>
+                <SheetDescription className="sr-only">Ações disponíveis para este item</SheetDescription>
               </SheetHeader>
               <div className="flex flex-col gap-1 px-2 pb-4">
                 {sheetItem &&
