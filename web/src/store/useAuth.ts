@@ -16,7 +16,7 @@ import {
 } from 'firebase/auth'
 import { Timestamp } from 'firebase/firestore'
 import { create } from 'zustand'
-import { ROUTES } from '@/paths'
+import { authenticatedRoutes, matchesRoute, ROUTES } from '@/paths'
 
 interface LoadingState {
   checkAuth: boolean
@@ -127,6 +127,41 @@ async function signInWithOAuth(provider: AuthProvider) {
   await signInWithPopup(firebaseAuth, provider)
 }
 
+// Último AppUser em localStorage: o app abre na hora com ele e atualiza em segundo plano
+// (ver specs/navegacao-fluida.md). Só serve para renderizar a UI — nunca é fonte de
+// autorização; o dado real substitui o cache assim que o Firestore responde.
+const CACHED_USER_KEY = 'hebromsys_cached_user'
+
+function readCachedUser(uid: string): AppUser | null {
+  try {
+    const raw = localStorage.getItem(CACHED_USER_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (parsed?.uid !== uid) return null
+    // Timestamp vira {seconds, nanoseconds} no JSON — reconstrói para formatDate etc.
+    return {
+      ...parsed,
+      created_at: new Timestamp(parsed.created_at.seconds, parsed.created_at.nanoseconds),
+      updated_at: new Timestamp(parsed.updated_at.seconds, parsed.updated_at.nanoseconds),
+    }
+  } catch {
+    return null
+  }
+}
+
+function writeCachedUser(user: AppUser | null) {
+  try {
+    if (user) localStorage.setItem(CACHED_USER_KEY, JSON.stringify(user))
+    else localStorage.removeItem(CACHED_USER_KEY)
+  } catch {
+    // Storage indisponível (aba privada etc.) — o app só perde o atalho do boot
+  }
+}
+
+function isOnProtectedRoute(): boolean {
+  return authenticatedRoutes.some((route) => matchesRoute(route, window.location.pathname))
+}
+
 let authUnsubscribe: Unsubscribe | null = null
 
 async function clearSessionCookie() {
@@ -161,20 +196,45 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
     })
 
     authUnsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
+      let showingCachedUser = false
+
       try {
         if (user) {
-          const userData = await loadAppUser(user)
-          await setSessionCookie(await user.getIdToken())
+          const cachedUser = readCachedUser(user.uid)
+
+          // Numa rota protegida o proxy.ts já viu o cookie, então dá para liberar a tela
+          // com o cache e renovar cookie + AppUser em segundo plano. Fora dela (ex: /login)
+          // o cookie precisa estar gravado antes, senão o proxy devolve para o /login.
+          showingCachedUser = Boolean(cachedUser) && isOnProtectedRoute()
+
+          if (showingCachedUser) {
+            set((s) => ({ currentUser: cachedUser, loading: { ...s.loading, checkAuth: false } }))
+            user
+              .getIdToken()
+              .then(setSessionCookie)
+              .catch((error) => console.error('Erro ao renovar cookie de sessão:', error))
+          }
+
+          const [userData] = await Promise.all([
+            loadAppUser(user),
+            showingCachedUser ? Promise.resolve() : user.getIdToken().then(setSessionCookie),
+          ])
           set({ currentUser: userData })
+          writeCachedUser(userData)
           mirrorGoogleAvatar(userData)
         } else {
           set({ currentUser: null })
+          writeCachedUser(null)
           clearSessionCookie().catch(console.error)
         }
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error)
-        set((s) => ({ currentUser: null, loading: { ...s.loading, signIn: false } }))
-        clearSessionCookie().catch(console.error)
+        // Já está na tela com o cache (ex: offline): mantém em vez de deslogar
+        if (!showingCachedUser) {
+          set((s) => ({ currentUser: null, loading: { ...s.loading, signIn: false } }))
+          writeCachedUser(null)
+          clearSessionCookie().catch(console.error)
+        }
       } finally {
         set((s) => ({ loading: { ...s.loading, checkAuth: false } }))
       }
@@ -280,6 +340,7 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
         await firebaseSignOut(firebaseAuth)
       }
       set({ currentUser: null })
+      writeCachedUser(null)
 
       // Navegação completa: além de garantir o proxy sem cookie, derruba os listeners
       // onSnapshot e os stores do usuário anterior.

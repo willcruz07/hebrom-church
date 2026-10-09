@@ -46,6 +46,7 @@ import { UserAvatar } from '@/components/ui/UserAvatar'
 import { MINISTRY_ATTRIBUTIONS, resolveAttributionGroupIds } from '@/lib/ministry-attributions'
 import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
 import { Switch } from '@/components/ui/switch'
+import { useMembersStore } from '@/store/useMembersStore'
 
 const memberSchema = z.object({
   // Pessoal
@@ -90,12 +91,49 @@ const memberSchema = z.object({
 
 type MemberFormData = z.infer<typeof memberSchema>
 
+function toFormValues(userData: AppUser): MemberFormData {
+  return {
+    full_name: userData.profile.full_name,
+    role: userData.role,
+    phone: userData.profile.phone || '',
+    birth_date: userData.profile.birth_date || '',
+    gender: userData.profile.gender || 'M',
+    marital_status: userData.profile.marital_status || 'single',
+    spouse_name: userData.profile.spouse_name || '',
+    children_count: userData.profile.children_count || 0,
+    father_name: userData.profile.father_name || '',
+    mother_name: userData.profile.mother_name || '',
+    naturalness: userData.profile.naturalness || '',
+    profession: userData.profile.profession || '',
+    rg: userData.profile.rg || '',
+    cpf: userData.profile.cpf || '',
+    address: userData.profile.address || '',
+    address_number: userData.profile.address_number || '',
+    address_complement: userData.profile.address_complement || '',
+    neighborhood: userData.profile.neighborhood || '',
+    city: userData.profile.city || '',
+    state: userData.profile.state || '',
+    zip_code: userData.profile.zip_code || '',
+    communion_date: userData.profile.communion_date || '',
+    baptism_date: userData.profile.baptism_date || '',
+    atribuicao_principal: userData.atribuicao_principal,
+    atribuicoes_secundarias: userData.atribuicoes_secundarias || [],
+    can_post_mural: userData.can_post_mural ?? false,
+    emergency_contact_name: userData.profile.emergency_contact_name || '',
+    emergency_contact_phone: userData.profile.emergency_contact_phone || '',
+    blood_type: userData.profile.blood_type || '',
+  }
+}
+
 export default function MemberEditPage() {
   const { uid } = useParams() as { uid: string }
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
+  // Vindo da lista, o membro já está no useMembersStore: abre na hora, sem buscar de novo.
+  // Lido só na montagem — atualizações do listener não sobrescrevem o formulário em edição.
+  const [cachedMember] = useState(() => useMembersStore.getState().getMember(uid))
+  const [loading, setLoading] = useState(!cachedMember)
   const [saving, setSaving] = useState(false)
-  const [member, setMember] = useState<AppUser | null>(null)
+  const [member, setMember] = useState<AppUser | null>(cachedMember ?? null)
 
   const {
     register,
@@ -106,10 +144,12 @@ export default function MemberEditPage() {
     reset,
   } = useForm<MemberFormData>({
     resolver: zodResolver(memberSchema) as any,
-    defaultValues: {
-      atribuicoes_secundarias: [],
-      can_post_mural: false,
-    },
+    defaultValues: cachedMember
+      ? toFormValues(cachedMember)
+      : {
+          atribuicoes_secundarias: [],
+          can_post_mural: false,
+        },
   })
 
   const selectedAttribution = watch('atribuicao_principal')
@@ -117,6 +157,8 @@ export default function MemberEditPage() {
   const selectedRole = watch('role')
 
   useEffect(() => {
+    if (cachedMember) return
+
     async function loadData() {
       try {
         const userData = await getUserById(uid)
@@ -130,37 +172,7 @@ export default function MemberEditPage() {
         setMember(userData)
 
         // Populate form
-        reset({
-          full_name: userData.profile.full_name,
-          role: userData.role,
-          phone: userData.profile.phone || '',
-          birth_date: userData.profile.birth_date || '',
-          gender: userData.profile.gender || 'M',
-          marital_status: userData.profile.marital_status || 'single',
-          spouse_name: userData.profile.spouse_name || '',
-          children_count: userData.profile.children_count || 0,
-          father_name: userData.profile.father_name || '',
-          mother_name: userData.profile.mother_name || '',
-          naturalness: userData.profile.naturalness || '',
-          profession: userData.profile.profession || '',
-          rg: userData.profile.rg || '',
-          cpf: userData.profile.cpf || '',
-          address: userData.profile.address || '',
-          address_number: userData.profile.address_number || '',
-          address_complement: userData.profile.address_complement || '',
-          neighborhood: userData.profile.neighborhood || '',
-          city: userData.profile.city || '',
-          state: userData.profile.state || '',
-          zip_code: userData.profile.zip_code || '',
-          communion_date: userData.profile.communion_date || '',
-          baptism_date: userData.profile.baptism_date || '',
-          atribuicao_principal: userData.atribuicao_principal,
-          atribuicoes_secundarias: userData.atribuicoes_secundarias || [],
-          can_post_mural: userData.can_post_mural ?? false,
-          emergency_contact_name: userData.profile.emergency_contact_name || '',
-          emergency_contact_phone: userData.profile.emergency_contact_phone || '',
-          blood_type: userData.profile.blood_type || '',
-        })
+        reset(toFormValues(userData))
       } catch (error) {
         toast.error('Erro ao carregar dados')
       } finally {
@@ -169,7 +181,7 @@ export default function MemberEditPage() {
     }
 
     loadData()
-  }, [uid, reset, router])
+  }, [uid, cachedMember, reset, router])
 
   const onSubmit = async (data: MemberFormData) => {
     setSaving(true)

@@ -4,23 +4,16 @@ import { db } from './config'
 import { uploadFile } from './storage'
 import { collection, getDocs, query, where, orderBy, onSnapshot, getCountFromServer } from 'firebase/firestore'
 
+// `null` só quando o documento não existe. Erro (ex: offline) propaga — o useAuth trata
+// `null` como "primeiro login" e cria o documento, o que sobrescreveria o usuário real.
 export const getUserById = async (userId: string): Promise<AppUser | null> => {
-  try {
-    const docRef = doc(db, 'users', userId)
-    const userDoc = await getDoc(docRef)
+  const userDoc = await getDoc(doc(db, 'users', userId))
+  if (!userDoc.exists()) return null
 
-    if (userDoc.exists()) {
-      return {
-        ...userDoc.data(),
-        uid: userDoc.id,
-      } as AppUser
-    }
-
-    return null
-  } catch (error) {
-    console.error('Erro ao buscar usuário:', error)
-    return null
-  }
+  return {
+    ...userDoc.data(),
+    uid: userDoc.id,
+  } as AppUser
 }
 
 export const createUser = async (userData: AppUser): Promise<void> => {
@@ -97,6 +90,22 @@ export const getUsers = async (): Promise<AppUser[]> => {
     console.error('Erro ao listar usuários:', error)
     return []
   }
+}
+
+// Listener da lista de membros — quem gerencia o ciclo de vida é o useMembersStore
+export const subscribeToUsers = (
+  onData: (users: AppUser[]) => void,
+  onError: (error: Error) => void,
+) => {
+  const q = query(collection(db, 'users'), orderBy('created_at', 'desc'))
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      onData(snapshot.docs.map((doc) => ({ ...doc.data(), uid: doc.id }) as AppUser))
+    },
+    onError,
+  )
 }
 
 export const getPendingUsersCount = async (): Promise<number> => {

@@ -4,10 +4,12 @@ import { Sidebar } from '@/components/Sidebar';
 import { MobileLayout } from '@/components/mobile/MobileLayout';
 import NotificationPrompt from '@/components/notifications/NotificationPrompt';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useMediaQuery } from 'usehooks-ts';
 import { useAuth } from '@/store/useAuth';
 import { onForegroundMessage, syncNotificationToken } from '@/services/firebase/messaging';
 import { seedFixedGroups } from '@/services/firebase/groups';
+import { authenticatedRoutes } from '@/paths';
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -15,6 +17,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   const { currentUser } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -26,6 +29,15 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     // Só quando troca de usuário — o objeto currentUser muda a cada atualização de perfil
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.uid]);
+
+  useEffect(() => {
+    // O menu navega via router.push, que não pré-carrega nada: sem isto cada toque espera
+    // a ida ao servidor com a LoadingScreen na tela. Ver specs/navegacao-fluida.md.
+    if (!currentUser) return
+    authenticatedRoutes.forEach((route) => router.prefetch(route));
+    // Uma vez por usuário logado
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.uid, router]);
 
   useEffect(() => {
     // Garante que os 20 grupos fixos por atribuição existam — ver specs/mural-grupos.md

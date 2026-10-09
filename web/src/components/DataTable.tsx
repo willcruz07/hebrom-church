@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   Table,
   TableBody,
@@ -18,12 +19,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { SwipeableRow } from '@/components/ui/SwipeableRow'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
 export interface DataAction<T> {
   label: string
   icon?: React.ReactNode
   onClick: (item: T) => void
-  variant?: 'default' | 'destructive'
+  variant?: 'default' | 'destructive' | 'success'
 }
 
 export interface Column<T> {
@@ -48,6 +51,15 @@ interface DataTableProps<T> {
   renderMobileCard?: (item: T) => React.ReactNode
   onRowClick?: (item: T) => void
   actions?: (item: T) => DataAction<T>[]
+  /**
+   * Mobile: ações reveladas ao deslizar o card da direita para a esquerda (e num bottom
+   * sheet via pressão longa). Sem isto, o mobile usa o menu "…" de `actions`.
+   * Exige `getRowKey`. Ver specs/lista-swipe-actions.md.
+   */
+  mobileActions?: (item: T) => DataAction<T>[]
+  getRowKey?: (item: T) => string
+  /** Título do bottom sheet de ações (pressão longa) */
+  getActionsTitle?: (item: T) => string
 }
 
 export function DataTable<T>({
@@ -58,7 +70,22 @@ export function DataTable<T>({
   renderMobileCard,
   onRowClick,
   actions,
+  mobileActions,
+  getRowKey,
+  getActionsTitle,
 }: DataTableProps<T>) {
+  const useSwipe = Boolean(mobileActions && getRowKey)
+  const [openRowKey, setOpenRowKey] = useState<string | null>(null)
+  const [sheetItem, setSheetItem] = useState<T | null>(null)
+
+  // Rolar a lista fecha o card aberto (scroll não borbulha, por isso capture)
+  useEffect(() => {
+    if (openRowKey === null) return
+    const close = () => setOpenRowKey(null)
+    document.addEventListener('scroll', close, { capture: true, passive: true })
+    return () => document.removeEventListener('scroll', close, { capture: true })
+  }, [openRowKey])
+
   const renderActions = (item: T) => {
     const itemActions = actions?.(item)
     if (!itemActions || itemActions.length === 0) return null
@@ -254,6 +281,81 @@ export function DataTable<T>({
       </div>
 
       {/* Mobile View */}
+      {useSwipe ? (
+        <div className="grid grid-cols-1 gap-4 md:hidden">
+          <AnimatePresence initial={false}>
+            {data.map((item) => {
+              const key = getRowKey!(item)
+              const itemActions = mobileActions!(item)
+
+              return (
+                <motion.div
+                  key={key}
+                  layout="position"
+                  exit={{ opacity: 0, height: 0, marginTop: -16 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <SwipeableRow
+                    isOpen={openRowKey === key}
+                    onOpenChange={(open) => setOpenRowKey(open ? key : null)}
+                    onTap={() => {
+                      if (openRowKey !== null) setOpenRowKey(null)
+                      else onRowClick?.(item)
+                    }}
+                    onLongPress={itemActions.length > 0 ? () => setSheetItem(item) : undefined}
+                    actions={itemActions.map((action) => ({
+                      label: action.label,
+                      icon: action.icon,
+                      variant: action.variant,
+                      onClick: () => action.onClick(item),
+                    }))}
+                    className="rounded-2xl border border-slate-200 dark:border-slate-800"
+                  >
+                    {renderMobileCard ? renderMobileCard(item) : renderDefaultMobileCard(item)}
+                  </SwipeableRow>
+                </motion.div>
+              )
+            })}
+          </AnimatePresence>
+
+          {/* Alternativa ao gesto: pressão longa abre as mesmas ações */}
+          <Sheet open={sheetItem !== null} onOpenChange={(open) => !open && setSheetItem(null)}>
+            <SheetContent side="bottom" className="rounded-t-3xl pb-[env(safe-area-inset-bottom)]">
+              <SheetHeader>
+                <SheetTitle className="truncate pr-8">
+                  {sheetItem && getActionsTitle ? getActionsTitle(sheetItem) : 'Ações'}
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-1 px-2 pb-4">
+                {sheetItem &&
+                  mobileActions!(sheetItem).map((action) => (
+                    <button
+                      key={action.label}
+                      type="button"
+                      onClick={() => {
+                        const item = sheetItem
+                        setSheetItem(null)
+                        action.onClick(item)
+                      }}
+                      className={cn(
+                        'flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-bold transition-colors active:bg-slate-100 dark:active:bg-slate-800',
+                        action.variant === 'destructive'
+                          ? 'text-red-600'
+                          : action.variant === 'success'
+                            ? 'text-emerald-600'
+                            : 'text-slate-700 dark:text-slate-200',
+                      )}
+                    >
+                      <span className="shrink-0 opacity-80">{action.icon}</span>
+                      {action.label}
+                    </button>
+                  ))}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {data.map((item, i) => (
           <div
@@ -268,6 +370,7 @@ export function DataTable<T>({
           </div>
         ))}
       </div>
+      )}
     </div>
   )
 }

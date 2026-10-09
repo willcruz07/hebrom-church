@@ -42,6 +42,8 @@ O ecossistema do Hebrom Sys cobre membresia, secretaria e pastoral de uma igreja
 | Ministérios e carteirinha | ~15 ministérios, atribuição primária/secundária por usuário, tema visual da carteirinha | `specs/ministerios-carteirinha.md` | `ministerios-carteirinha` |
 | Mural e grupos | Feed geral vs. feed por grupo (fórum), moderação do líder de grupo | `specs/mural-grupos.md` | `mural-grupos` |
 | Arquitetura de dados / Firestore | Estratégia de `onSnapshot`, cache local, janelas de tempo, paginação — para minimizar custo de leitura | `specs/firestore-arquitetura-dados.md` | `firestore-cache` |
+| Navegação fluida | Prefetch de rotas, boot paralelo com cache do usuário, dados em cache que atualizam em segundo plano — `LoadingScreen` mantida, mas breve | `specs/navegacao-fluida.md` | — |
+| Ações por swipe em listas | Swipe direita→esquerda revelando ações atrás do card no mobile (estilo Gmail/Outlook), começando pela lista de membros | `specs/lista-swipe-actions.md` | — |
 
 **Importante**: as specs descrevem o **design-alvo** (muitas dessas features ainda não existem no código hoje). Elas são referência para conversas futuras, não uma ordem para implementar ou refatorar nada agora — só mexa em código a partir delas quando o usuário pedir explicitamente.
 

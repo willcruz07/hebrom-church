@@ -2,10 +2,8 @@
 
 import { PermissionGuard } from '@/components/PermissionGuard'
 import {
-  Users,
   UserPlus,
   Search,
-  MoreHorizontal,
   Shield,
   AlertCircle,
   CheckCircle2,
@@ -15,21 +13,15 @@ import {
 } from 'lucide-react'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { getUsers, approveUser, deleteUser } from '@/services/firebase/users'
+import { approveUser, deleteUser } from '@/services/firebase/users'
 import { AppUser, UserRole } from '@/types'
 import { toast } from 'sonner'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { CreateMemberModal } from './components/CreateMemberModal'
 import { cn, formatDate } from '@/lib/utils'
-import { DataTable, Column } from '@/components/DataTable'
+import { DataTable, Column, DataAction } from '@/components/DataTable'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { useMembersStore } from '@/store/useMembersStore'
+import { useMessages } from '@/hooks/useMessages'
 
 const roleLabels: Record<UserRole, string> = {
   pastor: 'Pastor',
@@ -49,27 +41,23 @@ const roleColors: Record<UserRole, string> = {
 
 export default function MembersPage() {
   const router = useRouter()
-  const [members, setMembers] = useState<AppUser[]>([])
-  const [loading, setLoading] = useState(true)
+  const { onShowMessage } = useMessages()
+  // Listener vivo na sessão: voltar para esta tela mostra a lista na hora
+  const members = useMembersStore((s) => s.members)
+  const loaded = useMembersStore((s) => s.loaded)
+  const listenerError = useMembersStore((s) => s.error)
+  const startListening = useMembersStore((s) => s.startListening)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
-  const fetchMembers = async () => {
-    try {
-      const data = await getUsers()
-      console.log(data, 'DATA MEMBRE')
-      setMembers(data)
-    } catch (error) {
-      toast.error('Erro ao carregar membros')
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    startListening()
+  }, [startListening])
 
   useEffect(() => {
-    fetchMembers()
-  }, [])
+    if (listenerError) toast.error('Erro ao carregar membros')
+  }, [listenerError])
 
   const filteredMembers = useMemo(() => {
     return members.filter((member) => {
@@ -88,28 +76,32 @@ export default function MembersPage() {
     [members],
   )
 
+  // A lista se atualiza sozinha pelo listener — não precisa recarregar após aprovar/excluir
   const handleApprove = async (uid: string) => {
     try {
       await approveUser(uid)
       toast.success('Usuário aprovado com sucesso!')
-      fetchMembers()
     } catch (error) {
       toast.error('Erro ao aprovar usuário')
     }
   }
 
-  const handleDeleteMember = async (uid: string) => {
-    if (!confirm('Tem certeza que deseja excluir este membro? Esta ação não pode ser desfeita.')) {
-      return
-    }
-
-    try {
-      await deleteUser(uid)
-      toast.success('Membro excluído com sucesso!')
-      fetchMembers()
-    } catch (error) {
-      toast.error('Erro ao excluir membro')
-    }
+  const handleDeleteMember = (member: AppUser) => {
+    onShowMessage({
+      type: 'QUESTION',
+      messageType: 'warning',
+      title: 'Excluir membro',
+      description: `Tem certeza que deseja excluir ${member.profile.full_name || 'este membro'}? Esta ação não pode ser desfeita.`,
+      buttonText: 'Excluir',
+      onConfirm: async () => {
+        try {
+          await deleteUser(member.uid)
+          toast.success('Membro excluído com sucesso!')
+        } catch (error) {
+          toast.error('Erro ao excluir membro')
+        }
+      },
+    })
   }
 
   const columns: Column<AppUser>[] = [
@@ -161,18 +153,42 @@ export default function MembersPage() {
     },
   ]
 
-  const getActions = (member: AppUser) => {
-    const actions = [
+  // Mobile: ações atrás do card (swipe). "Ver perfil" fica de fora — tocar no card já abre.
+  const getMobileActions = (member: AppUser): DataAction<AppUser>[] => {
+    const actions: DataAction<AppUser>[] = []
+
+    if (member.role === 'pending_member') {
+      actions.push({
+        label: 'Aprovar',
+        icon: <CheckCircle2 className="h-5 w-5" />,
+        onClick: (m) => handleApprove(m.uid),
+        variant: 'success',
+      })
+    }
+
+    actions.push({
+      label: 'Excluir',
+      icon: <Trash2 className="h-5 w-5" />,
+      onClick: (m) => handleDeleteMember(m),
+      variant: 'destructive',
+    })
+
+    return actions
+  }
+
+  // Desktop: menu "…" da tabela
+  const getActions = (member: AppUser): DataAction<AppUser>[] => {
+    const actions: DataAction<AppUser>[] = [
       {
         label: 'Ver Perfil',
         icon: <Eye className="h-4 w-4" />,
-        onClick: (m: AppUser) => router.push(`/dashboard/members/${m.uid}`),
+        onClick: (m) => router.push(`/dashboard/members/${m.uid}`),
       },
       {
         label: 'Excluir Membro',
         icon: <Trash2 className="h-4 w-4" />,
-        onClick: (m: AppUser) => handleDeleteMember(m.uid),
-        variant: 'destructive' as const,
+        onClick: (m) => handleDeleteMember(m),
+        variant: 'destructive',
       },
     ]
 
@@ -180,7 +196,7 @@ export default function MembersPage() {
       actions.push({
         label: 'Aprovar Membro',
         icon: <CheckCircle2 className="h-4 w-4" />,
-        onClick: (m: AppUser) => handleApprove(m.uid),
+        onClick: (m) => handleApprove(m.uid),
       })
     }
 
@@ -289,12 +305,18 @@ export default function MembersPage() {
         <DataTable
           columns={columns}
           data={filteredMembers}
-          isLoading={loading}
+          isLoading={!loaded}
           emptyMessage="Nenhum membro encontrado."
           actions={getActions}
+          mobileActions={getMobileActions}
+          getRowKey={(member) => member.uid}
+          getActionsTitle={(member) => member.profile.full_name || member.email}
           onRowClick={(member) => router.push(`/dashboard/members/${member.uid}`)}
           renderMobileCard={(member) => (
-            <div className="p-4 flex flex-col gap-3">
+            <div
+              className="p-4 flex flex-col gap-3"
+              onPointerDown={() => router.prefetch(`/dashboard/members/${member.uid}`)}
+            >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative shrink-0">
@@ -335,39 +357,6 @@ export default function MembersPage() {
                     </div>
                   </div>
                 </div>
-
-                <div onClick={(e) => e.stopPropagation()} className="shrink-0">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="h-9 w-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800/50 text-slate-400 border border-slate-200/50 dark:border-slate-700/50 active:scale-90 transition-all">
-                        <MoreHorizontal className="h-5 w-5" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-52 rounded-2xl p-2 shadow-2xl border-slate-200 dark:border-slate-800"
-                    >
-                      <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        Gerenciar
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator className="my-1 opacity-50" />
-                      {getActions(member).map((action, idx) => (
-                        <DropdownMenuItem
-                          key={idx}
-                          onClick={() => action.onClick(member)}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-                            action.variant === 'destructive'
-                              ? 'text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20'
-                              : 'text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800'
-                          }`}
-                        >
-                          <span className="shrink-0 opacity-70">{action.icon}</span>
-                          <span className="font-bold text-xs">{action.label}</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
               </div>
             </div>
           )}
@@ -377,7 +366,7 @@ export default function MembersPage() {
       <CreateMemberModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={fetchMembers}
+        onSuccess={() => {}}
       />
     </PermissionGuard>
   )

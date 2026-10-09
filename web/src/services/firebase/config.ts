@@ -1,6 +1,13 @@
 import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider, OAuthProvider } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import {
+  Firestore,
+  getFirestore,
+  initializeFirestore,
+  memoryLocalCache,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore'
 import { getStorage, ref } from 'firebase/storage'
 
 const firebaseConfig = {
@@ -16,7 +23,24 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
 
 const auth = getAuth(app)
-const db = getFirestore(app)
+
+// Cache em IndexedDB: listeners e leituras repetidas respondem do disco primeiro
+// (ver specs/navegacao-fluida.md). No SSR não há IndexedDB, então fica em memória.
+function createFirestore(): Firestore {
+  try {
+    return initializeFirestore(app, {
+      localCache:
+        typeof window === 'undefined'
+          ? memoryLocalCache()
+          : persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    })
+  } catch {
+    // initializeFirestore só pode rodar uma vez por app (ex: HMR em dev)
+    return getFirestore(app)
+  }
+}
+
+const db = createFirestore()
 const storage = getStorage(app)
 const storageRef = ref
 const googleProvider = new GoogleAuthProvider()
