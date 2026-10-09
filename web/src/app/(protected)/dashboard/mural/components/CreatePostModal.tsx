@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Image as ImageIcon, Send, Type, AlignLeft, Users } from 'lucide-react'
+import { X, Image as ImageIcon, Send, Type, AlignLeft, Users, CalendarDays } from 'lucide-react'
+import dayjs from '@/lib/dayjs'
 import { toast } from 'sonner'
 import { useAuth } from '@/store/useAuth'
 import { createPost } from '@/services/firebase/mural'
@@ -18,6 +19,7 @@ const postSchema = z.object({
   title: z.string().min(5, 'O título deve ter pelo menos 5 caracteres'),
   content: z.string().min(10, 'O conteúdo deve ter pelo menos 10 caracteres'),
   target_groups: z.array(z.string()),
+  event_date: z.string().optional(),
 })
 
 type PostFormValues = z.infer<typeof postSchema>
@@ -104,6 +106,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
             avatar_url: currentUser.profile.avatar_url || '',
           },
           target_groups: data.target_groups,
+          ...(data.event_date ? { event_date: data.event_date } : {}),
         },
         selectedFile || undefined,
       )
@@ -230,6 +233,23 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
                 />
                 <p className="text-[10px] text-slate-500">
                   Nenhum grupo selecionado = aviso Geral (visível a todos).
+                </p>
+              </div>
+
+              {/* Data do evento */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-amber-500" />
+                  Data do Evento (Opcional)
+                </label>
+                <input
+                  type="date"
+                  {...register('event_date')}
+                  min={dayjs().format('YYYY-MM-DD')}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm transition-all focus:ring-2 focus:ring-amber-500/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+                />
+                <p className="text-[10px] text-slate-500">
+                  Se preenchida, o aviso sai do mural automaticamente depois dessa data.
                 </p>
               </div>
 

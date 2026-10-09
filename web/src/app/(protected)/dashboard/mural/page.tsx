@@ -19,6 +19,7 @@ import { getGroups } from '@/services/firebase/groups'
 import { FeedPost, ChurchGroup } from '@/types'
 import dayjs from '@/lib/dayjs'
 import { toJsDate } from '@/lib/utils'
+import { isPostActive, sortMuralPosts } from '@/lib/mural-visibility'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
@@ -54,7 +55,7 @@ export default function MuralPage() {
     getGroups().then((all) => setMyGroups(all.filter((g) => currentUser.sub_groups.includes(g.id))))
   }, [currentUser?.sub_groups])
 
-  const filteredPosts = posts.filter((post) => {
+  const filteredPosts = sortMuralPosts(posts.filter((post) => isPostActive(post))).filter((post) => {
     const isGeral = post.target_groups.length === 0
     const isFromMyGroup = myGroups.some((g) => post.target_groups.includes(g.name))
 

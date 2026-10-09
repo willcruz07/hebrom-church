@@ -193,6 +193,9 @@ export const birthdays = onSchedule(
       content: body,
       media_url: "",
       target_groups: [],
+      // O mural usa kind + event_date para mostrar o aviso só no mês vigente
+      kind: "birthday",
+      event_date: todayStr,
       created_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 

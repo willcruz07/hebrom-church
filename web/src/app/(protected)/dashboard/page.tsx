@@ -272,9 +272,9 @@ export default function DashboardPage() {
       const birth = dayjs(m.profile.birth_date)
       return birth.month() === now.month()
     }).sort((a, b) => {
-      const dayA = dayjs(a.profile.birth_date).date()
-      const dayB = dayjs(b.profile.birth_date).date()
-      return dayA - dayB
+      // Hoje primeiro, depois os próximos dias; os que já passaram no mês vão para o fim
+      const rank = (day: number) => (day >= now.date() ? day : day + 31)
+      return rank(dayjs(a.profile.birth_date).date()) - rank(dayjs(b.profile.birth_date).date())
     }).slice(0, 5).map(m => {
       const birth = dayjs(m.profile.birth_date)
       const isToday = birth.date() === now.date() && birth.month() === now.month()

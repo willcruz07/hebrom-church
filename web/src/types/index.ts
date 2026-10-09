@@ -74,6 +74,10 @@ export interface FeedPost {
   content: string;
   media_url?: string;
   target_groups: string[];
+  /** 'birthday' = aviso automático de aniversário (backend/src/birthdays.ts) */
+  kind?: 'birthday';
+  /** YYYY-MM-DD. Aniversário: dia do aniversário. Aviso de evento: some do mural depois dessa data. */
+  event_date?: string;
   created_at: Timestamp;
   likes?: string[];
   comments?: PostComment[];
