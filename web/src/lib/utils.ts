@@ -84,6 +84,14 @@ export function maskPhone(value: string) {
   return cleaned.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '').substring(0, 15)
 }
 
+/** Link wa.me a partir de um telefone brasileiro mascarado. Retorna null se o número estiver incompleto. */
+export function whatsappUrl(phone?: string | null): string | null {
+  const digits = (phone ?? '').replace(/\D/g, '')
+  if (digits.length === 10 || digits.length === 11) return `https://wa.me/55${digits}`
+  if (digits.length >= 12 && digits.startsWith('55')) return `https://wa.me/${digits}`
+  return null
+}
+
 export function maskCPF(value: string) {
   const cleaned = value.replace(/\D/g, '')
   return cleaned

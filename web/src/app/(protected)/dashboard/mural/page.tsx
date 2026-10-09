@@ -18,7 +18,7 @@ import { subscribeToPosts, deletePost, toggleLike } from '@/services/firebase/mu
 import { getGroups } from '@/services/firebase/groups'
 import { FeedPost, ChurchGroup } from '@/types'
 import dayjs from '@/lib/dayjs'
-import { toJsDate } from '@/lib/utils'
+import { toJsDate, cn } from '@/lib/utils'
 import { isPostActive, sortMuralPosts } from '@/lib/mural-visibility'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/ui/UserAvatar'
@@ -162,11 +162,11 @@ export default function MuralPage() {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                   <UserAvatar
-                    src={post.author.avatar_url}
+                    src={post.author.uid === 'system' ? '/logo.png' : post.author.avatar_url}
                     name={post.author.name}
                     size={48}
-                    className="rounded-2xl"
-                    textClassName="text-lg"
+                    className={cn('rounded-2xl', post.author.uid === 'system' && 'bg-black')}
+                    imageClassName={post.author.uid === 'system' ? 'scale-[1.4]' : undefined}
                   />
                   <div>
                     <div className="flex items-center gap-2">

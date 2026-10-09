@@ -41,8 +41,9 @@ import { AppUser } from '@/types'
 import { getUserById, updateUserProfile, deleteUser } from '@/services/firebase/users'
 import { doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/services/firebase/config'
-import { maskPhone, maskCPF, maskCEP, cn } from '@/lib/utils'
-import { UserAvatar } from '@/components/ui/UserAvatar'
+import Image from 'next/image'
+import { maskPhone, maskCPF, maskCEP, cn, whatsappUrl } from '@/lib/utils'
+import { AvatarLightbox } from '@/components/ui/AvatarLightbox'
 import { MINISTRY_ATTRIBUTIONS, resolveAttributionGroupIds } from '@/lib/ministry-attributions'
 import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
 import { SelectField } from '@/components/ui/select-field'
@@ -266,7 +267,7 @@ export default function MemberEditPage() {
 
           <div className="flex items-center gap-4 md:gap-6 relative z-10">
             <div className="flex shrink-0 flex-col items-center gap-2">
-              <UserAvatar
+              <AvatarLightbox
                 src={member?.profile.avatar_url}
                 name={member?.profile.full_name}
                 className="h-16 w-16 md:h-24 md:w-24 rounded-3xl border-4 border-white dark:border-slate-800 shadow-xl ring-1 ring-slate-100 dark:ring-slate-700"
@@ -297,10 +298,23 @@ export default function MemberEditPage() {
                   <Briefcase className="h-3.5 w-3.5 shrink-0 text-amber-500" />
                   <span className="truncate">{member?.atribuicao_principal || 'Membro'}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Phone className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                  {member?.profile.phone || 'Sem telefone'}
-                </div>
+                {whatsappUrl(member?.profile.phone) ? (
+                  <a
+                    href={whatsappUrl(member?.profile.phone)!}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex w-fit items-center gap-1.5 hover:text-emerald-600 hover:underline"
+                    aria-label={`Abrir conversa no WhatsApp com ${member?.profile.full_name}`}
+                  >
+                    <Image src="/whatsapp.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0" />
+                    {member?.profile.phone}
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                    {member?.profile.phone || 'Sem telefone'}
+                  </div>
+                )}
               </div>
             </div>
 
