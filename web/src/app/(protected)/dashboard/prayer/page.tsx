@@ -286,8 +286,8 @@ export default function PrayerPage() {
           'flex items-center gap-1.5 rounded-full border font-semibold transition-colors disabled:cursor-default',
           size === 'sm' ? 'px-3 py-1 text-xs' : 'px-4 py-2 text-sm',
           isPraying
-            ? 'border-rose-500 bg-rose-500 text-white'
-            : 'border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-600 dark:border-slate-700 dark:text-slate-300',
+            ? 'border-amber-500 bg-amber-500 text-white'
+            : 'border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-300',
         )}
         aria-pressed={isPraying}
       >
@@ -301,7 +301,7 @@ export default function PrayerPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-rose-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
       </div>
     )
   }
@@ -321,7 +321,7 @@ export default function PrayerPage() {
         {canInteract && (
           <Dialog open={isNewRequestOpen} onOpenChange={setIsNewRequestOpen}>
             <DialogTrigger asChild>
-              <Button className="shrink-0 bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-500/25">
+              <Button className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-500/25">
                 <Plus className="mr-2 h-4 w-4" />
                 Pedir Oração
               </Button>
@@ -338,7 +338,7 @@ export default function PrayerPage() {
                   <textarea
                     value={newRequestText}
                     onChange={(e) => setNewRequestText(e.target.value)}
-                    className="min-h-[120px] w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-base md:text-sm focus:border-rose-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900"
+                    className="min-h-[120px] w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-base md:text-sm focus:border-amber-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900"
                     placeholder="Escreva aqui o motivo da sua oração..."
                   />
                 </div>
@@ -351,7 +351,7 @@ export default function PrayerPage() {
                     id="confidential"
                     checked={isConfidential}
                     onChange={(e) => setIsConfidential(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
                   />
                   <span>
                     <span className="flex items-center gap-1.5 text-sm font-bold">
@@ -371,7 +371,7 @@ export default function PrayerPage() {
                 <Button
                   onClick={handleCreateRequest}
                   disabled={!newRequestText.trim()}
-                  className="bg-rose-600 hover:bg-rose-700"
+                  className="bg-amber-600 hover:bg-amber-700"
                 >
                   Enviar Pedido
                 </Button>
@@ -435,11 +435,11 @@ export default function PrayerPage() {
           <div
             key={prayer.id}
             onClick={() => handleOpenRequest(prayer)}
-            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-rose-500/50 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/50"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-amber-500/50 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/50"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-colors">
                   {prayer.is_confidential ? <Lock className="h-5 w-5" /> : <Heart className="h-6 w-6" />}
                 </div>
                 <div className="min-w-0">
@@ -491,7 +491,7 @@ export default function PrayerPage() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleDeleteRequest(prayer.id)}
-                        className="text-rose-600 focus:text-rose-600"
+                        className="text-amber-600 focus:text-amber-600"
                       >
                         <Trash2 className="mr-2 h-4 w-4" /> Excluir
                       </DropdownMenuItem>
@@ -554,7 +554,7 @@ export default function PrayerPage() {
             <>
               <DialogHeader>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white">
                     {selectedPrayer.is_confidential ? (
                       <Lock className="h-5 w-5" />
                     ) : (
@@ -654,7 +654,7 @@ export default function PrayerPage() {
                             <button
                               type="button"
                               onClick={() => handleRemoveComment(comment)}
-                              className="mt-1 rounded-full p-1 text-slate-300 hover:text-rose-500"
+                              className="mt-1 rounded-full p-1 text-slate-300 hover:text-amber-500"
                               aria-label="Remover comentário"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -677,13 +677,13 @@ export default function PrayerPage() {
                           rows={2}
                           maxLength={500}
                           placeholder="Escreva uma palavra de apoio..."
-                          className="min-h-[44px] flex-1 resize-none rounded-xl border border-slate-200 bg-white p-3 text-base md:text-sm focus:border-rose-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900"
+                          className="min-h-[44px] flex-1 resize-none rounded-xl border border-slate-200 bg-white p-3 text-base md:text-sm focus:border-amber-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900"
                         />
                         <Button
                           size="icon"
                           onClick={handleAddComment}
                           disabled={!commentText.trim() || isSendingComment}
-                          className="h-11 w-11 shrink-0 rounded-xl bg-rose-600 hover:bg-rose-700"
+                          className="h-11 w-11 shrink-0 rounded-xl bg-amber-600 hover:bg-amber-700"
                           aria-label="Enviar comentário"
                         >
                           {isSendingComment ? (
