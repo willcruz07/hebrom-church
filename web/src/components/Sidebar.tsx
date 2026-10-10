@@ -19,6 +19,7 @@ import {
   Settings,
   MessageSquare,
   Heart,
+  BookOpen,
   Calendar,
   Users,
   X,
@@ -78,7 +79,7 @@ const navigationItems = [
   {
     name: 'Palavra do Dia',
     href: ROUTES.AUTHENTICATED.DAILY_WORD,
-    icon: Heart,
+    icon: BookOpen,
     description: 'Versículos e devocionais',
     permission: 'canViewGeneralFeed', // Todos podem ver
   },

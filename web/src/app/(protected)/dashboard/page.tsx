@@ -142,7 +142,7 @@ const mockCategoryData = [
 
 export default function DashboardPage() {
   const { currentUser } = useAuth()
-  const { permissions } = usePermissions()
+  const { permissions, isPastor } = usePermissions()
   const router = useRouter()
   const [dailyWord, setDailyWord] = useState<DailyWord | null>(null)
   
@@ -171,7 +171,7 @@ export default function DashboardPage() {
           dailyWordData
         ] = await Promise.all([
           getDocs(collection(db, 'users')),
-          prayerService.getPrayers(),
+          prayerService.getPrayers({ uid: currentUser?.uid ?? '', isPastor }),
           agendaService.getEvents(),
           getDocs(query(collection(db, 'posts'), orderBy('created_at', 'desc'))),
           getDailyWord(dayjs().format('YYYY-MM-DD'))
@@ -195,7 +195,7 @@ export default function DashboardPage() {
     }
 
     fetchDashboardData()
-  }, [permissions.canViewDashboardOverview, router])
+  }, [permissions.canViewDashboardOverview, router, currentUser?.uid, isPastor])
 
   const userName = currentUser?.profile.full_name || 'Usuário'
   const firstName = userName.split(' ')[0]

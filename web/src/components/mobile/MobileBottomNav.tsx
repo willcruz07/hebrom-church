@@ -6,7 +6,16 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { ROUTES } from '@/paths'
 import { useNewUsersStore } from '@/store/useNewUsersStore'
 import clsx from 'clsx'
-import { MessageSquare, Heart, Calendar, Settings, Home, Users } from 'lucide-react'
+import {
+  MessageSquare,
+  Heart,
+  Calendar,
+  Settings,
+  Home,
+  Users,
+  BookOpen,
+  IdCard,
+} from 'lucide-react'
 import { useAuth } from '@/store/useAuth'
 
 interface NavItem {
@@ -14,59 +23,95 @@ interface NavItem {
   href: string
   icon: React.ComponentType<{ className?: string }>
   isActive?: (pathname: string) => boolean
-  permission?: string
 }
 
-const navigationItems: NavItem[] = [
-  {
+const startsWith = (route: string) => (pathname: string) => pathname.startsWith(route)
+
+const NAV = {
+  dailyWord: {
+    name: 'Palavra',
+    href: ROUTES.AUTHENTICATED.DAILY_WORD,
+    icon: BookOpen,
+    isActive: startsWith(ROUTES.AUTHENTICATED.DAILY_WORD),
+  },
+  mural: {
     name: 'Mural',
     href: ROUTES.AUTHENTICATED.MURAL,
     icon: MessageSquare,
-    isActive: (pathname) => pathname.startsWith(ROUTES.AUTHENTICATED.MURAL),
-    permission: 'canViewGeneralFeed',
+    isActive: startsWith(ROUTES.AUTHENTICATED.MURAL),
   },
-  {
+  prayer: {
     name: 'Oração',
     href: ROUTES.AUTHENTICATED.PRAYER,
     icon: Heart,
-    isActive: (pathname) => pathname.startsWith(ROUTES.AUTHENTICATED.PRAYER),
-    permission: 'canRequestPrayer',
+    isActive: startsWith(ROUTES.AUTHENTICATED.PRAYER),
   },
-  {
+  members: {
     name: 'Membros',
     href: ROUTES.AUTHENTICATED.MEMBERS,
     icon: Users,
-    isActive: (pathname) => pathname.startsWith(ROUTES.AUTHENTICATED.MEMBERS),
-    permission: 'canManageUsers',
+    isActive: startsWith(ROUTES.AUTHENTICATED.MEMBERS),
   },
-  {
+  dashboardHome: {
     name: 'Home',
-    href: ROUTES.AUTHENTICATED.HOME, // Será tratado dinamicamente no componente
+    href: ROUTES.AUTHENTICATED.HOME,
     icon: Home,
     isActive: (pathname) => pathname === ROUTES.AUTHENTICATED.HOME,
-    permission: 'canViewDashboardOverview',
   },
-  {
+  muralHome: {
     name: 'Home',
     href: ROUTES.AUTHENTICATED.MURAL,
     icon: Home,
     isActive: (pathname) =>
       pathname === ROUTES.AUTHENTICATED.MURAL || pathname === ROUTES.AUTHENTICATED.HOME,
   },
-  {
+  agenda: {
     name: 'Agenda',
     href: ROUTES.AUTHENTICATED.AGENDA,
     icon: Calendar,
-    isActive: (pathname) => pathname.startsWith(ROUTES.AUTHENTICATED.AGENDA),
-    permission: 'canViewAgenda',
+    isActive: startsWith(ROUTES.AUTHENTICATED.AGENDA),
   },
-  {
+  idCard: {
+    name: 'Carteirinha',
+    href: ROUTES.AUTHENTICATED.ID_CARD,
+    icon: IdCard,
+    isActive: startsWith(ROUTES.AUTHENTICATED.ID_CARD),
+  },
+  settings: {
     name: 'Configuração',
     href: ROUTES.AUTHENTICATED.PROFILE,
     icon: Settings,
-    isActive: (pathname) => pathname.startsWith(ROUTES.AUTHENTICATED.PROFILE),
+    isActive: startsWith(ROUTES.AUTHENTICATED.PROFILE),
   },
-]
+} satisfies Record<string, NavItem>
+
+/**
+ * Itens da barra por papel: [esquerda..., home central, ...direita].
+ * O perfil/configuração fica no avatar do header (e no menu ☰) para quem não é visitante.
+ */
+function getNavLayout(
+  isVisitor: boolean,
+  permissions: ReturnType<typeof usePermissions>['permissions'],
+): { left: NavItem[]; home: NavItem | null; right: NavItem[] } {
+  // Visitante não tem menu ☰ nem carteirinha: mantém mural e configuração na barra
+  if (isVisitor) {
+    return { left: [], home: null, right: [NAV.mural, NAV.dailyWord, NAV.agenda, NAV.settings] }
+  }
+  // Membro pendente ainda não pode pedir oração nem tem carteirinha
+  const idCardOrSettings = permissions.canViewProfileCard ? NAV.idCard : NAV.settings
+  if (permissions.canManageUsers) {
+    return {
+      left: [NAV.dailyWord, NAV.members],
+      home: NAV.dashboardHome,
+      right: [NAV.agenda, idCardOrSettings],
+    }
+  }
+  return {
+    left: permissions.canRequestPrayer ? [NAV.dailyWord, NAV.prayer] : [NAV.dailyWord],
+    home: NAV.muralHome,
+    right: [NAV.agenda, idCardOrSettings],
+  }
+}
 
 interface MobileBottomNavProps {
   className?: string
@@ -85,31 +130,11 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
     navigateTo(href)
   }
 
-  const filteredNavigation = navigationItems.filter((item) => {
-    // Hide specific items for visitors: Home and Prayer
-    if (isVisitor && (item.name === 'Home' || item.name === 'Oração')) {
-      return false
-    }
-
-    // Ocultar Oração para administradores para manter o limite de 5 itens no bottom nav
-    if (item.name === 'Oração' && (permissions as any).canManageUsers) {
-      return false
-    }
-
-    // Lógica especial para o botão Home duplicado (para não-visitantes)
-    if (item.name === 'Home') {
-      if (item.href === ROUTES.AUTHENTICATED.HOME) return permissions.canViewDashboardOverview
-      if (item.href === ROUTES.AUTHENTICATED.MURAL) return !permissions.canViewDashboardOverview
-    }
-
-    if (!item.permission) return true
-    return (permissions as any)[item.permission]
-  })
-
-  const homeIndex = filteredNavigation.findIndex((item) => item.name === 'Home')
-  const leftItems = homeIndex !== -1 ? filteredNavigation.slice(0, homeIndex) : []
-  const rightItems = homeIndex !== -1 ? filteredNavigation.slice(homeIndex + 1) : filteredNavigation
-  const homeItem = homeIndex !== -1 ? filteredNavigation[homeIndex] : null
+  const {
+    left: leftItems,
+    home: homeItem,
+    right: rightItems,
+  } = getNavLayout(isVisitor, permissions)
 
   const renderNavItem = (item: NavItem) => {
     const Icon = item.icon

@@ -9,6 +9,8 @@ import { useMenuState } from '@/store/useMenuState'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useNewUsersStore } from '@/store/useNewUsersStore'
 import Image from 'next/image'
+import Link from 'next/link'
+import { ROUTES } from '@/paths'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 
 interface MobileLayoutProps {
@@ -68,12 +70,17 @@ export function MobileLayout({
           <Image src="/logo_sb.png" alt="Hebrom" width={124} height={124} className=" w-auto" />
         </div>
 
-        <UserAvatar
-          src={currentUser?.profile.avatar_url}
-          name={currentUser?.profile.full_name}
-          size={40}
-          textClassName="text-sm"
-        />
+        <Link
+          href={ROUTES.AUTHENTICATED.PROFILE}
+          aria-label="Meu perfil e configurações"
+          className="rounded-full transition-transform active:scale-95"
+        >
+          <UserAvatar
+            src={currentUser?.profile.avatar_url}
+            name={currentUser?.profile.full_name}
+            size={40}
+          />
+        </Link>
       </header>
 
       <main

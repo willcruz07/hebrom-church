@@ -22,3 +22,4 @@ if (!admin.apps.length) {
 }
 
 export {birthdays} from "./birthdays";
+export {dailyWord} from "./dailyWord";

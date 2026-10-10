@@ -95,9 +95,27 @@ export interface PrayerRequest {
     name: string;
   };
   pastor_response?: string;
+  /** Pastor que escreveu a resposta (pode ser diferente de quem visualizou primeiro). */
+  responded_by?: {
+    uid: string;
+    name: string;
+  };
+  /** Comentários de intercessão — só em pedidos abertos (não confidenciais). */
+  comments?: PrayerComment[];
+  /** uids de quem marcou "Estou orando". */
+  praying_uids?: string[];
   is_archived: boolean;
   created_at: Timestamp;
   updated_at: Timestamp;
+}
+
+export interface PrayerComment {
+  id: string;
+  author_uid: string;
+  author_name: string;
+  author_avatar_url?: string;
+  text: string;
+  created_at: Timestamp;
 }
 export interface ChurchGroup {
   id: string;
@@ -132,5 +150,7 @@ export interface DailyWord {
   author_uid: string;
   author_name: string;
   publish_date: string; // YYYY-MM-DD
+  /** Devocional sorteado da base pelo job `dailyWord` do backend (não lançado pelo pastor). */
+  is_auto?: boolean;
   created_at: Timestamp;
 }

@@ -1,6 +1,8 @@
 {
   "name": "functions",
   "scripts": {
+    "sync:seed": "node -e \"require('fs').mkdirSync('src/generated',{recursive:true});require('fs').copyFileSync('../web/src/lib/bible-seed.ts','src/generated/bible-seed.ts')\"",
+    "prebuild": "npm run sync:seed",
     "lint": "eslint --ext .js,.ts .",
     "build": "tsc",
     "build:watch": "tsc --watch",

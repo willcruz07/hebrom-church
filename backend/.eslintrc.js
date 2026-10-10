@@ -20,6 +20,7 @@ module.exports = {
   ignorePatterns: [
     "/lib/**/*", // Ignore built files.
     "/generated/**/*", // Ignore generated files.
+    "/src/generated/**/*", // Cópia do bible-seed do web (sync:seed).
   ],
   plugins: [
     "@typescript-eslint",
