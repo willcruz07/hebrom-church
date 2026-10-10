@@ -1,5 +1,6 @@
 'use client'
 
+import { useMessages } from '@/hooks/useMessages'
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -47,6 +48,7 @@ interface EditMemberModalProps {
 }
 
 export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemberModalProps) {
+  const { confirm: confirmAction } = useMessages()
   const [loading, setLoading] = useState(false)
   const [groups, setGroups] = useState<ChurchGroup[]>([])
   const [inactivating, setInactivating] = useState(false)
@@ -238,7 +240,7 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
                 type="button"
                 variant="outline"
                 onClick={async () => {
-                  if (confirm('Tem certeza que deseja excluir permanentemente este usuário?')) {
+                  if ((await confirmAction({ title: 'Excluir usuário', description: 'Tem certeza que deseja excluir permanentemente este usuário?', confirmText: 'Excluir', destructive: true }))) {
                     try {
                       await deleteUser(member.uid)
                       toast.success('Usuário excluído com sucesso')

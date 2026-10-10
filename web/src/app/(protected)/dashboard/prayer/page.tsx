@@ -1,5 +1,6 @@
 'use client'
 
+import { useMessages } from '@/hooks/useMessages'
 import { useState, useEffect } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/store/useAuth'
@@ -17,7 +18,6 @@ import {
   CalendarIcon,
   Archive,
   ArchiveRestore,
-  Loader2,
   Lock,
   Send,
   HandHeart,
@@ -44,14 +44,18 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
+import { Textarea } from '@/components/ui/textarea'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { toast } from 'sonner'
 import dayjs from '@/lib/dayjs'
 import { PrayerComment, PrayerRequest } from '@/types'
 import { cn, toJsDate } from '@/lib/utils'
+import { PageTitle } from '@/components/ui/page-title'
 
 export default function PrayerPage() {
+  const { confirm: confirmAction } = useMessages()
   const { isPastor, permissions } = usePermissions()
   const { currentUser } = useAuth()
   const uid = currentUser?.uid ?? ''
@@ -197,7 +201,7 @@ export default function PrayerPage() {
   }
 
   const handleRemoveComment = async (comment: PrayerComment) => {
-    if (!selectedPrayer || !confirm('Remover este comentário?')) return
+    if (!selectedPrayer || !(await confirmAction({ title: 'Remover comentário', description: 'Remover este comentário?', confirmText: 'Remover', destructive: true }))) return
     try {
       await prayerService.removeComment(selectedPrayer.id, comment)
     } catch (error) {
@@ -207,7 +211,7 @@ export default function PrayerPage() {
   }
 
   const handleDeleteRequest = async (id: string) => {
-    if (!confirm('Excluir este pedido de oração? Essa ação não pode ser desfeita.')) return
+    if (!(await confirmAction({ title: 'Excluir pedido', description: 'Excluir este pedido de oração? Essa ação não pode ser desfeita.', confirmText: 'Excluir', destructive: true }))) return
     try {
       await prayerService.deleteRequest(id)
       toast.success('Pedido excluído.')
@@ -301,7 +305,7 @@ export default function PrayerPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+        <HebromSpinner size="lg" />
       </div>
     )
   }
@@ -309,14 +313,11 @@ export default function PrayerPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <header className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-lg md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Pedidos de Oração
-          </h1>
-          <p className="max-w-2/3 text-sm md:text-base text-slate-500 dark:text-slate-400">
-            Compartilhe suas necessidades e interceda pelos irmãos.
-          </p>
-        </div>
+        <PageTitle
+          title="Pedidos de Oração"
+          description="Compartilhe suas necessidades e interceda pelos irmãos."
+          descriptionClassName="max-w-2/3"
+        />
 
         {canInteract && (
           <Dialog open={isNewRequestOpen} onOpenChange={setIsNewRequestOpen}>
@@ -335,10 +336,10 @@ export default function PrayerPage() {
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label>Qual o seu pedido?</Label>
-                  <textarea
+                  <Textarea
                     value={newRequestText}
                     onChange={(e) => setNewRequestText(e.target.value)}
-                    className="min-h-[120px] w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-base md:text-sm focus:border-amber-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900"
+                    className="min-h-[120px] rounded-xl p-3"
                     placeholder="Escreva aqui o motivo da sua oração..."
                   />
                 </div>
@@ -594,10 +595,10 @@ export default function PrayerPage() {
                       <MessageCircle className="h-4 w-4" />
                       Responder como Pastor
                     </Label>
-                    <textarea
+                    <Textarea
                       value={pastorResponse}
                       onChange={(e) => setPastorResponse(e.target.value)}
-                      className="min-h-[100px] w-full rounded-xl border border-amber-100 bg-amber-50/30 p-3 text-base md:text-sm focus:border-amber-500 focus:outline-none dark:border-amber-900/30 dark:bg-amber-900/10"
+                      className="min-h-[100px] rounded-xl border-amber-200 bg-amber-50/30 p-3 dark:border-amber-900/30 dark:bg-amber-900/10"
                       placeholder="Deixe uma palavra de conforto ou confirmação de oração..."
                     />
                   </div>
@@ -671,13 +672,13 @@ export default function PrayerPage() {
 
                     {canInteract && (
                       <div className="flex items-end gap-2">
-                        <textarea
+                        <Textarea
                           value={commentText}
                           onChange={(e) => setCommentText(e.target.value)}
                           rows={2}
                           maxLength={500}
                           placeholder="Escreva uma palavra de apoio..."
-                          className="min-h-[44px] flex-1 resize-none rounded-xl border border-slate-200 bg-white p-3 text-base md:text-sm focus:border-amber-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900"
+                          className="min-h-[44px] flex-1 resize-none rounded-xl p-3"
                         />
                         <Button
                           size="icon"
@@ -687,7 +688,7 @@ export default function PrayerPage() {
                           aria-label="Enviar comentário"
                         >
                           {isSendingComment ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <HebromSpinner size="sm" className="brightness-200" />
                           ) : (
                             <Send className="h-4 w-4" />
                           )}

@@ -1,5 +1,6 @@
 'use client'
 
+import { useMessages } from '@/hooks/useMessages'
 import { useState, useEffect } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/store/useAuth'
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { CreatePostModal } from './components/CreatePostModal'
 import { PostComments } from './components/PostComments'
+import { DailyWordHighlight } from './components/DailyWordHighlight'
 import { subscribeToPosts, deletePost, toggleLike } from '@/services/firebase/mural'
 import { getGroups } from '@/services/firebase/groups'
 import { FeedPost, ChurchGroup } from '@/types'
@@ -23,10 +25,12 @@ import { isPostActive, sortMuralPosts } from '@/lib/mural-visibility'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
+import { PageTitle } from '@/components/ui/page-title'
 
 const GENERAL_FILTER_ID = '__general__'
 
 export default function MuralPage() {
+  const { confirm: confirmAction } = useMessages()
   const { permissions } = usePermissions()
   const { currentUser } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -77,7 +81,7 @@ export default function MuralPage() {
   })
 
   const handleDeletePost = async (postId: string) => {
-    if (!confirm('Deseja excluir este aviso?')) return
+    if (!(await confirmAction({ title: 'Excluir aviso', description: 'Deseja excluir este aviso do mural?', confirmText: 'Excluir', destructive: true }))) return
 
     try {
       await deletePost(postId)
@@ -101,14 +105,11 @@ export default function MuralPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Feed da Igreja
-          </h1>
-          <p className="text-slate-500 max-w-2/3 dark:text-slate-400">
-            Fique por dentro de tudo que acontece na Hebrom.
-          </p>
-        </div>
+        <PageTitle
+          title="Feed da Igreja"
+          description="Fique por dentro de tudo que acontece na Hebrom."
+          descriptionClassName="max-w-2/3"
+        />
         {permissions.canPostTargetedFeed && (
           <>
             <button
@@ -123,6 +124,8 @@ export default function MuralPage() {
           </>
         )}
       </header>
+
+      <DailyWordHighlight />
 
       <div className="flex flex-col gap-2 border-b border-slate-200 pb-4 dark:border-slate-800">
         <ChipMultiSelect

@@ -13,10 +13,20 @@ interface IMessage {
   onCancel?: () => void;
 }
 
+interface ConfirmOptions {
+  title: string;
+  description: string;
+  confirmText?: string;
+  /** Ação destrutiva (excluir): botão de confirmar em vermelho. */
+  destructive?: boolean;
+}
+
 interface IMessagesContext {
   message: IMessage;
   onShowMessage: (message: Omit<IMessage, 'isVisible'>) => void;
   onHideMessage: () => void;
+  /** Substitui o `confirm()` do navegador pelo diálogo do app. Resolve `true` se confirmado. */
+  confirm: (options: ConfirmOptions) => Promise<boolean>;
 }
 
 const MessagesContext = createContext<IMessagesContext>({} as IMessagesContext);
@@ -45,8 +55,23 @@ export const MessagesProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const confirm = ({ title, description, confirmText, destructive }: ConfirmOptions) =>
+    new Promise<boolean>((resolve) => {
+      onShowMessage({
+        type: 'QUESTION',
+        messageType: destructive ? 'error' : 'warning',
+        title,
+        description,
+        buttonText: confirmText ?? 'Confirmar',
+        onConfirm: () => resolve(true),
+        onCancel: () => resolve(false),
+      });
+    });
+
   return (
-    <MessagesContext.Provider value={{ message, onShowMessage, onHideMessage }}>{children}</MessagesContext.Provider>
+    <MessagesContext.Provider value={{ message, onShowMessage, onHideMessage, confirm }}>
+      {children}
+    </MessagesContext.Provider>
   );
 };
 

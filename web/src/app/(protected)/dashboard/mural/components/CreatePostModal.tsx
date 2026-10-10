@@ -8,6 +8,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Image as ImageIcon, Send, Type, AlignLeft, Users, CalendarDays } from 'lucide-react'
 import dayjs from '@/lib/dayjs'
 import { ImageCropper } from '@/components/ui/ImageCropper'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { BANNER_IMAGE } from '@/lib/image-specs'
 import { toast } from 'sonner'
 import { useAuth } from '@/store/useAuth'
@@ -205,16 +208,15 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
 
               {/* Title Input */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <Label className="flex items-center gap-2 font-bold">
                   <Type className="h-4 w-4 text-amber-500" />
                   Título do Aviso
-                </label>
-                <input
+                </Label>
+                <Input
                   {...register('title')}
                   placeholder="Ex: Culto Especial de Santa Ceia"
-                  className={`w-full rounded-xl border bg-slate-50 px-4 py-2.5 text-sm transition-all focus:ring-2 focus:ring-amber-500/20 focus:outline-none dark:bg-slate-800 ${
-                    errors.title ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
-                  }`}
+                  aria-invalid={!!errors.title}
+                  className="h-11 rounded-xl"
                 />
                 {errors.title && (
                   <p className="text-xs text-red-500 font-medium">{errors.title.message}</p>
@@ -223,10 +225,10 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
 
               {/* Alcance */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <Label className="flex items-center gap-2 font-bold">
                   <Users className="h-4 w-4 text-amber-500" />
                   Alcance (Grupos)
-                </label>
+                </Label>
                 <ChipMultiSelect
                   title="Alcance do Aviso"
                   triggerLabel="Geral (todos) + grupos"
@@ -248,15 +250,15 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
 
               {/* Data do evento */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <Label className="flex items-center gap-2 font-bold">
                   <CalendarDays className="h-4 w-4 text-amber-500" />
                   Data do Evento (Opcional)
-                </label>
-                <input
+                </Label>
+                <Input
                   type="date"
                   {...register('event_date')}
                   min={dayjs().format('YYYY-MM-DD')}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm transition-all focus:ring-2 focus:ring-amber-500/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+                  className="h-11 rounded-xl"
                 />
                 <p className="text-[10px] text-slate-500">
                   Se preenchida, o aviso sai do mural automaticamente depois dessa data.
@@ -265,17 +267,16 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
 
               {/* Description Input */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <Label className="flex items-center gap-2 font-bold">
                   <AlignLeft className="h-4 w-4 text-amber-500" />
                   Descrição do Post
-                </label>
-                <textarea
+                </Label>
+                <Textarea
                   {...register('content')}
                   rows={4}
                   placeholder="Descreva os detalhes do aviso aqui..."
-                  className={`w-full resize-none rounded-xl border bg-slate-50 p-4 text-sm transition-all focus:ring-2 focus:ring-amber-500/20 focus:outline-none dark:bg-slate-800 ${
-                    errors.content ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
-                  }`}
+                  aria-invalid={!!errors.content}
+                  className="resize-none rounded-xl p-4"
                 />
                 {errors.content && (
                   <p className="text-xs text-red-500 font-medium">{errors.content.message}</p>
@@ -287,7 +288,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1  bg-red-700  rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700 transition-all hover:bg-slate-50 dark:border-slate-800 dark:text-white"
+                  className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700 transition-all hover:bg-slate-50 dark:border-slate-800 dark:text-white dark:hover:bg-slate-800"
                 >
                   Cancelar
                 </button>

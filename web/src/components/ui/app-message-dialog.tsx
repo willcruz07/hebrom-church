@@ -11,10 +11,12 @@ import {
 } from '@/components/ui/dialog';
 
 import { useMessages } from '@/hooks/useMessages';
+import { cn } from '@/lib/utils';
 
 export function AppMessageDialog() {
   const { message, onHideMessage } = useMessages();
-  const { isVisible, title, description, type, onConfirm, onCancel, buttonText } = message;
+  const { isVisible, title, description, type, messageType, onConfirm, onCancel, buttonText } =
+    message;
 
   const handleConfirm = () => {
     if (onConfirm) {
@@ -30,9 +32,10 @@ export function AppMessageDialog() {
     onHideMessage();
   };
 
+  // Fechar pelo fundo/Esc conta como "Cancelar"
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      onHideMessage();
+      handleCancel();
     }
   };
 
@@ -46,13 +49,28 @@ export function AppMessageDialog() {
         <DialogFooter>
           {type === 'QUESTION' ? (
             <>
-              <Button variant="outline" onClick={handleCancel}>
+              <Button variant="outline" onClick={handleCancel} className="rounded-xl">
                 Cancelar
               </Button>
-              <Button onClick={handleConfirm}>Sim, confirmar</Button>
+              <Button
+                onClick={handleConfirm}
+                className={cn(
+                  'rounded-xl text-white',
+                  messageType === 'error'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-amber-600 hover:bg-amber-700',
+                )}
+              >
+                {buttonText || 'Sim, confirmar'}
+              </Button>
             </>
           ) : (
-            <Button onClick={handleConfirm}>{buttonText || 'OK'}</Button>
+            <Button
+              onClick={handleConfirm}
+              className="rounded-xl bg-amber-600 text-white hover:bg-amber-700"
+            >
+              {buttonText || 'OK'}
+            </Button>
           )}
         </DialogFooter>
       </DialogContent>

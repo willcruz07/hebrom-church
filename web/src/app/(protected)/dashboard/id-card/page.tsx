@@ -19,6 +19,7 @@ import {
 import type { AppUser, UserRole } from '@/types'
 import { useEffect, useState } from 'react'
 import { formatPhone, formatDate, cn } from '@/lib/utils'
+import { formatMaritalStatus } from '@/lib/member-options'
 import Image from 'next/image'
 import { useNavigation } from '@/hooks/useNavigation'
 import { MINISTRY_ATTRIBUTION_THEME, MINISTRY_LEADER_ACCENT } from '@/lib/ministry-attributions'
@@ -69,23 +70,6 @@ function getCardStatus(user: AppUser | null): CardStatus {
     color: '#22C55E',
     icon: Check,
   }
-}
-
-type MaritalStatus = NonNullable<AppUser['profile']['marital_status']>
-
-const MARITAL_STATUS_STEMS: Record<MaritalStatus, string> = {
-  single: 'Solteiro (a)',
-  married: 'Casado (a)',
-  divorced: 'Divorciado (a)',
-  widowed: 'Viúvo (a)',
-  separated: 'Separado (a)',
-}
-
-// Flexiona pelo gênero do cadastro; sem gênero informado usa "o(a)"
-function formatMaritalStatus(status?: MaritalStatus, gender?: AppUser['profile']['gender']) {
-  if (!status) return '-'
-  const suffix = gender === 'M' ? 'o' : gender === 'F' ? 'a' : 'o(a)'
-  return MARITAL_STATUS_STEMS[status] + suffix
 }
 
 // Abaixo do breakpoint `lg` a carteirinha ocupa a tela toda. Com o telefone em pé o

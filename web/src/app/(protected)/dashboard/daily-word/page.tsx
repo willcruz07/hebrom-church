@@ -1,5 +1,6 @@
 'use client'
 
+import { useMessages } from '@/hooks/useMessages'
 import { useState, useEffect, useCallback } from 'react'
 import {
   Plus,
@@ -50,6 +51,7 @@ import { DailyWord } from '@/types'
 import { BIBLE_SEED_DATA } from '@/lib/bible-seed'
 import { DAILY_WORD_THEMES, getDailyWordTheme } from '@/lib/daily-word-themes'
 import { cn } from '@/lib/utils'
+import { PageTitle } from '@/components/ui/page-title'
 
 type Tab = 'today' | 'history' | 'themes' | 'scheduled'
 type SeedVerse = (typeof BIBLE_SEED_DATA)[number]
@@ -95,6 +97,7 @@ async function shareWord(word: Pick<DailyWord, 'content' | 'reference'>) {
 }
 
 export default function DailyWordPage() {
+  const { confirm: confirmAction } = useMessages()
   const { currentUser } = useAuth()
   const { isPastor, isSecretary } = usePermissions()
   const canManage = isPastor || isSecretary
@@ -222,7 +225,7 @@ export default function DailyWordPage() {
   }
 
   const handleDelete = async (word: DailyWord) => {
-    if (!confirm(`Excluir a palavra de ${dayjs(word.publish_date).format('DD/MM')}?`)) return
+    if (!(await confirmAction({ title: 'Excluir palavra', description: `Excluir a palavra de ${dayjs(word.publish_date).format('DD/MM')}?`, confirmText: 'Excluir', destructive: true }))) return
     try {
       await deleteDailyWord(word.id)
       toast.success('Palavra excluída')
@@ -312,15 +315,11 @@ export default function DailyWordPage() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-lg md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-amber-600" />
-            Palavra do Dia
-          </h1>
-          <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 mt-1">
-            Alimente sua fé diariamente com versículos e meditações.
-          </p>
-        </div>
+        <PageTitle
+          title="Palavra do Dia"
+          icon={<BookOpen className="h-6 w-6 md:h-8 md:w-8 shrink-0 text-amber-600" />}
+          description="Alimente sua fé diariamente com versículos e meditações."
+        />
 
         {canManage && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

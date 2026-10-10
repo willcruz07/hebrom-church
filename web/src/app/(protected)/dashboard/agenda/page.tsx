@@ -13,6 +13,7 @@ import { CATEGORIES, getCategory } from './categories'
 import dayjs from '@/lib/dayjs'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { PageTitle } from '@/components/ui/page-title'
 
 export default function AgendaPage() {
   const { permissions } = usePermissions()
@@ -20,6 +21,7 @@ export default function AgendaPage() {
   const [loading, setLoading] = useState(true)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<ChurchEvent | null>(null)
+  const [editingEvent, setEditingEvent] = useState<ChurchEvent | null>(null)
   const [filter, setFilter] = useState<EventCategory | 'Todos'>('Todos')
   const [currentMonth, setCurrentMonth] = useState(dayjs())
 
@@ -49,14 +51,10 @@ export default function AgendaPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Agenda
-          </h1>
-          <p className="text-xs md:text-sm font-medium text-slate-500 dark:text-slate-400">
-            Eventos, cultos e programações da nossa igreja.
-          </p>
-        </div>
+        <PageTitle
+          title="Agenda"
+          description="Eventos, cultos e programações da nossa igreja."
+        />
         {permissions.canManageAgenda && (
           <button
             onClick={() => setIsCreateModalOpen(true)}
@@ -137,6 +135,7 @@ export default function AgendaPage() {
               {monthEvents.map((event, idx) => {
                 const category = getCategory(event.category)
                 const isLast = idx === monthEvents.length - 1
+                const isPast = dayjs(`${event.date}T${event.time || '23:59'}`).isBefore(dayjs())
 
                 return (
                   <div key={event.id} className="flex gap-3 md:gap-4">
@@ -159,7 +158,12 @@ export default function AgendaPage() {
                       onClick={() => setSelectedEvent(event)}
                       className="flex-1 min-w-0 pb-4 text-left md:pb-5"
                     >
-                      <div className="group flex gap-4 md:gap-5 rounded-2xl border border-slate-200 bg-white p-4 md:p-5 transition-all hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/5 dark:border-slate-800 dark:bg-slate-900/50">
+                      <div
+                        className={cn(
+                          'group flex gap-4 md:gap-5 rounded-2xl border border-slate-200 bg-white p-4 md:p-5 transition-all hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/5 dark:border-slate-800 dark:bg-slate-900/50',
+                          isPast && 'opacity-60 hover:opacity-100',
+                        )}
+                      >
                         {/* Date block */}
                         <div className="flex shrink-0 flex-col items-center justify-center border-r border-slate-100 pr-4 dark:border-slate-800 md:pr-5">
                           <span className="text-2xl md:text-3xl font-black leading-none text-slate-900 dark:text-white">
@@ -176,6 +180,11 @@ export default function AgendaPage() {
                             <span className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                               <span className={cn('h-1.5 w-1.5 rounded-full', category.dot)} />
                               {event.category}
+                              {isPast && (
+                                <span className="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                                  Realizado
+                                </span>
+                              )}
                             </span>
                             <h4 className="text-base md:text-xl font-black text-slate-900 dark:text-white transition-colors group-hover:text-amber-600">
                               {event.title}
@@ -257,8 +266,12 @@ export default function AgendaPage() {
       </div>
 
       <CreateEventModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        isOpen={isCreateModalOpen || !!editingEvent}
+        event={editingEvent}
+        onClose={() => {
+          setIsCreateModalOpen(false)
+          setEditingEvent(null)
+        }}
         onSuccess={() => {}}
       />
 
@@ -267,6 +280,10 @@ export default function AgendaPage() {
         isOpen={!!selectedEvent}
         onClose={() => setSelectedEvent(null)}
         canManage={permissions.canManageAgenda}
+        onEdit={(event) => {
+          setSelectedEvent(null)
+          setEditingEvent(event)
+        }}
       />
     </div>
   )

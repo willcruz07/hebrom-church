@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import dayjs from '@/lib/dayjs'
 import { toJsDate } from '@/lib/utils'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { Input } from '@/components/ui/input'
 
 interface PostCommentsProps {
   post: FeedPost
@@ -118,12 +119,12 @@ export function PostComments({ post: initialPost, isOpen, onClose }: PostComment
                   textClassName="text-xs"
                 />
                 <div className="relative flex-1">
-                  <input
+                  <Input
                     type="text"
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Escreva um comentário..."
-                    className="w-full rounded-2xl border-none bg-white py-2.5 pl-4 pr-12 text-sm shadow-sm focus:ring-2 focus:ring-amber-500/20 dark:bg-slate-800 dark:text-white"
+                    className="h-11 rounded-2xl bg-white pr-12 dark:bg-slate-800"
                   />
                   <button
                     type="submit"

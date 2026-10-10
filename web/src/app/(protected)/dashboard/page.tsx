@@ -42,6 +42,7 @@ import { prayerService } from '@/services/firebase/prayer'
 import { agendaService } from '@/services/firebase/agenda'
 import { getPosts } from '@/services/firebase/mural'
 import { AppUser, PrayerRequest, ChurchEvent, FeedPost } from '@/types'
+import { PageTitle } from '@/components/ui/page-title'
 
 interface StatCardProps {
   title: string
@@ -315,14 +316,10 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 pb-10">
       <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-lg md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Olá, {firstName}! 👋
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400">
-            Bem-vindo ao painel de gestão do Hebrom Sys.
-          </p>
-        </div>
+        <PageTitle
+          title={<>Olá, {firstName}! 👋</>}
+          description="Bem-vindo ao painel de gestão do Hebrom Sys."
+        />
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="h-10 px-4 text-sm font-medium">
             {new Date().toLocaleDateString('pt-BR', {

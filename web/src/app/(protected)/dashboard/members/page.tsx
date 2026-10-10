@@ -20,16 +20,12 @@ import { CreateMemberModal } from './components/CreateMemberModal'
 import { cn, formatDate } from '@/lib/utils'
 import { DataTable, Column, DataAction } from '@/components/DataTable'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { Input } from '@/components/ui/input'
 import { useMembersStore } from '@/store/useMembersStore'
 import { useMessages } from '@/hooks/useMessages'
+import { getRoleLabel } from '@/lib/member-options'
+import { PageTitle } from '@/components/ui/page-title'
 
-const roleLabels: Record<UserRole, string> = {
-  pastor: 'Pastor',
-  secretary: 'Secretária',
-  member: 'Membro',
-  pending_member: 'Pendente',
-  visitor: 'Visitante',
-}
 
 const roleColors: Record<UserRole, string> = {
   pastor: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400',
@@ -143,7 +139,7 @@ export default function MembersPage() {
           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${roleColors[member.role]}`}
         >
           <Shield className="h-3 w-3" />
-          {roleLabels[member.role]}
+          {getRoleLabel(member.role)}
         </span>
       ),
     },
@@ -207,14 +203,10 @@ export default function MembersPage() {
     <PermissionGuard permission="canManageUsers">
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-lg md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              Membros
-            </h1>
-            <p className="text-[9px] md:text-sm font-medium text-slate-500 dark:text-slate-400">
-              Gerencie os membros, líderes e visitantes da sua igreja.
-            </p>
-          </div>
+          <PageTitle
+            title="Membros"
+            description="Gerencie os membros, líderes e visitantes da sua igreja."
+          />
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-700 active:scale-95 md:w-auto"
@@ -269,12 +261,12 @@ export default function MembersPage() {
         <div className="flex flex-col md:flex-row items-center gap-4 border-b border-slate-200 pb-4 dark:border-slate-800">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
+            <Input
               type="text"
               placeholder="Buscar por nome ou e-mail..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm focus:border-amber-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900"
+              className="h-11 rounded-xl bg-white pl-10 dark:bg-slate-900"
             />
           </div>
 
@@ -294,7 +286,7 @@ export default function MembersPage() {
                         : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400'
                     }`}
                   >
-                    {role === 'all' ? 'Todos' : roleLabels[role as UserRole]}
+                    {role === 'all' ? 'Todos' : getRoleLabel(role as UserRole)}
                   </button>
                 ),
               )}
@@ -347,7 +339,7 @@ export default function MembersPage() {
                       <span
                         className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${roleColors[member.role]}`}
                       >
-                        {roleLabels[member.role]}
+                        {getRoleLabel(member.role)}
                       </span>
                       {member.atribuicao_principal && (
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">

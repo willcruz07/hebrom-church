@@ -1,9 +1,10 @@
 'use client'
 
+import { useMessages } from '@/hooks/useMessages'
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Calendar as CalendarIcon, Clock, MapPin, Trash2 } from 'lucide-react'
+import { Calendar as CalendarIcon, Clock, MapPin, Pencil, Trash2 } from 'lucide-react'
 import { ChurchEvent } from '@/types'
 import { agendaService } from '@/services/firebase/agenda'
 import { toast } from 'sonner'
@@ -16,9 +17,11 @@ interface EventDetailModalProps {
   isOpen: boolean
   onClose: () => void
   canManage: boolean
+  onEdit?: (event: ChurchEvent) => void
 }
 
-export function EventDetailModal({ event, isOpen, onClose, canManage }: EventDetailModalProps) {
+export function EventDetailModal({ event, isOpen, onClose, canManage, onEdit }: EventDetailModalProps) {
+  const { confirm: confirmAction } = useMessages()
   const [displayEvent, setDisplayEvent] = useState<ChurchEvent | null>(null)
 
   useEffect(() => {
@@ -30,7 +33,7 @@ export function EventDetailModal({ event, isOpen, onClose, canManage }: EventDet
   const category = getCategory(displayEvent.category)
 
   const handleDelete = async () => {
-    if (!confirm('Deseja excluir este evento?')) return
+    if (!(await confirmAction({ title: 'Excluir evento', description: 'Deseja excluir este evento? Essa ação não pode ser desfeita.', confirmText: 'Excluir', destructive: true }))) return
     try {
       await agendaService.deleteEvent(displayEvent.id)
       toast.success('Evento excluído')
@@ -113,7 +116,7 @@ export function EventDetailModal({ event, isOpen, onClose, canManage }: EventDet
         </div>
 
         {canManage && (
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button
               type="button"
               variant="ghost"
@@ -122,6 +125,15 @@ export function EventDetailModal({ event, isOpen, onClose, canManage }: EventDet
             >
               <Trash2 className="h-4 w-4" /> Excluir Evento
             </Button>
+            {onEdit && (
+              <Button
+                type="button"
+                onClick={() => onEdit(displayEvent)}
+                className="w-full gap-2 rounded-xl bg-amber-600 font-bold text-white hover:bg-amber-700 sm:w-auto"
+              >
+                <Pencil className="h-4 w-4" /> Editar Evento
+              </Button>
+            )}
           </DialogFooter>
         )}
       </DialogContent>

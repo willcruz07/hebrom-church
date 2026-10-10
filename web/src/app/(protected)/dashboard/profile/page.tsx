@@ -27,6 +27,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { maskPhone } from '@/lib/utils'
 import { ImageCropper } from '@/components/ui/ImageCropper'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { PageTitle } from '@/components/ui/page-title'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { getRoleLabel } from '@/lib/member-options'
 
 const profileSchema = z.object({
   full_name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
@@ -186,12 +191,10 @@ export default function ProfilePage() {
   return (
     <div className="space-y-8 pb-10">
       <header className="flex flex-col gap-2">
-        <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white lg:text-4xl">
-          Meu Perfil
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400">
-          Gerencie suas informações pessoais e configurações de conta.
-        </p>
+        <PageTitle
+          title="Meu Perfil"
+          description="Gerencie suas informações pessoais e configurações de conta."
+        />
       </header>
 
       <div className="grid gap-8 lg:grid-cols-3">
@@ -248,13 +251,7 @@ export default function ProfilePage() {
                     <div className="flex flex-wrap items-center justify-center gap-2 pt-2 md:justify-start">
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                         <CheckCircle2 className="h-3 w-3" />
-                        {userRole === 'visitor'
-                          ? 'Visitante'
-                          : userRole === 'member'
-                            ? 'Membro'
-                            : userRole === 'pastor'
-                              ? 'Pastor'
-                              : 'Secretaria'}
+                        {getRoleLabel(userRole)}
                       </span>
                       {currentUser.profile.baptism_date && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
@@ -267,14 +264,15 @@ export default function ProfilePage() {
 
                 <div className="mt-8 grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Label>
                       Nome Completo
-                    </label>
+                    </Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <input
+                      <Input
                         {...register('full_name')}
-                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-amber-500 focus:outline-none dark:bg-slate-800 ${errors.full_name ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
+                        className="h-11 rounded-xl pl-10"
+                        aria-invalid={!!errors.full_name}
                         placeholder="Seu nome completo"
                       />
                     </div>
@@ -284,27 +282,27 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Label>
                       E-mail (Inalterável)
-                    </label>
+                    </Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <input
+                      <Input
                         type="email"
                         disabled
                         value={currentUser.email}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-100 py-2.5 pl-10 pr-4 text-sm opacity-60 dark:border-slate-700 dark:bg-slate-800"
+                        className="h-11 rounded-xl pl-10"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Label>
                       Telefone / WhatsApp
-                    </label>
+                    </Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <input
+                      <Input
                         inputMode="numeric"
                         {...register('phone', {
                           onChange: (e) => {
@@ -312,7 +310,8 @@ export default function ProfilePage() {
                             setValue('phone', masked)
                           },
                         })}
-                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-amber-500 focus:outline-none dark:bg-slate-800 ${errors.phone ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
+                        className="h-11 rounded-xl pl-10"
+                        aria-invalid={!!errors.phone}
                         placeholder="(00) 00000-0000"
                       />
                     </div>
@@ -320,15 +319,16 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Label>
                       Data de Nascimento
-                    </label>
+                    </Label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <input
+                      <Input
                         {...register('birth_date')}
                         type="date"
-                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-amber-500 focus:outline-none dark:bg-slate-800 ${errors.birth_date ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
+                        className="h-11 rounded-xl pl-10"
+                        aria-invalid={!!errors.birth_date}
                       />
                     </div>
                     {errors.birth_date && (
@@ -337,14 +337,15 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="md:col-span-2 space-y-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Label>
                       Endereço Completo
-                    </label>
+                    </Label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <input
+                      <Input
                         {...register('address')}
-                        className={`w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-4 text-sm transition-colors focus:border-amber-500 focus:outline-none dark:bg-slate-800 ${errors.address ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
+                        className="h-11 rounded-xl pl-10"
+                        aria-invalid={!!errors.address}
                         placeholder="Rua, Número, Bairro, Cidade - UF"
                       />
                     </div>
@@ -354,13 +355,14 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="md:col-span-2 space-y-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Label>
                       Bio / Sobre você
-                    </label>
-                    <textarea
+                    </Label>
+                    <Textarea
                       {...register('bio')}
                       rows={3}
-                      className={`w-full rounded-xl border bg-slate-50 p-4 text-sm transition-colors focus:border-amber-500 focus:outline-none dark:bg-slate-800 ${errors.bio ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'}`}
+                      className="rounded-xl p-4"
+                      aria-invalid={!!errors.bio}
                       placeholder="Conte um pouco sobre sua trajetória ou ministério..."
                     />
                     <div className="flex justify-between items-center mt-1">

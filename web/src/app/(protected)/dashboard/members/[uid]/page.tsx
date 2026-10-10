@@ -1,5 +1,6 @@
 'use client'
 
+import { useMessages } from '@/hooks/useMessages'
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -24,7 +25,6 @@ import {
   Cross,
 } from 'lucide-react'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -46,15 +46,19 @@ import { maskPhone, maskCPF, maskCEP, cn, whatsappUrl } from '@/lib/utils'
 import { AvatarLightbox } from '@/components/ui/AvatarLightbox'
 import { MINISTRY_ATTRIBUTIONS, resolveAttributionGroupIds } from '@/lib/ministry-attributions'
 import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
+import { SectionCard } from '@/components/ui/section-card'
 import { SelectField } from '@/components/ui/select-field'
 import {
   BLOOD_TYPE_OPTIONS,
   GENDER_OPTIONS,
   MARITAL_STATUS_OPTIONS,
   ROLE_OPTIONS,
+  getRoleLabel,
 } from '@/lib/member-options'
 import { Switch } from '@/components/ui/switch'
 import { useMembersStore } from '@/store/useMembersStore'
+import { PermissionGuard } from '@/components/PermissionGuard'
+import { PageTitle } from '@/components/ui/page-title'
 
 const memberSchema = z.object({
   // Pessoal
@@ -133,7 +137,17 @@ function toFormValues(userData: AppUser): MemberFormData {
   }
 }
 
+// Ficha completa (CPF, endereço, saúde) — só secretaria/pastor, igual à lista de membros
 export default function MemberEditPage() {
+  return (
+    <PermissionGuard permission="canManageUsers">
+      <MemberEditContent />
+    </PermissionGuard>
+  )
+}
+
+function MemberEditContent() {
+  const { confirm: confirmAction } = useMessages()
   const { uid } = useParams() as { uid: string }
   const router = useRouter()
   // Vindo da lista, o membro já está no useMembersStore: abre na hora, sem buscar de novo.
@@ -246,17 +260,17 @@ export default function MemberEditPage() {
           >
             <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
-          <div>
-            <h1 className="text-lg md:text-xl font-black text-slate-900 dark:text-white leading-tight">
-              Detalhes do Membro
-            </h1>
-            <p className="text-[10px] md:text-xs font-medium text-slate-500">
-              Gerencie as informações de{' '}
-              <span className="text-amber-600 dark:text-amber-400">
-                {member?.profile.full_name}
-              </span>
-            </p>
-          </div>
+          <PageTitle
+            title="Detalhes do Membro"
+            description={
+              <>
+                Gerencie as informações de{' '}
+                <span className="text-amber-600 dark:text-amber-400">
+                  {member?.profile.full_name}
+                </span>
+              </>
+            }
+          />
         </div>
 
         {/* Profile Overview Card */}
@@ -285,7 +299,7 @@ export default function MemberEditPage() {
                         : 'bg-emerald-100 text-emerald-700',
                 )}
               >
-                {member?.role && member.role.replace('_', ' ')}
+                {getRoleLabel(member?.role)}
               </span>
             </div>
 
@@ -335,7 +349,7 @@ export default function MemberEditPage() {
                 variant="outline"
                 className="w-full text-red-600 hover:bg-red-50 rounded-xl font-bold"
                 onClick={async () => {
-                  if (confirm('Excluir permanentemente este membro?')) {
+                  if ((await confirmAction({ title: 'Excluir membro', description: 'Excluir permanentemente este membro? Essa ação não pode ser desfeita.', confirmText: 'Excluir', destructive: true }))) {
                     try {
                       await deleteUser(uid)
                       toast.success('Membro excluído')
@@ -398,333 +412,297 @@ export default function MemberEditPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <TabsContent value="personal">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader>
-                <CardTitle className="text-xl md:text-base font-black">
-                  Informações Básicas
-                </CardTitle>
-                <CardDescription className="text-sm">
-                  Dados essenciais de identificação e contato.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Nome Completo</Label>
-                  <Input {...register('full_name')} placeholder="Nome completo" className="h-11" />
-                  {errors.full_name && (
-                    <p className="text-xs text-red-500">{errors.full_name.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label>E-mail</Label>
-                  <Input
-                    value={member?.email}
-                    disabled
-                    className="h-11 bg-slate-50 dark:bg-slate-900 border-dashed"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Telefone</Label>
-                  <Input
-                    {...register('phone')}
-                    numeric
-                    onChange={(e) => setValue('phone', maskPhone(e.target.value))}
-                    placeholder="(00) 00000-0000"
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Data de Nascimento</Label>
-                  <Input type="date" {...register('birth_date')} className="h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Naturalidade</Label>
-                  <Input
-                    {...register('naturalness')}
-                    placeholder="Ex: São Paulo - SP"
-                    className="h-11"
-                  />
-                </div>
-                <SelectField
-                  label="Sexo"
-                  options={GENDER_OPTIONS}
-                  onValueChange={(v) => setValue('gender', v)}
-                  defaultValue={watch('gender')}
-                  triggerClassName="h-11"
+            <SectionCard
+              title="Informações Básicas"
+              description="Dados essenciais de identificação e contato."
+              contentClassName="grid gap-6 md:grid-cols-2"
+            >
+              <div className="space-y-2">
+                <Label>Nome Completo</Label>
+                <Input {...register('full_name')} placeholder="Nome completo" className="h-11 rounded-xl" />
+                {errors.full_name && (
+                  <p className="text-xs text-red-500">{errors.full_name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input
+                  value={member?.email}
+                  disabled
+                  className="h-11 bg-slate-50 dark:bg-slate-900 border-dashed"
                 />
-              </CardContent>
-            </Card>
+              </div>
+              <div className="space-y-2">
+                <Label>Telefone</Label>
+                <Input
+                  {...register('phone')}
+                  numeric
+                  onChange={(e) => setValue('phone', maskPhone(e.target.value))}
+                  placeholder="(00) 00000-0000"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Data de Nascimento</Label>
+                <Input type="date" {...register('birth_date')} className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Naturalidade</Label>
+                <Input
+                  {...register('naturalness')}
+                  placeholder="Ex: São Paulo - SP"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <SelectField
+                label="Sexo"
+                options={GENDER_OPTIONS}
+                onValueChange={(v) => setValue('gender', v)}
+                defaultValue={watch('gender')}
+                triggerClassName="h-11 rounded-xl"
+              />
+            </SectionCard>
           </TabsContent>
 
           <TabsContent value="family">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader>
-                <CardTitle className="text-xl md:text-base font-black">
-                  Família e Relacionamento
-                </CardTitle>
-                <CardDescription className="text-sm">
-                  Informações sobre cônjuge e filhos.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Nome do Pai</Label>
-                  <Input {...register('father_name')} placeholder="Nome do pai" className="h-11" />
+            <SectionCard
+              title="Família e Relacionamento"
+              description="Informações sobre cônjuge e filhos."
+              contentClassName="grid gap-6 md:grid-cols-2"
+            >
+              <div className="space-y-2">
+                <Label>Nome do Pai</Label>
+                <Input {...register('father_name')} placeholder="Nome do pai" className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Nome da Mãe</Label>
+                <Input {...register('mother_name')} placeholder="Nome da mãe" className="h-11 rounded-xl" />
+              </div>
+              <SelectField
+                label="Estado Civil"
+                options={MARITAL_STATUS_OPTIONS}
+                onValueChange={(v) => setValue('marital_status', v)}
+                defaultValue={watch('marital_status')}
+                triggerClassName="h-11 rounded-xl"
+              />
+              <div className="space-y-2">
+                <Label>Quantidade de Filhos</Label>
+                <Input type="number" numeric {...register('children_count')} className="h-11 rounded-xl" />
+              </div>
+              {watch('marital_status') === 'married' && (
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Nome do Cônjuge</Label>
+                  <Input
+                    {...register('spouse_name')}
+                    placeholder="Nome do cônjuge"
+                    className="h-11 rounded-xl"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label>Nome da Mãe</Label>
-                  <Input {...register('mother_name')} placeholder="Nome da mãe" className="h-11" />
-                </div>
-                <SelectField
-                  label="Estado Civil"
-                  options={MARITAL_STATUS_OPTIONS}
-                  onValueChange={(v) => setValue('marital_status', v)}
-                  defaultValue={watch('marital_status')}
-                  triggerClassName="h-11"
-                />
-                <div className="space-y-2">
-                  <Label>Quantidade de Filhos</Label>
-                  <Input type="number" numeric {...register('children_count')} className="h-11" />
-                </div>
-                {watch('marital_status') === 'married' && (
-                  <div className="space-y-2 md:col-span-2">
-                    <Label>Nome do Cônjuge</Label>
-                    <Input
-                      {...register('spouse_name')}
-                      placeholder="Nome do cônjuge"
-                      className="h-11"
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              )}
+            </SectionCard>
           </TabsContent>
 
           <TabsContent value="address">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader>
-                <CardTitle className="text-xl md:text-base font-black">
-                  Endereço Residencial
-                </CardTitle>
-                <CardDescription className="text-sm">
-                  Onde o membro reside atualmente.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>CEP</Label>
-                  <Input
-                    {...register('zip_code')}
-                    numeric
-                    onChange={(e) => setValue('zip_code', maskCEP(e.target.value))}
-                    placeholder="00000-000"
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Logradouro / Rua</Label>
-                  <Input {...register('address')} placeholder="Rua, Avenida..." className="h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Número</Label>
-                  <Input {...register('address_number')} placeholder="Nº" className="h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Complemento</Label>
-                  <Input
-                    {...register('address_complement')}
-                    placeholder="Apto, Bloco, Casa..."
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Bairro</Label>
-                  <Input {...register('neighborhood')} placeholder="Bairro" className="h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Cidade</Label>
-                  <Input {...register('city')} placeholder="Cidade" className="h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Estado (UF)</Label>
-                  <Input
-                    {...register('state')}
-                    maxLength={2}
-                    placeholder="EX: SP"
-                    className="uppercase h-11"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <SectionCard
+              title="Endereço Residencial"
+              description="Onde o membro reside atualmente."
+              contentClassName="grid gap-6 md:grid-cols-2"
+            >
+              <div className="space-y-2">
+                <Label>CEP</Label>
+                <Input
+                  {...register('zip_code')}
+                  numeric
+                  onChange={(e) => setValue('zip_code', maskCEP(e.target.value))}
+                  placeholder="00000-000"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Logradouro / Rua</Label>
+                <Input {...register('address')} placeholder="Rua, Avenida..." className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input {...register('address_number')} placeholder="Nº" className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Complemento</Label>
+                <Input
+                  {...register('address_complement')}
+                  placeholder="Apto, Bloco, Casa..."
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input {...register('neighborhood')} placeholder="Bairro" className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input {...register('city')} placeholder="Cidade" className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Estado (UF)</Label>
+                <Input
+                  {...register('state')}
+                  maxLength={2}
+                  placeholder="EX: SP"
+                  className="uppercase h-11"
+                />
+              </div>
+            </SectionCard>
           </TabsContent>
 
           <TabsContent value="docs">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader>
-                <CardTitle className="text-xl md:text-base font-black">Documentação</CardTitle>
-                <CardDescription className="text-sm">
-                  Documentos de identificação oficial.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>CPF</Label>
-                  <Input
-                    {...register('cpf')}
-                    numeric
-                    onChange={(e) => setValue('cpf', maskCPF(e.target.value))}
-                    placeholder="000.000.000-00"
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>RG</Label>
-                  <Input {...register('rg')} placeholder="00.000.000-0" className="h-11" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Profissão</Label>
-                  <Input
-                    {...register('profession')}
-                    placeholder="Ex: Engenheiro, Professor, Autônomo"
-                    className="h-11"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <SectionCard
+              title="Documentação"
+              description="Documentos de identificação oficial."
+              contentClassName="grid gap-6 md:grid-cols-2"
+            >
+              <div className="space-y-2">
+                <Label>CPF</Label>
+                <Input
+                  {...register('cpf')}
+                  numeric
+                  onChange={(e) => setValue('cpf', maskCPF(e.target.value))}
+                  placeholder="000.000.000-00"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>RG</Label>
+                <Input {...register('rg')} placeholder="00.000.000-0" className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Profissão</Label>
+                <Input
+                  {...register('profession')}
+                  placeholder="Ex: Engenheiro, Professor, Autônomo"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+            </SectionCard>
           </TabsContent>
 
           <TabsContent value="church">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader>
-                <CardTitle className="text-xl md:text-base font-black">Vida Eclesiástica</CardTitle>
-                <CardDescription className="text-sm">
-                  Histórico ministerial e grupos.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-8">
-                <div className="grid gap-6 md:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label>Cargo principal</Label>
-                    <Select
-                      onValueChange={(v) =>
-                        setValue(
-                          'atribuicao_principal',
-                          v as MemberFormData['atribuicao_principal'],
-                        )
-                      }
-                      defaultValue={member?.atribuicao_principal}
-                    >
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Nenhum" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MINISTRY_ATTRIBUTIONS.map((attribution) => (
-                          <SelectItem key={attribution} value={attribution}>
-                            {attribution}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <SelectField
-                    label="Permissão do Sistema"
-                    options={ROLE_OPTIONS}
-                    onValueChange={(v) => setValue('role', v)}
-                    defaultValue={member?.role}
-                    triggerClassName="h-11"
-                  />
-                  <div className="space-y-2">
-                    <Label>Data de Batismo</Label>
-                    <Input type="date" {...register('baptism_date')} className="h-11" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Data de Comunhão</Label>
-                    <Input type="date" {...register('communion_date')} className="h-11" />
-                  </div>
-                </div>
-
-                <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <Label className="text-sm font-semibold">Atribuições extras</Label>
-                  <ChipMultiSelect
-                    title="Atribuições extras"
-                    triggerLabel="Selecionar atribuições extras"
-                    options={MINISTRY_ATTRIBUTIONS.filter((a) => a !== selectedAttribution).map(
-                      (a) => ({ id: a, label: a }),
-                    )}
-                    selected={selectedSecondaryAttributions || []}
-                    onChange={(next) =>
+            <SectionCard
+              title="Vida Eclesiástica"
+              description="Histórico ministerial e grupos."
+              contentClassName="space-y-8"
+            >
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>Cargo principal</Label>
+                  <Select
+                    onValueChange={(v) =>
                       setValue(
-                        'atribuicoes_secundarias',
-                        next as MemberFormData['atribuicoes_secundarias'],
+                        'atribuicao_principal',
+                        v as MemberFormData['atribuicao_principal'],
                       )
                     }
-                  />
+                    defaultValue={member?.atribuicao_principal}
+                  >
+                    <SelectTrigger className="h-11 rounded-xl">
+                      <SelectValue placeholder="Nenhum" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MINISTRY_ATTRIBUTIONS.map((attribution) => (
+                        <SelectItem key={attribution} value={attribution}>
+                          {attribution}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+                <SelectField
+                  label="Permissão do Sistema"
+                  options={ROLE_OPTIONS}
+                  onValueChange={(v) => setValue('role', v)}
+                  defaultValue={member?.role}
+                  triggerClassName="h-11 rounded-xl"
+                />
+                <div className="space-y-2">
+                  <Label>Data de Batismo</Label>
+                  <Input type="date" {...register('baptism_date')} className="h-11 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Data de Comunhão</Label>
+                  <Input type="date" {...register('communion_date')} className="h-11 rounded-xl" />
+                </div>
+              </div>
 
-                <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-                  <div>
-                    <Label className="text-sm font-semibold">Pode postar/gerenciar no mural</Label>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Já é automático para Secretaria/Pastor. Ative aqui para dar esse acesso a um
-                      membro específico.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={
-                      selectedRole === 'secretary' ||
-                      selectedRole === 'pastor' ||
-                      watch('can_post_mural')
-                    }
-                    disabled={selectedRole === 'secretary' || selectedRole === 'pastor'}
-                    onCheckedChange={(checked) => setValue('can_post_mural', checked)}
-                  />
+              <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Label className="text-sm font-semibold">Atribuições extras</Label>
+                <ChipMultiSelect
+                  title="Atribuições extras"
+                  triggerLabel="Selecionar atribuições extras"
+                  options={MINISTRY_ATTRIBUTIONS.filter((a) => a !== selectedAttribution).map(
+                    (a) => ({ id: a, label: a }),
+                  )}
+                  selected={selectedSecondaryAttributions || []}
+                  onChange={(next) =>
+                    setValue(
+                      'atribuicoes_secundarias',
+                      next as MemberFormData['atribuicoes_secundarias'],
+                    )
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                <div>
+                  <Label className="text-sm font-semibold">Pode postar/gerenciar no mural</Label>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Já é automático para Secretaria/Pastor. Ative aqui para dar esse acesso a um
+                    membro específico.
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+                <Switch
+                  checked={
+                    selectedRole === 'secretary' ||
+                    selectedRole === 'pastor' ||
+                    watch('can_post_mural')
+                  }
+                  disabled={selectedRole === 'secretary' || selectedRole === 'pastor'}
+                  onCheckedChange={(checked) => setValue('can_post_mural', checked)}
+                />
+              </div>
+            </SectionCard>
           </TabsContent>
 
           <TabsContent value="health">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-1.5 bg-amber-600 w-full" />
-              <CardHeader>
-                <CardTitle className="text-xl md:text-base font-black">Saúde e Cuidados</CardTitle>
-                <CardDescription className="text-sm">
-                  Informações importantes para casos de emergência.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-6 md:grid-cols-2">
-                <SelectField
-                  label="Tipo Sanguíneo"
-                  options={BLOOD_TYPE_OPTIONS}
-                  onValueChange={(v) => setValue('blood_type', v)}
-                  defaultValue={watch('blood_type')}
-                  triggerClassName="h-11"
+            <SectionCard
+              title="Saúde e Cuidados"
+              description="Informações importantes para casos de emergência."
+              contentClassName="grid gap-6 md:grid-cols-2"
+            >
+              <SelectField
+                label="Tipo Sanguíneo"
+                options={BLOOD_TYPE_OPTIONS}
+                onValueChange={(v) => setValue('blood_type', v)}
+                defaultValue={watch('blood_type')}
+                triggerClassName="h-11 rounded-xl"
+              />
+              <div className="space-y-2">
+                <Label>Nome do Contato de Emergência</Label>
+                <Input
+                  {...register('emergency_contact_name')}
+                  placeholder="Ex: Maria (Esposa)"
+                  className="h-11 rounded-xl"
                 />
-                <div className="space-y-2">
-                  <Label>Nome do Contato de Emergência</Label>
-                  <Input
-                    {...register('emergency_contact_name')}
-                    placeholder="Ex: Maria (Esposa)"
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Telefone de Emergência</Label>
-                  <Input
-                    {...register('emergency_contact_phone')}
-                    numeric
-                    onChange={(e) => setValue('emergency_contact_phone', maskPhone(e.target.value))}
-                    placeholder="(00) 00000-0000"
-                    className="h-11"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="space-y-2">
+                <Label>Telefone de Emergência</Label>
+                <Input
+                  {...register('emergency_contact_phone')}
+                  numeric
+                  onChange={(e) => setValue('emergency_contact_phone', maskPhone(e.target.value))}
+                  placeholder="(00) 00000-0000"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+            </SectionCard>
           </TabsContent>
         </form>
 
@@ -745,9 +723,9 @@ export default function MemberEditPage() {
 
           <Button
             variant="outline"
-            className="w-full bg-red-700 text-red-100  hover:bg-red-50 h-12 rounded-xl text-sm font-bold"
+            className="w-full border-red-700 bg-red-700 text-red-50 hover:bg-red-800 hover:text-white h-12 rounded-xl text-sm font-bold"
             onClick={async () => {
-              if (confirm('Deseja realmente excluir este membro?')) {
+              if ((await confirmAction({ title: 'Excluir membro', description: 'Excluir permanentemente este membro? Essa ação não pode ser desfeita.', confirmText: 'Excluir', destructive: true }))) {
                 try {
                   await deleteUser(uid)
                   toast.success('Membro excluído')

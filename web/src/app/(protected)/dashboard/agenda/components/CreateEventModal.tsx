@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -25,8 +25,9 @@ import {
 } from '@/components/ui/select'
 import { agendaService } from '@/services/firebase/agenda'
 import { toast } from 'sonner'
-import { EventCategory } from '@/types'
-import { ImagePlus, X, UploadCloud, Loader2 } from 'lucide-react'
+import { ChurchEvent, EventCategory } from '@/types'
+import { ImagePlus, X, UploadCloud } from 'lucide-react'
+import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { useFirebaseStorage } from '@/services/firebase/storage'
 import { ImageCropper } from '@/components/ui/ImageCropper'
 import { BANNER_IMAGE } from '@/lib/image-specs'
@@ -40,25 +41,37 @@ const eventSchema = z.object({
   location: z.string().min(1, 'Local é obrigatório'),
   category: z.enum(['Culto', 'Homens', 'Mulheres', 'Jovens', 'Imersão', 'Batismo', 'Outro']),
   thumbnail_url: z.string().optional(),
-}).superRefine(({ date, time }, ctx) => {
-  // Não permite agendar evento retroativo (data passada, ou hoje com horário que já passou)
-  if (date && date < dayjs().format('YYYY-MM-DD')) {
-    ctx.addIssue({ code: 'custom', path: ['date'], message: 'A data não pode estar no passado' })
-  } else if (date && time && dayjs(`${date}T${time}`).isBefore(dayjs())) {
-    ctx.addIssue({ code: 'custom', path: ['time'], message: 'Esse horário já passou' })
-  }
 })
 
 type EventFormValues = z.infer<typeof eventSchema>
+
+const EMPTY_EVENT: EventFormValues = {
+  title: '',
+  description: '',
+  date: '',
+  time: '',
+  location: '',
+  category: 'Culto',
+}
+
+/** Não permite agendar evento retroativo (data passada, ou hoje com horário que já passou). */
+function retroactiveIssue(date: string, time: string): { field: 'date' | 'time'; message: string } | null {
+  if (date < dayjs().format('YYYY-MM-DD')) return { field: 'date', message: 'A data não pode estar no passado' }
+  if (dayjs(`${date}T${time}`).isBefore(dayjs())) return { field: 'time', message: 'Esse horário já passou' }
+  return null
+}
 
 interface CreateEventModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
+  /** Quando informado, o modal edita esse evento em vez de criar um novo. */
+  event?: ChurchEvent | null
 }
 
-export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModalProps) {
+export function CreateEventModal({ isOpen, onClose, onSuccess, event }: CreateEventModalProps) {
   const { uploadImage } = useFirebaseStorage()
+  const isEditing = !!event
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -71,16 +84,35 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
     handleSubmit,
     reset,
     setValue,
+    setError,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
-    defaultValues: {
-      category: 'Culto',
-    },
+    defaultValues: EMPTY_EVENT,
   })
 
   const category = watch('category')
+
+  // Ao abrir: preenche com o evento em edição (ou limpa para um novo)
+  useEffect(() => {
+    if (!isOpen) return
+    reset(
+      event
+        ? {
+            title: event.title,
+            description: event.description ?? '',
+            date: event.date,
+            time: event.time,
+            location: event.location,
+            category: event.category,
+          }
+        : EMPTY_EVENT,
+    )
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedFile(null)
+    setPreviewUrl(event?.thumbnail_url || null)
+  }, [isOpen, event, reset])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -105,6 +137,14 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
   }
 
   const onSubmit = async (data: EventFormValues) => {
+    // Na edição, só valida a data se ela (ou o horário) mudou — dá pra corrigir texto de evento passado
+    const scheduleChanged = !event || event.date !== data.date || event.time !== data.time
+    const issue = scheduleChanged ? retroactiveIssue(data.date, data.time) : null
+    if (issue) {
+      setError(issue.field, { message: issue.message })
+      return
+    }
+
     try {
       let thumbnail_url = ''
 
@@ -115,16 +155,26 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
         setIsUploading(false)
       }
 
-      await agendaService.createEvent({
-        ...data,
-        ...(thumbnail_url ? { thumbnail_url } : {}),
-      })
+      if (event) {
+        await agendaService.updateEvent(event.id, {
+          ...data,
+          // Nova capa, a capa atual mantida, ou removida (previewUrl vazio)
+          thumbnail_url: thumbnail_url || (previewUrl ? event.thumbnail_url ?? '' : ''),
+        })
+        toast.success('Evento atualizado!')
+      } else {
+        await agendaService.createEvent({
+          ...data,
+          ...(thumbnail_url ? { thumbnail_url } : {}),
+        })
+        toast.success('Evento criado com sucesso!')
+      }
 
-      toast.success('Evento criado com sucesso!')
       handleClose()
       onSuccess()
     } catch (error) {
-      toast.error('Erro ao criar evento')
+      console.error(error)
+      toast.error(event ? 'Erro ao atualizar evento' : 'Erro ao criar evento')
       setIsUploading(false)
     }
   }
@@ -140,10 +190,12 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
       <DialogContent className="sm:max-w-[500px] overflow-y-auto max-h-[90vh] rounded-3xl">
         <DialogHeader>
           <DialogTitle className="text-base md:text-2xl font-black uppercase tracking-tight">
-            Novo Evento
+            {isEditing ? 'Editar Evento' : 'Novo Evento'}
           </DialogTitle>
           <DialogDescription className="text-[10px] md:text-sm font-medium">
-            Preencha os dados abaixo para cadastrar um novo evento na agenda.
+            {isEditing
+              ? 'Altere os dados do evento e salve.'
+              : 'Preencha os dados abaixo para cadastrar um novo evento na agenda.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -172,7 +224,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
                 <Input
                   id="date"
                   type="date"
-                  min={dayjs().format('YYYY-MM-DD')}
+                  min={isEditing ? undefined : dayjs().format('YYYY-MM-DD')}
                   {...register('date')}
                   className="rounded-xl border-slate-200 dark:border-slate-800"
                 />
@@ -217,7 +269,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
               </Label>
               <Select
                 onValueChange={(value) => setValue('category', value as EventCategory)}
-                defaultValue="Culto"
+                value={category}
               >
                 <SelectTrigger className="rounded-xl w-full border-slate-200 dark:border-slate-800">
                   <SelectValue placeholder="Selecione uma categoria" />
@@ -314,11 +366,11 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
             >
               {isSubmitting || isUploading ? (
                 <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <HebromSpinner size="sm" className="brightness-200" />
                   {isUploading ? 'Enviando foto...' : 'Salvando...'}
                 </div>
               ) : (
-                'Criar Evento'
+                isEditing ? 'Salvar Alterações' : 'Criar Evento'
               )}
             </Button>
           </DialogFooter>

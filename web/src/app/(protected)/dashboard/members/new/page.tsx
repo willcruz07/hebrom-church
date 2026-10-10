@@ -23,7 +23,6 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -35,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { maskPhone, maskCPF, maskCEP } from '@/lib/utils'
 import { MINISTRY_ATTRIBUTIONS } from '@/lib/ministry-attributions'
 import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
+import { SectionCard } from '@/components/ui/section-card'
 import { SelectField } from '@/components/ui/select-field'
 import {
   BLOOD_TYPE_OPTIONS,
@@ -43,6 +43,7 @@ import {
   ROLE_OPTIONS,
 } from '@/lib/member-options'
 import { Switch } from '@/components/ui/switch'
+import { PageTitle } from '@/components/ui/page-title'
 
 const memberSchema = z.object({
   // Auth
@@ -152,14 +153,10 @@ export default function MemberCreatePage() {
         </button>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-sm md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Novo Membro
-            </h1>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Cadastre um novo membro com todas as informações necessárias.
-            </p>
-          </div>
+          <PageTitle
+            title="Novo Membro"
+            description="Cadastre um novo membro com todas as informações necessárias."
+          />
           <div className="hidden sm:flex gap-3">
             <Button variant="outline" onClick={() => router.back()} className="rounded-xl">
               Cancelar
@@ -230,349 +227,324 @@ export default function MemberCreatePage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <TabsContent value="auth">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-2 bg-slate-900 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Credenciais de Acesso</CardTitle>
-                <CardDescription className="text-[10px]">Dados para o membro acessar o sistema.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">E-mail</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                      {...register('email')}
-                      type="email"
-                      placeholder="email@exemplo.com"
-                      className="pl-10 h-11 rounded-xl"
-                    />
-                  </div>
-                  {errors.email && <p className="text-xs text-red-500 font-medium">{errors.email.message}</p>}
+            <SectionCard
+              title="Credenciais de Acesso"
+              description="Dados para o membro acessar o sistema."
+              contentClassName="grid gap-6 md:grid-cols-2"
+            >
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    {...register('email')}
+                    type="email"
+                    placeholder="email@exemplo.com"
+                    className="pl-10 h-11 rounded-xl"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Senha Provisória</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                      {...register('password')}
-                      type="password"
-                      placeholder="Mínimo 6 caracteres"
-                      className="pl-10 h-11 rounded-xl"
-                    />
-                  </div>
-                  {errors.password && (
-                    <p className="text-xs text-red-500 font-medium">{errors.password.message}</p>
-                  )}
+                {errors.email && <p className="text-xs text-red-500 font-medium">{errors.email.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label>Senha Provisória</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    {...register('password')}
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    className="pl-10 h-11 rounded-xl"
+                  />
                 </div>
-              </CardContent>
-            </Card>
+                {errors.password && (
+                  <p className="text-xs text-red-500 font-medium">{errors.password.message}</p>
+                )}
+              </div>
+            </SectionCard>
           </TabsContent>
 
           <TabsContent value="personal">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-2 bg-amber-600 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Informações Básicas</CardTitle>
-                <CardDescription className="text-[10px]">Dados essenciais de identificação e contato.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome Completo</Label>
-                  <Input {...register('full_name')} placeholder="Nome completo" className="h-11 rounded-xl" />
-                  {errors.full_name && (
-                    <p className="text-xs text-red-500 font-medium">{errors.full_name.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Telefone</Label>
-                  <Input
-                    {...register('phone')}
-                    numeric
-                    onChange={(e) => setValue('phone', maskPhone(e.target.value))}
-                    placeholder="(00) 00000-0000"
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Data de Nascimento</Label>
-                  <Input type="date" {...register('birth_date')} className="h-11 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Naturalidade</Label>
-                  <Input
-                    {...register('naturalness')}
-                    placeholder="Ex: São Paulo - SP"
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-                <SelectField
-                  label="Sexo"
-                  labelClassName="text-xs font-bold text-slate-700 dark:text-slate-300"
-                  options={GENDER_OPTIONS}
-                  onValueChange={(v) => setValue('gender', v)}
-                  defaultValue="M"
-                  triggerClassName="h-11 rounded-xl"
+            <SectionCard
+              title="Informações Básicas"
+              description="Dados essenciais de identificação e contato."
+              contentClassName="grid gap-6 md:grid-cols-2"
+            >
+              <div className="space-y-2">
+                <Label>Nome Completo</Label>
+                <Input {...register('full_name')} placeholder="Nome completo" className="h-11 rounded-xl" />
+                {errors.full_name && (
+                  <p className="text-xs text-red-500 font-medium">{errors.full_name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Telefone</Label>
+                <Input
+                  {...register('phone')}
+                  numeric
+                  onChange={(e) => setValue('phone', maskPhone(e.target.value))}
+                  placeholder="(00) 00000-0000"
+                  className="h-11 rounded-xl"
                 />
-              </CardContent>
-            </Card>
+              </div>
+              <div className="space-y-2">
+                <Label>Data de Nascimento</Label>
+                <Input type="date" {...register('birth_date')} className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Naturalidade</Label>
+                <Input
+                  {...register('naturalness')}
+                  placeholder="Ex: São Paulo - SP"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <SelectField
+                label="Sexo"
+                                options={GENDER_OPTIONS}
+                onValueChange={(v) => setValue('gender', v)}
+                defaultValue="M"
+                triggerClassName="h-11 rounded-xl"
+              />
+            </SectionCard>
           </TabsContent>
 
           <TabsContent value="family">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-2 bg-pink-500 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Estrutura Familiar</CardTitle>
-                <CardDescription className="text-[10px]">Informações sobre pais, cônjuge e dependentes.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome do Pai</Label>
-                  <Input {...register('father_name')} placeholder="Nome do pai" className="h-11 rounded-xl" />
+            <SectionCard
+              title="Estrutura Familiar"
+              description="Informações sobre pais, cônjuge e dependentes."
+              contentClassName="grid gap-6 md:grid-cols-2"
+            >
+              <div className="space-y-2">
+                <Label>Nome do Pai</Label>
+                <Input {...register('father_name')} placeholder="Nome do pai" className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Nome da Mãe</Label>
+                <Input {...register('mother_name')} placeholder="Nome da mãe" className="h-11 rounded-xl" />
+              </div>
+              <SelectField
+                label="Estado Civil"
+                                options={MARITAL_STATUS_OPTIONS}
+                onValueChange={(v) => setValue('marital_status', v)}
+                defaultValue="single"
+                triggerClassName="h-11 rounded-xl"
+              />
+              <div className="space-y-2">
+                <Label>Quantidade de Filhos</Label>
+                <Input type="number" numeric {...register('children_count')} className="h-11 rounded-xl" />
+              </div>
+              {watch('marital_status') === 'married' && (
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Nome do Cônjuge</Label>
+                  <Input
+                    {...register('spouse_name')}
+                    placeholder="Nome do cônjuge"
+                    className="h-11 rounded-xl"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome da Mãe</Label>
-                  <Input {...register('mother_name')} placeholder="Nome da mãe" className="h-11 rounded-xl" />
-                </div>
-                <SelectField
-                  label="Estado Civil"
-                  labelClassName="text-xs font-bold text-slate-700 dark:text-slate-300"
-                  options={MARITAL_STATUS_OPTIONS}
-                  onValueChange={(v) => setValue('marital_status', v)}
-                  defaultValue="single"
-                  triggerClassName="h-11 rounded-xl"
-                />
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Quantidade de Filhos</Label>
-                  <Input type="number" numeric {...register('children_count')} className="h-11 rounded-xl" />
-                </div>
-                {watch('marital_status') === 'married' && (
-                  <div className="space-y-2 md:col-span-2">
-                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome do Cônjuge</Label>
-                    <Input
-                      {...register('spouse_name')}
-                      placeholder="Nome do cônjuge"
-                      className="h-11 rounded-xl"
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              )}
+            </SectionCard>
           </TabsContent>
 
           <TabsContent value="address">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-2 bg-blue-500 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Endereço Residencial</CardTitle>
-                <CardDescription className="text-[10px]">Localização atual do membro.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-6 md:grid-cols-3">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">CEP</Label>
-                  <Input
-                    {...register('zip_code')}
-                    numeric
-                    onChange={(e) => setValue('zip_code', maskCEP(e.target.value))}
-                    placeholder="00000-000"
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Logradouro / Rua</Label>
-                  <Input {...register('address')} placeholder="Rua, Avenida..." className="h-11 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Número</Label>
-                  <Input {...register('address_number')} placeholder="Nº" className="h-11 rounded-xl" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Complemento</Label>
-                  <Input
-                    {...register('address_complement')}
-                    placeholder="Apto, Bloco, Casa..."
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Bairro</Label>
-                  <Input {...register('neighborhood')} placeholder="Bairro" className="h-11 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Cidade</Label>
-                  <Input {...register('city')} placeholder="Cidade" className="h-11 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Estado (UF)</Label>
-                  <Input
-                    {...register('state')}
-                    maxLength={2}
-                    placeholder="EX: SP"
-                    className="uppercase h-11 rounded-xl"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <SectionCard
+              title="Endereço Residencial"
+              description="Localização atual do membro."
+              contentClassName="grid gap-6 md:grid-cols-3"
+            >
+              <div className="space-y-2">
+                <Label>CEP</Label>
+                <Input
+                  {...register('zip_code')}
+                  numeric
+                  onChange={(e) => setValue('zip_code', maskCEP(e.target.value))}
+                  placeholder="00000-000"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Logradouro / Rua</Label>
+                <Input {...register('address')} placeholder="Rua, Avenida..." className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Número</Label>
+                <Input {...register('address_number')} placeholder="Nº" className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Complemento</Label>
+                <Input
+                  {...register('address_complement')}
+                  placeholder="Apto, Bloco, Casa..."
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Bairro</Label>
+                <Input {...register('neighborhood')} placeholder="Bairro" className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input {...register('city')} placeholder="Cidade" className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Estado (UF)</Label>
+                <Input
+                  {...register('state')}
+                  maxLength={2}
+                  placeholder="EX: SP"
+                  className="uppercase h-11 rounded-xl"
+                />
+              </div>
+            </SectionCard>
           </TabsContent>
 
           <TabsContent value="docs">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-2 bg-emerald-500 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Documentação e Carreira</CardTitle>
-                <CardDescription className="text-[10px]">Documentos oficiais e informações profissionais.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">CPF</Label>
-                  <Input
-                    {...register('cpf')}
-                    numeric
-                    onChange={(e) => setValue('cpf', maskCPF(e.target.value))}
-                    placeholder="000.000.000-00"
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">RG</Label>
-                  <Input {...register('rg')} placeholder="00.000.000-0" className="h-11 rounded-xl" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Profissão</Label>
-                  <Input
-                    {...register('profession')}
-                    placeholder="Ex: Engenheiro, Professor, Autônomo"
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <SectionCard
+              title="Documentação e Carreira"
+              description="Documentos oficiais e informações profissionais."
+              contentClassName="grid gap-6 md:grid-cols-2"
+            >
+              <div className="space-y-2">
+                <Label>CPF</Label>
+                <Input
+                  {...register('cpf')}
+                  numeric
+                  onChange={(e) => setValue('cpf', maskCPF(e.target.value))}
+                  placeholder="000.000.000-00"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>RG</Label>
+                <Input {...register('rg')} placeholder="00.000.000-0" className="h-11 rounded-xl" />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Profissão</Label>
+                <Input
+                  {...register('profession')}
+                  placeholder="Ex: Engenheiro, Professor, Autônomo"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+            </SectionCard>
           </TabsContent>
 
           <TabsContent value="church">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-2 bg-purple-600 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Vida Eclesiástica</CardTitle>
-                <CardDescription className="text-[10px]">Histórico ministerial e participação em grupos.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-8">
-                <div className="grid gap-6 md:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Cargo principal</Label>
-                    <Select
-                      onValueChange={(v) =>
-                        setValue('atribuicao_principal', v as MemberFormData['atribuicao_principal'])
-                      }
-                    >
-                      <SelectTrigger className="h-11 rounded-xl">
-                        <SelectValue placeholder="Nenhum" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MINISTRY_ATTRIBUTIONS.map((attribution) => (
-                          <SelectItem key={attribution} value={attribution}>
-                            {attribution}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <SelectField
-                    label="Permissão do Sistema"
-                    labelClassName="text-xs font-bold text-slate-700 dark:text-slate-300"
-                    options={ROLE_OPTIONS}
-                    onValueChange={(v) => setValue('role', v)}
-                    defaultValue="member"
-                    triggerClassName="h-11 rounded-xl"
-                  />
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Data de Batismo</Label>
-                    <Input type="date" {...register('baptism_date')} className="h-11 rounded-xl" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Data de Comunhão</Label>
-                    <Input type="date" {...register('communion_date')} className="h-11 rounded-xl" />
-                  </div>
-                </div>
-
-                <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <Label className="text-sm font-black tracking-tight">Atribuições extras</Label>
-                  <ChipMultiSelect
-                    title="Atribuições extras"
-                    triggerLabel="Selecionar atribuições extras"
-                    options={MINISTRY_ATTRIBUTIONS.filter((a) => a !== selectedAttribution).map(
-                      (a) => ({ id: a, label: a }),
-                    )}
-                    selected={selectedSecondaryAttributions || []}
-                    onChange={(next) =>
-                      setValue(
-                        'atribuicoes_secundarias',
-                        next as MemberFormData['atribuicoes_secundarias'],
-                      )
+            <SectionCard
+              title="Vida Eclesiástica"
+              description="Histórico ministerial e participação em grupos."
+              contentClassName="space-y-8"
+            >
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>Cargo principal</Label>
+                  <Select
+                    onValueChange={(v) =>
+                      setValue('atribuicao_principal', v as MemberFormData['atribuicao_principal'])
                     }
-                  />
+                  >
+                    <SelectTrigger className="h-11 rounded-xl">
+                      <SelectValue placeholder="Nenhum" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MINISTRY_ATTRIBUTIONS.map((attribution) => (
+                        <SelectItem key={attribution} value={attribution}>
+                          {attribution}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
-                <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-                  <div>
-                    <Label className="text-sm font-black tracking-tight">
-                      Pode postar/gerenciar no mural
-                    </Label>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Já é automático para Secretaria/Pastor. Ative aqui para dar esse acesso a um
-                      membro específico.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={
-                      selectedRole === 'secretary' ||
-                      selectedRole === 'pastor' ||
-                      watch('can_post_mural')
-                    }
-                    disabled={selectedRole === 'secretary' || selectedRole === 'pastor'}
-                    onCheckedChange={(checked) => setValue('can_post_mural', checked)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="health">
-            <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden rounded-2xl">
-              <div className="h-2 bg-red-500 w-full" />
-              <CardHeader className="py-4">
-                <CardTitle className="text-sm md:text-lg font-black tracking-tight">Saúde e Emergência</CardTitle>
-                <CardDescription className="text-[10px]">Informações cruciais para segurança do membro.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-6 md:grid-cols-2">
                 <SelectField
-                  label="Tipo Sanguíneo"
-                  labelClassName="text-xs font-bold text-slate-700 dark:text-slate-300"
-                  options={BLOOD_TYPE_OPTIONS}
-                  onValueChange={(v) => setValue('blood_type', v)}
-                  defaultValue="O+"
+                  label="Permissão do Sistema"
+                                    options={ROLE_OPTIONS}
+                  onValueChange={(v) => setValue('role', v)}
+                  defaultValue="member"
                   triggerClassName="h-11 rounded-xl"
                 />
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Nome do Contato de Emergência</Label>
-                  <Input
-                    {...register('emergency_contact_name')}
-                    placeholder="Ex: Maria (Esposa)"
-                    className="h-11 rounded-xl"
-                  />
+                  <Label>Data de Batismo</Label>
+                  <Input type="date" {...register('baptism_date')} className="h-11 rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Telefone de Emergência</Label>
-                  <Input
-                    {...register('emergency_contact_phone')}
-                    numeric
-                    onChange={(e) => setValue('emergency_contact_phone', maskPhone(e.target.value))}
-                    placeholder="(00) 00000-0000"
-                    className="h-11 rounded-xl"
-                  />
+                  <Label>Data de Comunhão</Label>
+                  <Input type="date" {...register('communion_date')} className="h-11 rounded-xl" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Label className="text-sm font-black tracking-tight">Atribuições extras</Label>
+                <ChipMultiSelect
+                  title="Atribuições extras"
+                  triggerLabel="Selecionar atribuições extras"
+                  options={MINISTRY_ATTRIBUTIONS.filter((a) => a !== selectedAttribution).map(
+                    (a) => ({ id: a, label: a }),
+                  )}
+                  selected={selectedSecondaryAttributions || []}
+                  onChange={(next) =>
+                    setValue(
+                      'atribuicoes_secundarias',
+                      next as MemberFormData['atribuicoes_secundarias'],
+                    )
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                <div>
+                  <Label className="text-sm font-black tracking-tight">
+                    Pode postar/gerenciar no mural
+                  </Label>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Já é automático para Secretaria/Pastor. Ative aqui para dar esse acesso a um
+                    membro específico.
+                  </p>
+                </div>
+                <Switch
+                  checked={
+                    selectedRole === 'secretary' ||
+                    selectedRole === 'pastor' ||
+                    watch('can_post_mural')
+                  }
+                  disabled={selectedRole === 'secretary' || selectedRole === 'pastor'}
+                  onCheckedChange={(checked) => setValue('can_post_mural', checked)}
+                />
+              </div>
+            </SectionCard>
+          </TabsContent>
+
+          <TabsContent value="health">
+            <SectionCard
+              title="Saúde e Emergência"
+              description="Informações cruciais para segurança do membro."
+              contentClassName="grid gap-6 md:grid-cols-2"
+            >
+              <SelectField
+                label="Tipo Sanguíneo"
+                                options={BLOOD_TYPE_OPTIONS}
+                onValueChange={(v) => setValue('blood_type', v)}
+                defaultValue="O+"
+                triggerClassName="h-11 rounded-xl"
+              />
+              <div className="space-y-2">
+                <Label>Nome do Contato de Emergência</Label>
+                <Input
+                  {...register('emergency_contact_name')}
+                  placeholder="Ex: Maria (Esposa)"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Telefone de Emergência</Label>
+                <Input
+                  {...register('emergency_contact_phone')}
+                  numeric
+                  onChange={(e) => setValue('emergency_contact_phone', maskPhone(e.target.value))}
+                  placeholder="(00) 00000-0000"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+            </SectionCard>
           </TabsContent>
 
           {/* Mobile Action Buttons (Stacked) */}
