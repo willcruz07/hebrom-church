@@ -28,6 +28,9 @@ import { toast } from 'sonner'
 import { EventCategory } from '@/types'
 import { ImagePlus, X, UploadCloud, Loader2 } from 'lucide-react'
 import { useFirebaseStorage } from '@/services/firebase/storage'
+import { ImageCropper } from '@/components/ui/ImageCropper'
+import { BANNER_IMAGE } from '@/lib/image-specs'
+import dayjs from '@/lib/dayjs'
 
 const eventSchema = z.object({
   title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres'),
@@ -37,6 +40,13 @@ const eventSchema = z.object({
   location: z.string().min(1, 'Local é obrigatório'),
   category: z.enum(['Culto', 'Homens', 'Mulheres', 'Jovens', 'Imersão', 'Batismo', 'Outro']),
   thumbnail_url: z.string().optional(),
+}).superRefine(({ date, time }, ctx) => {
+  // Não permite agendar evento retroativo (data passada, ou hoje com horário que já passou)
+  if (date && date < dayjs().format('YYYY-MM-DD')) {
+    ctx.addIssue({ code: 'custom', path: ['date'], message: 'A data não pode estar no passado' })
+  } else if (date && time && dayjs(`${date}T${time}`).isBefore(dayjs())) {
+    ctx.addIssue({ code: 'custom', path: ['time'], message: 'Esse horário já passou' })
+  }
 })
 
 type EventFormValues = z.infer<typeof eventSchema>
@@ -52,6 +62,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -74,13 +85,17 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      setSelectedFile(file)
       const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string)
-      }
+      reader.onloadend = () => setImageToCrop(reader.result as string)
       reader.readAsDataURL(file)
     }
+    // Permite escolher o mesmo arquivo de novo depois de cancelar o recorte
+    e.target.value = ''
+  }
+
+  const handleCropComplete = (blob: Blob) => {
+    setSelectedFile(new File([blob], 'capa.jpg', { type: 'image/jpeg' }))
+    setPreviewUrl(URL.createObjectURL(blob))
   }
 
   const removeFile = () => {
@@ -157,6 +172,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
                 <Input
                   id="date"
                   type="date"
+                  min={dayjs().format('YYYY-MM-DD')}
                   {...register('date')}
                   className="rounded-xl border-slate-200 dark:border-slate-800"
                 />
@@ -239,8 +255,8 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
                 onClick={() => !previewUrl && fileInputRef.current?.click()}
                 className={
                   z.string().safeParse(previewUrl).success
-                    ? 'relative h-32 w-full overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all dark:border-slate-800 dark:bg-slate-900/50'
-                    : 'group relative flex h-32 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all hover:border-amber-500/50 hover:bg-amber-50/50 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-amber-500/30 dark:hover:bg-amber-900/10'
+                    ? 'relative aspect-video w-full overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all dark:border-slate-800 dark:bg-slate-900/50'
+                    : 'group relative flex aspect-video w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all hover:border-amber-500/50 hover:bg-amber-50/50 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-amber-500/30 dark:hover:bg-amber-900/10'
                 }
               >
                 {previewUrl ? (
@@ -264,7 +280,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
                     </div>
                     <span className="text-xs font-medium">Clique para enviar uma foto</span>
                     <span className="text-[10px] uppercase tracking-wider opacity-60">
-                      PNG, JPG ou WEBP
+                      {BANNER_IMAGE.label} · recorte na próxima etapa
                     </span>
                   </div>
                 )}
@@ -307,6 +323,18 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
             </Button>
           </DialogFooter>
         </form>
+
+        {imageToCrop && (
+          <ImageCropper
+            key={imageToCrop}
+            image={imageToCrop}
+            open={!!imageToCrop}
+            onOpenChange={(open) => !open && setImageToCrop(null)}
+            onCropComplete={handleCropComplete}
+            spec={BANNER_IMAGE}
+            title="Recortar Capa do Evento"
+          />
+        )}
       </DialogContent>
     </Dialog>
   )

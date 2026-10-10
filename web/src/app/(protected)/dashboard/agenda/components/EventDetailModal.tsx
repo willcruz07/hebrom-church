@@ -48,7 +48,7 @@ export function EventDetailModal({ event, isOpen, onClose, canManage }: EventDet
         </DialogHeader>
 
         <div className="space-y-5">
-          <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
             {displayEvent.thumbnail_url ? (
               <img
                 src={displayEvent.thumbnail_url}

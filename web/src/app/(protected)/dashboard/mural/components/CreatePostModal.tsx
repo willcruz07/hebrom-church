@@ -7,6 +7,8 @@ import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Image as ImageIcon, Send, Type, AlignLeft, Users, CalendarDays } from 'lucide-react'
 import dayjs from '@/lib/dayjs'
+import { ImageCropper } from '@/components/ui/ImageCropper'
+import { BANNER_IMAGE } from '@/lib/image-specs'
 import { toast } from 'sonner'
 import { useAuth } from '@/store/useAuth'
 import { createPost } from '@/services/firebase/mural'
@@ -37,6 +39,7 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
   const [groups, setGroups] = useState<ChurchGroup[]>([])
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -79,13 +82,17 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
         toast.error('Por favor, selecione uma imagem válida.')
         return
       }
-      setSelectedFile(file)
       const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string)
-      }
+      reader.onloadend = () => setImageToCrop(reader.result as string)
       reader.readAsDataURL(file)
     }
+    // Permite escolher o mesmo arquivo de novo depois de cancelar o recorte
+    e.target.value = ''
+  }
+
+  const handleCropComplete = (blob: Blob) => {
+    setSelectedFile(new File([blob], 'banner.jpg', { type: 'image/jpeg' }))
+    setPreviewImage(URL.createObjectURL(blob))
   }
 
   const onSubmit = async (data: PostFormValues) => {
@@ -180,6 +187,9 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
                       <ImageIcon className="h-10 w-10" />
                       <span className="text-xs font-medium">
                         Adicionar Banner ou Imagem (Opcional)
+                      </span>
+                      <span className="text-[10px] uppercase tracking-wider opacity-70">
+                        {BANNER_IMAGE.label} · recorte na próxima etapa
                       </span>
                     </div>
                   )}
@@ -298,6 +308,18 @@ export function CreatePostModal({ isOpen, onClose, onSuccess }: CreatePostModalP
               </div>
             </form>
           </motion.div>
+
+          {imageToCrop && (
+            <ImageCropper
+              key={imageToCrop}
+              image={imageToCrop}
+              open={!!imageToCrop}
+              onOpenChange={(open) => !open && setImageToCrop(null)}
+              onCropComplete={handleCropComplete}
+              spec={BANNER_IMAGE}
+              title="Recortar Banner do Aviso"
+            />
+          )}
         </div>
       )}
     </AnimatePresence>

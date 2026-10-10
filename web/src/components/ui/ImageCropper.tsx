@@ -11,15 +11,26 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import getCroppedImg from '@/lib/cropImage'
+import type { ImageSpec } from '@/lib/image-specs'
 
 interface ImageCropperProps {
   image: string
   open: boolean
   onOpenChange: (open: boolean) => void
   onCropComplete: (croppedBlob: Blob) => void
+  /** Proporção e tamanho final do recorte. Sem isso, recorte quadrado na resolução original (foto de perfil). */
+  spec?: ImageSpec
+  title?: string
 }
 
-export function ImageCropper({ image, open, onOpenChange, onCropComplete }: ImageCropperProps) {
+export function ImageCropper({
+  image,
+  open,
+  onOpenChange,
+  onCropComplete,
+  spec,
+  title = 'Recortar Foto',
+}: ImageCropperProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null)
@@ -41,7 +52,13 @@ export function ImageCropper({ image, open, onOpenChange, onCropComplete }: Imag
 
   const handleConfirm = async () => {
     try {
-      const croppedBlob = await getCroppedImg(image, croppedAreaPixels)
+      const croppedBlob = await getCroppedImg(
+        image,
+        croppedAreaPixels,
+        0,
+        undefined,
+        spec ? { width: spec.width, height: spec.height } : undefined,
+      )
       if (croppedBlob) {
         onCropComplete(croppedBlob)
         onOpenChange(false)
@@ -55,7 +72,13 @@ export function ImageCropper({ image, open, onOpenChange, onCropComplete }: Imag
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] overflow-hidden p-0">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle>Recortar Foto</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
+          {spec && (
+            <p className="text-xs text-slate-500">
+              Arraste e use o zoom para enquadrar. Tamanho final:{' '}
+              <span className="font-bold text-slate-700 dark:text-slate-300">{spec.label}</span>
+            </p>
+          )}
         </DialogHeader>
         
         <div className="relative h-[400px] w-full bg-slate-100 dark:bg-slate-800">
@@ -63,7 +86,7 @@ export function ImageCropper({ image, open, onOpenChange, onCropComplete }: Imag
             image={image}
             crop={crop}
             zoom={zoom}
-            aspect={1}
+            aspect={spec?.aspect ?? 1}
             onCropChange={onCropChange}
             onCropComplete={onCropCompleteCallback}
             onZoomChange={onZoomChange}

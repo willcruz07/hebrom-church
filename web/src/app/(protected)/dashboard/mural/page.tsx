@@ -224,7 +224,7 @@ export default function MuralPage() {
                   <img
                     src={post.media_url}
                     alt={post.title}
-                    className="w-full object-cover max-h-72"
+                    className="aspect-video w-full object-cover"
                   />
                 </div>
               )}
