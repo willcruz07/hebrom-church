@@ -27,3 +27,21 @@ export interface VerseRef {
   chapter: number
   verse: number
 }
+
+/** O que as regras precisam de um Timestamp do Firestore (permite testar sem Firebase). */
+export interface TimestampLike {
+  toMillis(): number
+}
+
+/** Marcador de trecho: versículos de um único capítulo, com nota opcional. */
+export interface BibleBookmark<T extends TimestampLike = TimestampLike> {
+  id: string
+  bookId: string
+  chapter: number
+  /** Ordenado crescente, sem repetição, pelo menos 1. */
+  verses: number[]
+  /** Ausente = sem nota (o Firestore recusa `undefined`). */
+  note?: string
+  created_at: T
+  updated_at?: T
+}
