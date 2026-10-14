@@ -138,7 +138,7 @@ export function CreateMemberModal({ isOpen, onClose, onSuccess }: CreateMemberMo
             {errors.full_name && <p className="text-xs font-medium text-red-500">{errors.full_name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input
@@ -156,7 +156,7 @@ export function CreateMemberModal({ isOpen, onClose, onSuccess }: CreateMemberMo
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <SelectField
               label="Cargo / Role"
               options={CREATE_ROLE_OPTIONS}

@@ -163,7 +163,7 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
             {errors.full_name && <p className="text-xs text-red-500">{errors.full_name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <SelectField
               label="Cargo / Permissão"
               options={ROLE_OPTIONS}

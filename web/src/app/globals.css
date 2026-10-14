@@ -209,6 +209,26 @@ html {
   }
 }
 
+/* iOS: date/time nativos ignoram a altura, encolhem quando vazios e estouram a
+   largura do container. Sem a aparência nativa eles seguem o h-11/w-full do <Input>. */
+@supports (-webkit-touch-callout: none) {
+  input[type='date'],
+  input[type='time'],
+  input[type='datetime-local'] {
+    -webkit-appearance: none;
+    appearance: none;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  input::-webkit-date-and-time-value {
+    text-align: left;
+    min-height: 1.5em;
+  }
+}
+
 /* Scrollbar personalizada */
 ::-webkit-scrollbar {
   width: 8px;
