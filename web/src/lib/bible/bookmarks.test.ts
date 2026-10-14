@@ -6,6 +6,11 @@ import {
   MAX_BIBLE_BOOKMARKS,
   mergeSelection,
   overlappingBookmarks,
+  setNote,
+  withoutBookmark,
+  groupByBook,
+  buildQuote,
+  bookmarkHref,
   formatBookmarkRef,
   formatVerses,
   normalizeBookmarks,
@@ -176,4 +181,48 @@ test('mergeSelection recusa nota (nova ou unida) acima de 2000', () => {
     mergeSelection([bm({ id: 'a', verses: [1], note: long })], sel([1]), { now: ts(1), newId: 'n', note: long }),
     { ok: false, error: 'note-too-long' },
   )
+})
+
+test('setNote edita, limpa e ignora id inexistente', () => {
+  const now = ts(99)
+  const items = [bm({ id: 'a', verses: [1], note: 'velha' })]
+  const edited = okItems(setNote(items, 'a', '  nova ', now))
+  assert.equal(edited[0].note, 'nova')
+  assert.equal(edited[0].updated_at?.toMillis(), 99)
+  const cleared = okItems(setNote(items, 'a', '   ', now))
+  assert.equal('note' in cleared[0], false)
+  assert.deepEqual(okItems(setNote(items, 'sumiu', 'x', now)), items)
+  assert.deepEqual(setNote(items, 'a', 'x'.repeat(2001), now), { ok: false, error: 'note-too-long' })
+})
+
+test('withoutBookmark remove pelo id e tolera id inexistente', () => {
+  const items = [bm({ id: 'a', verses: [1] }), bm({ id: 'b', verses: [2] })]
+  assert.deepEqual(withoutBookmark(items, 'a').map((b) => b.id), ['b'])
+  assert.equal(withoutBookmark(items, 'sumiu').length, 2)
+})
+
+test('groupByBook conta, ordena por atividade e lista em ordem canônica', () => {
+  const groups = groupByBook([
+    bm({ id: 'l2', chapter: 27, verses: [5], created_at: ts(10) }),
+    bm({ id: 'l1', chapter: 3, verses: [2], note: 'n', created_at: ts(20) }),
+    bm({ id: 'l3', chapter: 27, verses: [1], created_at: ts(5), updated_at: ts(500) }),
+    bm({ id: 'j1', bookId: 'JHN', chapter: 3, verses: [16], created_at: ts(100) }),
+  ])
+  assert.deepEqual(groups.map((g) => g.bookId), ['LEV', 'JHN'])
+  assert.equal(groups[0].count, 3)
+  assert.equal(groups[0].withNote, 1)
+  assert.equal(groups[0].lastActivity, 500)
+  assert.deepEqual(groups[0].bookmarks.map((b) => b.id), ['l1', 'l3', 'l2'])
+})
+
+test('buildQuote: um versículo sem número, vários com sobrescrito', () => {
+  assert.equal(buildQuote([{ verse: 16, text: 'Porque Deus' }], 'João 3:16'), '"Porque Deus"\n— João 3:16')
+  assert.equal(
+    buildQuote([{ verse: 12, text: 'B' }, { verse: 1, text: 'A' }], 'Levítico 27:1, 12'),
+    '"¹ A ¹² B"\n— Levítico 27:1, 12',
+  )
+})
+
+test('bookmarkHref aponta o trecho no leitor', () => {
+  assert.equal(bookmarkHref({ bookId: 'LEV', chapter: 27, verses: [7, 1, 2, 3] }), '/dashboard/bible/levitico/27?v=1-3,7')
 })

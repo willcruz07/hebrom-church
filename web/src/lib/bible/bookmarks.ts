@@ -1,4 +1,4 @@
-import { findBookById, isValidVerse, parseRefKey } from './catalog.ts'
+import { bookHref, findBookById, isValidVerse, parseRefKey } from './catalog.ts'
 import type { BibleBookmark, TimestampLike } from './types.ts'
 
 export const MAX_BIBLE_BOOKMARKS = 200
@@ -191,4 +191,72 @@ export function mergeSelection<T extends TimestampLike>(
     updated_at: now,
   })
   return { ok: true, items: [...items.filter((i) => !hit.includes(i)), merged] }
+}
+
+/** Edita a nota (vazia/espaços remove a nota). Id inexistente devolve a lista sem mudança. */
+export function setNote<T extends TimestampLike>(
+  items: BibleBookmark<T>[],
+  id: string,
+  note: string,
+  now: T,
+): BookmarkResult<T> {
+  const cleaned = cleanNote(note)
+  if (cleaned && cleaned.length > MAX_BOOKMARK_NOTE_LENGTH) return { ok: false, error: 'note-too-long' }
+  return {
+    ok: true,
+    items: items.map((b) => (b.id === id ? buildBookmark({ ...b, note: cleaned, updated_at: now }) : b)),
+  }
+}
+
+export const withoutBookmark = <T extends TimestampLike>(items: BibleBookmark<T>[], id: string) =>
+  items.filter((b) => b.id !== id)
+
+export interface BookmarkGroup<T extends TimestampLike = TimestampLike> {
+  bookId: string
+  count: number
+  withNote: number
+  /** Maior `created_at`/`updated_at` do livro, em ms. */
+  lastActivity: number
+  /** Ordem do texto: capítulo, depois primeiro versículo. */
+  bookmarks: BibleBookmark<T>[]
+}
+
+const activityOf = (b: BibleBookmark) => Math.max(b.created_at.toMillis(), b.updated_at?.toMillis() ?? 0)
+
+/** Cards da tela principal: um por livro, o de atividade mais recente primeiro. */
+export function groupByBook<T extends TimestampLike>(items: BibleBookmark<T>[]): BookmarkGroup<T>[] {
+  const byBook = new Map<string, BibleBookmark<T>[]>()
+  for (const b of items) byBook.set(b.bookId, [...(byBook.get(b.bookId) ?? []), b])
+
+  return [...byBook.entries()]
+    .map(([bookId, bookmarks]) => ({
+      bookId,
+      count: bookmarks.length,
+      withNote: bookmarks.filter((b) => b.note).length,
+      lastActivity: Math.max(...bookmarks.map(activityOf)),
+      bookmarks: [...bookmarks].sort((a, b) => a.chapter - b.chapter || a.verses[0] - b.verses[0]),
+    }))
+    .sort((a, b) => b.lastActivity - a.lastActivity)
+}
+
+export interface QuoteEntry {
+  verse: number
+  text: string
+}
+
+const SUPERSCRIPT = '⁰¹²³⁴⁵⁶⁷⁸⁹'
+const superscript = (n: number) => [...String(n)].map((d) => SUPERSCRIPT[Number(d)]).join('')
+
+/** Texto para copiar/compartilhar; com mais de um versículo, numera cada um. */
+export function buildQuote(entries: QuoteEntry[], label: string): string {
+  const sorted = [...entries].sort((a, b) => a.verse - b.verse)
+  const body =
+    sorted.length === 1 ? sorted[0].text : sorted.map((e) => `${superscript(e.verse)} ${e.text}`).join(' ')
+  return `"${body}"\n— ${label}`
+}
+
+/** Leitor no capítulo do trecho, destacando todos os versículos (`?v=1-3,7`). */
+export function bookmarkHref(sel: VerseSelection): string {
+  const slug = findBookById(sel.bookId)?.slug ?? ''
+  return `${bookHref(slug)}/${sel.chapter}?v=${formatVerses(sel.verses).replace(/ /g, '')}`
 }
