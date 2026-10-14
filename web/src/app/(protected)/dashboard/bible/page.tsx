@@ -3,7 +3,7 @@ import { PageTitle } from '@/components/ui/page-title'
 import { BibleCredit } from './components/BibleCredit'
 import { BibleSearch } from './components/BibleSearch'
 import { BookGrid } from './components/BookGrid'
-import { BookmarksStrip } from './components/BookmarksStrip'
+import { BookmarksByBook } from './components/BookmarksByBook'
 import { ContinueReading } from './components/ContinueReading'
 
 export default function BiblePage() {
@@ -16,7 +16,7 @@ export default function BiblePage() {
       />
       <BibleSearch />
       <ContinueReading />
-      <BookmarksStrip />
+      <BookmarksByBook />
       <BookGrid testament="VT" title="Velho Testamento" />
       <BookGrid testament="NT" title="Novo Testamento" />
       <BibleCredit />
