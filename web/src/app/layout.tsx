@@ -30,6 +30,10 @@ const siteUrl =
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // App se comporta como nativo: sem zoom de pinça nem zoom automático no foco de input.
+  // (iOS ignora userScalable no Safari; o bloqueio de lá fica no PwaManager + globals.css)
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: 'cover',
   // Mesma cor da barra superior do app (MobileLayout): white / slate-900
   themeColor: [

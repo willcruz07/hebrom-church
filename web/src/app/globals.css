@@ -195,6 +195,20 @@
   }
 }
 
+/* Sem zoom por duplo toque (mantém rolagem e toque normais) */
+html {
+  touch-action: manipulation;
+}
+
+/* iOS dá zoom ao focar campos com fonte < 16px; no mobile força 16px */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 /* Scrollbar personalizada */
 ::-webkit-scrollbar {
   width: 8px;
