@@ -67,14 +67,14 @@ export const getDailyWord = async (date: string): Promise<DailyWord | null> => {
 
 export type DailyWordCursor = QueryDocumentSnapshot<DocumentData> | null
 
-/** Palavras já publicadas (hoje para trás), paginadas por cursor — mais recente primeiro. */
+/** Palavras de dias anteriores (sem a de hoje), paginadas por cursor — mais recente primeiro. */
 export const getPublishedDailyWords = async (
   pageSize = 10,
   cursor: DailyWordCursor = null,
 ): Promise<{ words: DailyWord[]; cursor: DailyWordCursor }> => {
   const q = query(
     collection(db, DAILY_WORD_COLLECTION),
-    where('publish_date', '<=', today()),
+    where('publish_date', '<', today()),
     orderBy('publish_date', 'desc'),
     ...(cursor ? [startAfter(cursor)] : []),
     limit(pageSize),

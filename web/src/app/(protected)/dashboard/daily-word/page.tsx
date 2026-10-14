@@ -13,6 +13,7 @@ import {
   History,
   CalendarClock,
   ChevronDown,
+  UserRound,
 } from 'lucide-react'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { toast } from 'sonner'
@@ -22,7 +23,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
   DialogContent,
@@ -47,24 +47,23 @@ import {
   type DailyWordCursor,
 } from '@/services/firebase/daily-word'
 import { DailyWord } from '@/types'
-import { BIBLE_SEED_DATA } from '@/lib/bible-seed'
 import { DAILY_WORD_THEMES, getDailyWordTheme } from '@/lib/daily-word-themes'
 import { cn } from '@/lib/utils'
 import { PageTitle } from '@/components/ui/page-title'
 import { PalavraTabs } from '@/components/palavra/PalavraTabs'
 import { shareText } from '@/lib/share'
 
-type Tab = 'today' | 'history' | 'themes' | 'scheduled'
-type SeedVerse = (typeof BIBLE_SEED_DATA)[number]
-
-const PAGE_SIZE = 10
+// Anteriores só carregam quando o usuário pede, de 3 em 3, para a tela não acumular
+const HISTORY_PAGE_SIZE = 3
 const THEME_OPTIONS = DAILY_WORD_THEMES.map((t) => ({ value: t.id, label: `${t.icon} ${t.label}` }))
+
+const todayStr = () => dayjs().format('YYYY-MM-DD')
 
 const emptyForm = () => ({
   content: '',
   reference: '',
   theme: 'Fe',
-  publish_date: dayjs().format('YYYY-MM-DD'),
+  publish_date: todayStr(),
 })
 
 /** "Hoje", "Ontem", "Amanhã" ou "seg, 06 de out". */
@@ -78,14 +77,18 @@ function formatWordDate(date: string) {
   return d.format(d.year() === today.year() ? 'ddd, DD [de] MMM' : 'DD [de] MMM [de] YYYY')
 }
 
-function pickRandomVerse(themeId: string): SeedVerse | null {
-  const verses = BIBLE_SEED_DATA.filter((v) => v.theme === themeId)
-  return verses.length ? verses[Math.floor(Math.random() * verses.length)] : null
-}
-
 async function shareWord(word: Pick<DailyWord, 'content' | 'reference'>) {
   const text = `📖 Palavra do Dia\n\n"${word.content}"${word.reference ? `\n— ${word.reference}` : ''}`
   await shareText(text, 'Palavra copiada!')
+}
+
+function SectionTitle({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
+      {icon}
+      {children}
+    </h2>
+  )
 }
 
 export default function DailyWordPage() {
@@ -94,21 +97,15 @@ export default function DailyWordPage() {
   const { isPastor, isSecretary } = usePermissions()
   const canManage = isPastor || isSecretary
 
-  const [tab, setTab] = useState<Tab>('today')
-
   const [todayWord, setTodayWord] = useState<DailyWord | null>(null)
   const [loadingToday, setLoadingToday] = useState(true)
 
-  const [history, setHistory] = useState<DailyWord[]>([])
+  const [history, setHistory] = useState<DailyWord[] | null>(null)
   const [historyCursor, setHistoryCursor] = useState<DailyWordCursor>(null)
-  const [historyLoaded, setHistoryLoaded] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  const [scheduled, setScheduled] = useState<DailyWord[] | null>(null)
-
-  const [selectedTheme, setSelectedTheme] = useState('')
-  const [selectedVerse, setSelectedVerse] = useState<SeedVerse | null>(null)
+  const [scheduled, setScheduled] = useState<DailyWord[]>([])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -117,7 +114,7 @@ export default function DailyWordPage() {
   const loadToday = useCallback(async () => {
     setLoadingToday(true)
     try {
-      setTodayWord(await getDailyWord(dayjs().format('YYYY-MM-DD')))
+      setTodayWord(await getDailyWord(todayStr()))
     } catch (error) {
       console.error(error)
       toast.error('Erro ao carregar a palavra de hoje')
@@ -129,10 +126,9 @@ export default function DailyWordPage() {
   const loadHistory = useCallback(async (cursor: DailyWordCursor = null) => {
     setLoadingHistory(true)
     try {
-      const page = await getPublishedDailyWords(PAGE_SIZE, cursor)
-      setHistory((prev) => (cursor ? [...prev, ...page.words] : page.words))
+      const page = await getPublishedDailyWords(HISTORY_PAGE_SIZE, cursor)
+      setHistory((prev) => (cursor && prev ? [...prev, ...page.words] : page.words))
       setHistoryCursor(page.cursor)
-      setHistoryLoaded(true)
     } catch (error) {
       console.error(error)
       toast.error('Erro ao carregar palavras anteriores')
@@ -150,33 +146,24 @@ export default function DailyWordPage() {
     }
   }, [])
 
+  // A lista de anteriores só é recarregada se o usuário já a abriu
+  const historyOpen = history !== null
+  const refreshAll = useCallback(() => {
+    loadToday()
+    if (historyOpen) loadHistory()
+    if (canManage) loadScheduled()
+  }, [canManage, historyOpen, loadToday, loadHistory, loadScheduled])
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadToday()
-  }, [loadToday])
-
-  // As listas só são buscadas quando a aba é aberta pela primeira vez
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (tab === 'history' && !historyLoaded) loadHistory()
-    if (tab === 'scheduled' && scheduled === null) loadScheduled()
-  }, [tab, historyLoaded, scheduled, loadHistory, loadScheduled])
-
-  const refreshAll = () => {
-    loadToday()
-    if (historyLoaded) loadHistory()
-    if (scheduled !== null) loadScheduled()
-  }
-
-  const handleThemeSelect = (themeId: string) => {
-    setSelectedTheme(themeId)
-    setSelectedVerse(pickRandomVerse(themeId))
-  }
+    if (canManage) loadScheduled()
+  }, [canManage, loadToday, loadScheduled])
 
   const handleCreate = async () => {
     if (!newWord.content.trim() || !currentUser) return
 
-    if (newWord.publish_date < dayjs().format('YYYY-MM-DD')) {
+    if (newWord.publish_date < todayStr()) {
       toast.error('A data de publicação não pode estar no passado.')
       return
     }
@@ -199,7 +186,7 @@ export default function DailyWordPage() {
         author_name: currentUser.profile.full_name,
       })
 
-      const isToday = newWord.publish_date === dayjs().format('YYYY-MM-DD')
+      const isToday = newWord.publish_date === todayStr()
       toast.success(
         isToday
           ? 'Palavra lançada! Todos foram notificados.'
@@ -299,13 +286,17 @@ export default function DailyWordPage() {
           )}
         </button>
 
-        <p className="mt-2 text-[11px] text-slate-400">Por {word.author_name}</p>
+        <p className="mt-2 text-[11px] text-slate-400">
+          {word.is_auto ? 'Devocional do dia' : `Por ${word.author_name}`}
+        </p>
       </li>
     )
   }
 
+  const todayTheme = todayWord ? getDailyWordTheme(todayWord.theme) : null
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <PalavraTabs />
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <PageTitle
@@ -334,7 +325,7 @@ export default function DailyWordPage() {
                   <Label>Data de Publicação</Label>
                   <Input
                     type="date"
-                    min={dayjs().format('YYYY-MM-DD')}
+                    min={todayStr()}
                     value={newWord.publish_date}
                     onChange={(e) => setNewWord({ ...newWord, publish_date: e.target.value })}
                   />
@@ -381,105 +372,118 @@ export default function DailyWordPage() {
         )}
       </header>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="w-full">
-        <TabsList
-          className={cn(
-            'grid w-full rounded-xl bg-slate-100 dark:bg-slate-800 p-1 md:w-[480px]',
-            canManage ? 'grid-cols-4' : 'grid-cols-3',
-          )}
+      {loadingToday ? (
+        <div className="flex justify-center py-20">
+          <HebromSpinner size="lg" />
+        </div>
+      ) : todayWord && todayTheme ? (
+        <Card className="relative overflow-hidden border-none shadow-2xl dark:bg-slate-900 bg-white">
+          <div className="absolute top-0 right-0 p-8 opacity-10">
+            <Quote className="h-32 w-32 rotate-180" />
+          </div>
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-purple-600 to-pink-600" />
+
+          <CardHeader className="pt-12 pb-6 px-6 md:px-8 text-center">
+            <div className="mx-auto mb-4 flex flex-wrap items-center justify-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-600 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white">
+                {todayWord.is_auto ? <Sparkles className="h-3 w-3" /> : <UserRound className="h-3 w-3" />}
+                {todayWord.is_auto ? 'Devocional do dia' : 'Palavra do Pastor'}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                {todayTheme.icon} {todayTheme.label}
+              </span>
+            </div>
+            <CardTitle className="text-xl md:text-4xl font-serif italic leading-relaxed text-slate-800 dark:text-white">
+              {todayWord.content}
+            </CardTitle>
+            {todayWord.reference && (
+              <p className="mt-6 text-base md:text-xl font-bold text-amber-600 dark:text-amber-400">
+                — {todayWord.reference}
+              </p>
+            )}
+          </CardHeader>
+
+          <CardFooter className="bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 px-6 md:px-8 py-4 flex flex-wrap justify-between items-center gap-3">
+            <div className="flex flex-col text-sm text-slate-500">
+              <span className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                {dayjs(todayWord.publish_date).format('DD [de] MMMM, YYYY')}
+              </span>
+              {!todayWord.is_auto && (
+                <span className="text-xs text-slate-400">Por {todayWord.author_name}</span>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => shareWord(todayWord)}
+              className="rounded-full border-amber-200 text-amber-600 hover:bg-amber-50"
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Compartilhar
+            </Button>
+          </CardFooter>
+        </Card>
+      ) : (
+        <Card className="border-dashed border-2 py-16 text-center">
+          <CardContent className="space-y-4">
+            <div className="mx-auto h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center dark:bg-slate-800">
+              <BookOpen className="h-8 w-8 text-slate-400" />
+            </div>
+            <div>
+              <h3 className="text-base md:text-lg font-semibold">
+                Nenhuma palavra lançada para hoje
+              </h3>
+              <p className="text-slate-500">Aguarde a atualização do pastor ou secretaria.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {canManage && scheduled.length > 0 && (
+        <section className="space-y-3">
+          <SectionTitle icon={<CalendarClock className="h-4 w-4 text-blue-500" />}>
+            Agendadas · {scheduled.length}
+          </SectionTitle>
+          <ul className="space-y-3">{scheduled.map((w) => renderWordItem(w, 'scheduled'))}</ul>
+        </section>
+      )}
+
+      {history === null ? (
+        <Button
+          variant="outline"
+          className="w-full rounded-xl border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-900/50 dark:text-amber-400 dark:hover:bg-amber-900/20"
+          disabled={loadingHistory}
+          onClick={() => loadHistory()}
         >
-          <TabsTrigger value="today" className="rounded-lg text-xs">
-            Hoje
-          </TabsTrigger>
-          <TabsTrigger value="history" className="rounded-lg text-xs">
-            Anteriores
-          </TabsTrigger>
-          <TabsTrigger value="themes" className="rounded-lg text-xs">
-            Temas
-          </TabsTrigger>
-          {canManage && (
-            <TabsTrigger value="scheduled" className="rounded-lg text-xs">
-              Agendadas
-            </TabsTrigger>
-          )}
-        </TabsList>
-
-        <TabsContent value="today" className="mt-6 space-y-6">
-          {loadingToday ? (
-            <div className="flex justify-center py-20">
-              <HebromSpinner size="lg" />
-            </div>
-          ) : todayWord ? (
-            <Card className="relative overflow-hidden border-none shadow-2xl dark:bg-slate-900 bg-white">
-              <div className="absolute top-0 right-0 p-8 opacity-10">
-                <Quote className="h-32 w-32 rotate-180" />
-              </div>
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-purple-600 to-pink-600" />
-
-              <CardHeader className="pt-12 pb-6 px-6 md:px-8 text-center">
-                <div className="mx-auto mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-xs font-bold dark:bg-amber-900/30 dark:text-amber-400 uppercase tracking-widest">
-                  <Sparkles className="h-3 w-3" />
-                  {getDailyWordTheme(todayWord.theme).icon} {getDailyWordTheme(todayWord.theme).label}
-                </div>
-                <CardTitle className="text-xl md:text-4xl font-serif italic leading-relaxed text-slate-800 dark:text-white">
-                  {todayWord.content}
-                </CardTitle>
-                {todayWord.reference && (
-                  <p className="mt-6 text-base md:text-xl font-bold text-amber-600 dark:text-amber-400">
-                    — {todayWord.reference}
-                  </p>
-                )}
-              </CardHeader>
-
-              <CardFooter className="bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 px-6 md:px-8 py-4 flex flex-wrap justify-between items-center gap-3">
-                <div className="flex flex-col text-sm text-slate-500">
-                  <span className="flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4" />
-                    {dayjs(todayWord.publish_date).format('DD [de] MMMM, YYYY')}
-                  </span>
-                  <span className="text-xs text-slate-400">Por {todayWord.author_name}</span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => shareWord(todayWord)}
-                  className="rounded-full border-amber-200 text-amber-600 hover:bg-amber-50"
-                >
-                  <Share2 className="mr-2 h-4 w-4" />
-                  Compartilhar
-                </Button>
-              </CardFooter>
-            </Card>
+          {loadingHistory ? (
+            <HebromSpinner size="sm" />
           ) : (
-            <Card className="border-dashed border-2 py-16 text-center">
-              <CardContent className="space-y-4">
-                <div className="mx-auto h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center dark:bg-slate-800">
-                  <BookOpen className="h-8 w-8 text-slate-400" />
-                </div>
-                <div>
-                  <h3 className="text-base md:text-lg font-semibold">
-                    Nenhuma palavra lançada para hoje
-                  </h3>
-                  <p className="text-slate-500">Aguarde a atualização do pastor ou secretaria.</p>
-                </div>
-                <Button variant="outline" className="rounded-full" onClick={() => setTab('history')}>
-                  <History className="mr-2 h-4 w-4" />
-                  Ver palavras anteriores
-                </Button>
-              </CardContent>
-            </Card>
+            <>
+              <History className="mr-2 h-4 w-4" />
+              Ver palavras anteriores
+            </>
           )}
-        </TabsContent>
-
-        <TabsContent value="history" className="mt-6">
-          {!historyLoaded ? (
-            <div className="flex justify-center py-20">
-              <HebromSpinner size="lg" />
-            </div>
-          ) : history.length === 0 ? (
-            <p className="py-16 text-center text-slate-500">Nenhuma palavra publicada ainda.</p>
+        </Button>
+      ) : (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <SectionTitle icon={<History className="h-4 w-4 text-amber-600" />}>Palavras anteriores</SectionTitle>
+            <button
+              type="button"
+              onClick={() => {
+                setHistory(null)
+                setHistoryCursor(null)
+              }}
+              className="text-xs font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+            >
+              Ocultar
+            </button>
+          </div>
+          {history.length === 0 ? (
+            <p className="py-6 text-center text-sm text-slate-500">Nenhuma palavra anterior ainda.</p>
           ) : (
-            <div className="space-y-4">
+            <>
               <ul className="space-y-3">{history.map((w) => renderWordItem(w, 'history'))}</ul>
               {historyCursor && (
                 <Button
@@ -498,104 +502,10 @@ export default function DailyWordPage() {
                   )}
                 </Button>
               )}
-            </div>
+            </>
           )}
-        </TabsContent>
-
-        <TabsContent value="themes" className="mt-6 space-y-8">
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-            {DAILY_WORD_THEMES.map((theme) => (
-              <button
-                key={theme.id}
-                onClick={() => handleThemeSelect(theme.id)}
-                className={cn(
-                  'flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300 gap-1.5',
-                  selectedTheme === theme.id
-                    ? 'bg-amber-600 border-amber-600 text-white shadow-lg shadow-amber-500/25 scale-105'
-                    : 'bg-white border-slate-200 hover:border-amber-300 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400',
-                )}
-              >
-                <span className="text-2xl">{theme.icon}</span>
-                <span className="text-[11px] font-bold uppercase tracking-tighter">{theme.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <Dialog open={!!selectedTheme} onOpenChange={(open) => !open && setSelectedTheme('')}>
-            <DialogContent className="max-h-[85vh] gap-0 overflow-y-auto rounded-3xl border-none bg-gradient-to-br from-amber-600 to-purple-700 p-0 text-white shadow-2xl sm:max-w-xl [&>[data-slot=dialog-close]]:text-white [&>[data-slot=dialog-close]]:opacity-80">
-              <div className="pointer-events-none absolute top-0 right-0 p-6 opacity-20">
-                <Quote className="h-24 w-24 rotate-180" />
-              </div>
-
-              <div className="relative px-6 pt-10 pb-8 text-center md:px-10">
-                <span className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-widest">
-                  {getDailyWordTheme(selectedTheme).icon} {getDailyWordTheme(selectedTheme).label}
-                </span>
-
-                {selectedVerse ? (
-                  <div key={selectedVerse.referencia} className="animate-in fade-in duration-500">
-                    <DialogTitle className="font-serif text-xl italic leading-relaxed md:text-3xl">
-                      “{selectedVerse.descricao}”
-                    </DialogTitle>
-                    <DialogDescription className="mt-6 text-base font-bold text-amber-100 md:text-xl">
-                      — {selectedVerse.referencia}
-                    </DialogDescription>
-                  </div>
-                ) : (
-                  <>
-                    <DialogTitle className="text-lg">Nenhum versículo encontrado</DialogTitle>
-                    <DialogDescription className="mt-2 text-amber-100">
-                      Ainda não há versículos para este tema.
-                    </DialogDescription>
-                  </>
-                )}
-              </div>
-
-              <div className="relative flex flex-wrap justify-center gap-2 bg-black/10 px-6 py-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleThemeSelect(selectedTheme)}
-                  className="rounded-full text-amber-50 hover:bg-white/10 hover:text-white"
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Sortear outro
-                </Button>
-                {selectedVerse && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      shareWord({ content: selectedVerse.descricao, reference: selectedVerse.referencia })
-                    }
-                    className="rounded-full text-amber-50 hover:bg-white/10 hover:text-white"
-                  >
-                    <Share2 className="mr-2 h-4 w-4" />
-                    Compartilhar
-                  </Button>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
-
-        {canManage && (
-          <TabsContent value="scheduled" className="mt-6">
-            {scheduled === null ? (
-              <div className="flex justify-center py-20">
-                <HebromSpinner size="lg" />
-              </div>
-            ) : scheduled.length === 0 ? (
-              <div className="py-16 text-center text-slate-500">
-                <CalendarClock className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-                Nenhuma palavra agendada para os próximos dias.
-              </div>
-            ) : (
-              <ul className="space-y-3">{scheduled.map((w) => renderWordItem(w, 'scheduled'))}</ul>
-            )}
-          </TabsContent>
-        )}
-      </Tabs>
+        </section>
+      )}
     </div>
   )
 }
