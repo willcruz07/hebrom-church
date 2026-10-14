@@ -11,8 +11,10 @@ import { getBook, prefetchBible } from '@/lib/bible/loader'
 import { FONT_SIZES, readFontSize, saveFontSize, saveLastRead } from '@/lib/bible/preferences'
 import { copyText, shareText } from '@/lib/share'
 import { cn } from '@/lib/utils'
+import { useHideOnScroll } from '@/hooks/useHideOnScroll'
 import { useAuth } from '@/store/useAuth'
 import { useBibleBookmarks } from '@/store/useBibleBookmarks'
+import { useBottomNav } from '@/store/useBottomNav'
 import type { BibleBookmark } from '@/types'
 import { BibleCredit } from './BibleCredit'
 import { BookmarkSheet } from './BookmarkSheet'
@@ -41,6 +43,15 @@ export function ChapterReader({ slug, chapter, focusVerses }: ChapterReaderProps
   const [activeBookmarkId, setActiveBookmarkId] = useState<string | null>(null)
   const [flash, setFlash] = useState<number[]>(focusVerses)
   const focusKey = focusVerses.join(',')
+
+  // Foco na leitura: a barra inferior sai ao rolar para baixo e enquanto há seleção
+  const scrolledAway = useHideOnScroll()
+  const setNavHidden = useBottomNav((s) => s.setHidden)
+  const navHidden = scrolledAway || selection.length > 0
+  useEffect(() => {
+    setNavHidden(navHidden)
+  }, [navHidden, setNavHidden])
+  useEffect(() => () => setNavHidden(false), [setNavHidden])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

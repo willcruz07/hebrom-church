@@ -17,6 +17,7 @@ import {
   IdCard,
 } from 'lucide-react'
 import { useAuth } from '@/store/useAuth'
+import { useBottomNav } from '@/store/useBottomNav'
 
 interface NavItem {
   name: string
@@ -120,6 +121,7 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
   const currentUser = useAuth((s) => s.currentUser)
+  const hidden = useBottomNav((s) => s.hidden)
   const pathname = usePathname()
   const { navigateTo } = useNavigation()
   const { permissions, isVisitor } = usePermissions()
@@ -203,7 +205,9 @@ export function MobileBottomNav({ className = '' }: MobileBottomNavProps) {
   return (
     <nav
       className={clsx(
-        'mobile-bottom-nav fixed bottom-0 left-0 right-0 z-40 rounded-t-[2.5rem] border-t border-slate-200 bg-white/95 pb-safe backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 lg:hidden',
+        'mobile-bottom-nav fixed bottom-0 left-0 right-0 z-40 rounded-t-[2.5rem] border-t border-slate-200 bg-white/95 pb-safe backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 transition-transform duration-300 lg:hidden',
+        // Desce além da própria altura para o botão central (que sobressai) sumir junto
+        hidden && 'pointer-events-none translate-y-[calc(100%+2.5rem)]',
         className,
       )}
     >
