@@ -18,7 +18,13 @@ import {
   UserCheck,
   UserPlus,
   BookOpen,
+  Baby,
 } from 'lucide-react'
+import Link from 'next/link'
+import { kidsToday } from '@/components/kids/kids-today'
+import { countByRoom } from '@/lib/kids/stats'
+import { useKidsStore } from '@/store/useKidsStore'
+import { MEMBERS_KIDS_HREF } from './members/components/MembersTabs'
 import { getDailyWord } from '@/services/firebase/daily-word'
 import { DailyWord } from '@/types'
 import dayjs from '@/lib/dayjs'
@@ -52,6 +58,7 @@ interface StatCardProps {
   colorClass: string
   subLabel?: string
   subValue?: number
+  subText?: string
 }
 
 const StatCard = ({
@@ -62,6 +69,7 @@ const StatCard = ({
   colorClass,
   subLabel,
   subValue,
+  subText,
 }: StatCardProps) => (
   <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white/60 p-6 shadow-lg backdrop-blur-md transition-all hover:-translate-y-1 hover:border-amber-500/30 hover:bg-white/80 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-900/80">
     <div
@@ -80,6 +88,7 @@ const StatCard = ({
             <span className="font-medium text-slate-700 dark:text-slate-300">{subValue}</span>
           </p>
         )}
+        {subText && <p className="mt-1 text-xs text-slate-500">{subText}</p>}
       </div>
       <div
         className={`rounded-xl p-3 shadow-inner ${colorClass} bg-opacity-10 ring-1 ring-amber-500/10 ring-inset`}
@@ -144,6 +153,12 @@ const mockCategoryData = [
 export default function DashboardPage() {
   const { currentUser } = useAuth()
   const { permissions, isPastor } = usePermissions()
+  const kids = useKidsStore((s) => s.children)
+  const startKids = useKidsStore((s) => s.startListening)
+  useEffect(() => {
+    if (permissions.canViewDashboardOverview) startKids()
+  }, [permissions.canViewDashboardOverview, startKids])
+  const kidCounts = useMemo(() => countByRoom(kids, kidsToday()), [kids])
   const router = useRouter()
   const [dailyWord, setDailyWord] = useState<DailyWord | null>(null)
   
@@ -331,7 +346,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {permissions.canViewMetrics && (
           <StatCard
             title="Total de Membros"
@@ -343,6 +358,15 @@ export default function DashboardPage() {
             subValue={stats.activeMembers}
           />
         )}
+        <Link href={MEMBERS_KIDS_HREF} className="block">
+          <StatCard
+            title="Crianças cadastradas"
+            value={kidCounts.total}
+            icon={Baby}
+            colorClass="text-amber-500"
+            subText={`${kidCounts.bercario} berçário · ${kidCounts.kids} kids · ${kidCounts.juniores} juniores`}
+          />
+        </Link>
         <StatCard
           title="Pedidos de Oração"
           value={stats.totalPrayers}

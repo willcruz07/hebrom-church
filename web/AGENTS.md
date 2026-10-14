@@ -28,6 +28,7 @@ Tudo em `src/services/firebase/*`, um arquivo por domínio (`agenda.ts`, `groups
 - Não há `firestore.rules`/`storage.rules` versionados neste repositório.
 - Toda autorização (`usePermissions`, `PermissionGuard`) é client-side.
 - `bible_bookmarks/{uid}` guarda marcadores **e anotações pessoais**: a privacidade depende da regra `allow read, write: if request.auth != null && request.auth.uid == uid;` estar aplicada no console (ver `docs/superpowers/specs/2026-10-14-biblia-marcadores-notas-design.md`).
+- `kids_children` guarda **dados de saúde de crianças** (Área Kids): a privacidade depende das regras do Firestore e do Storage descritas em `docs/superpowers/specs/2026-10-14-kids-cadastro-design.md` (seção "Privacidade") estarem aplicadas no console. A foto (`kids/{childId}.jpg`) aceita escrita de qualquer usuário autenticado — risco aceito.
 
 **Regra**: não crie uma rota em `src/app/api/**` que faça leitura/escrita privilegiada sem antes verificar a sessão no servidor e o `role` do usuário no Firestore. Nunca confie em `role` (ou qualquer campo de privilégio) vindo do corpo da requisição. Veja o skill `security-check` antes de mexer em rotas de API, regras de permissão ou funções de `services/firebase` que escrevem dados de outro usuário.
 

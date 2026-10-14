@@ -17,6 +17,7 @@ import { approveUser, deleteUser } from '@/services/firebase/users'
 import { AppUser, UserRole } from '@/types'
 import { toast } from 'sonner'
 import { CreateMemberModal } from './components/CreateMemberModal'
+import { MembersTabs } from './components/MembersTabs'
 import { cn, formatDate } from '@/lib/utils'
 import { DataTable, Column, DataAction } from '@/components/DataTable'
 import { UserAvatar } from '@/components/ui/UserAvatar'
@@ -202,6 +203,7 @@ export default function MembersPage() {
   return (
     <PermissionGuard permission="canManageUsers">
       <div className="space-y-6">
+        <MembersTabs />
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <PageTitle
             title="Membros"

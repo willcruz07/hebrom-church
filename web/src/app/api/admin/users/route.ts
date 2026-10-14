@@ -6,7 +6,7 @@ import { resolveAttributionGroupIds } from '@/lib/ministry-attributions';
 export async function POST(request: Request) {
   try {
     const {
-      email,
+      email: rawEmail,
       password,
       role,
       atribuicao_principal,
@@ -14,6 +14,9 @@ export async function POST(request: Request) {
       can_post_mural,
       ...profileData
     } = await request.json();
+
+    // E-mail sempre em minúsculas: a busca de contas por e-mail (ex.: vínculo de responsável na Área Kids) depende disso
+    const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : rawEmail
 
     const sub_groups = resolveAttributionGroupIds(atribuicao_principal, atribuicoes_secundarias);
 

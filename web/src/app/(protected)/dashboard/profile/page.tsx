@@ -32,6 +32,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { getRoleLabel } from '@/lib/member-options'
+import { MyChildrenSection } from './components/MyChildrenSection'
 
 const profileSchema = z.object({
   full_name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
@@ -461,6 +462,8 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+
+          <MyChildrenSection />
         </div>
 
         <div className="space-y-6">

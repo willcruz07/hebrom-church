@@ -1,6 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 import { MinistryAttribution } from '@/lib/ministry-attributions';
 import type { BibleBookmark as BookmarkOf } from '@/lib/bible/types';
+import type { KidChildOf } from '@/lib/kids/child';
 
 export type UserRole = 'visitor' | 'pending_member' | 'member' | 'secretary' | 'pastor';
 
@@ -158,3 +159,6 @@ export interface DailyWord {
 
 /** Marcador de trecho da Bíblia (regras em src/lib/bible/bookmarks.ts). */
 export type BibleBookmark = BookmarkOf<Timestamp>;
+
+/** Criança da Área Kids (regras em src/lib/kids/). */
+export type KidChild = KidChildOf<Timestamp>;
