@@ -7,7 +7,6 @@ import {
   Calendar as CalendarIcon,
   BookOpen,
   Quote,
-  Filter,
   Trash2,
   Sparkles,
   Share2,
@@ -528,58 +527,62 @@ export default function DailyWordPage() {
             ))}
           </div>
 
-          {selectedTheme && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-base md:text-xl font-bold flex items-center gap-2">
-                  <Filter className="h-5 w-5 text-amber-600" />
-                  Versículo sobre {getDailyWordTheme(selectedTheme).label}
-                </h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleThemeSelect(selectedTheme)}
-                  className="rounded-full border-amber-200 text-amber-600 hover:bg-amber-50"
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Sortear outro
-                </Button>
+          <Dialog open={!!selectedTheme} onOpenChange={(open) => !open && setSelectedTheme('')}>
+            <DialogContent className="max-h-[85vh] gap-0 overflow-y-auto rounded-3xl border-none bg-gradient-to-br from-amber-600 to-purple-700 p-0 text-white shadow-2xl sm:max-w-xl [&>[data-slot=dialog-close]]:text-white [&>[data-slot=dialog-close]]:opacity-80">
+              <div className="pointer-events-none absolute top-0 right-0 p-6 opacity-20">
+                <Quote className="h-24 w-24 rotate-180" />
               </div>
 
-              {selectedVerse ? (
-                <Card className="relative overflow-hidden border-none shadow-xl bg-gradient-to-br from-amber-600 to-purple-700 text-white">
-                  <div className="absolute top-0 right-0 p-6 opacity-20">
-                    <Quote className="h-24 w-24 rotate-180" />
-                  </div>
-                  <CardHeader className="pt-10 pb-6 px-6 md:px-8 text-center">
-                    <CardTitle className="text-lg md:text-3xl font-serif italic leading-relaxed">
-                      {selectedVerse.descricao}
-                    </CardTitle>
-                    <p className="mt-6 text-sm md:text-xl font-bold text-amber-100">
+              <div className="relative px-6 pt-10 pb-8 text-center md:px-10">
+                <span className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-widest">
+                  {getDailyWordTheme(selectedTheme).icon} {getDailyWordTheme(selectedTheme).label}
+                </span>
+
+                {selectedVerse ? (
+                  <div key={selectedVerse.referencia} className="animate-in fade-in duration-500">
+                    <DialogTitle className="font-serif text-xl italic leading-relaxed md:text-3xl">
+                      “{selectedVerse.descricao}”
+                    </DialogTitle>
+                    <DialogDescription className="mt-6 text-base font-bold text-amber-100 md:text-xl">
                       — {selectedVerse.referencia}
-                    </p>
-                  </CardHeader>
-                  <CardFooter className="bg-black/10 px-8 py-4 flex justify-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        shareWord({ content: selectedVerse.descricao, reference: selectedVerse.referencia })
-                      }
-                      className="rounded-full text-amber-50 hover:bg-white/10 hover:text-white"
-                    >
-                      <Share2 className="mr-2 h-4 w-4" />
-                      Compartilhar
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ) : (
-                <p className="text-center py-10 text-slate-500">
-                  Nenhum versículo encontrado para este tema.
-                </p>
-              )}
-            </div>
-          )}
+                    </DialogDescription>
+                  </div>
+                ) : (
+                  <>
+                    <DialogTitle className="text-lg">Nenhum versículo encontrado</DialogTitle>
+                    <DialogDescription className="mt-2 text-amber-100">
+                      Ainda não há versículos para este tema.
+                    </DialogDescription>
+                  </>
+                )}
+              </div>
+
+              <div className="relative flex flex-wrap justify-center gap-2 bg-black/10 px-6 py-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleThemeSelect(selectedTheme)}
+                  className="rounded-full text-amber-50 hover:bg-white/10 hover:text-white"
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Sortear outro
+                </Button>
+                {selectedVerse && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      shareWord({ content: selectedVerse.descricao, reference: selectedVerse.referencia })
+                    }
+                    className="rounded-full text-amber-50 hover:bg-white/10 hover:text-white"
+                  >
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Compartilhar
+                  </Button>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {canManage && (
