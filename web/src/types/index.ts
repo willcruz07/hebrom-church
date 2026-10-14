@@ -1,5 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 import { MinistryAttribution } from '@/lib/ministry-attributions';
+import type { BibleBookmark as BookmarkOf } from '@/lib/bible/types';
 
 export type UserRole = 'visitor' | 'pending_member' | 'member' | 'secretary' | 'pastor';
 
@@ -155,8 +156,5 @@ export interface DailyWord {
   created_at: Timestamp;
 }
 
-/** Marcador da Bíblia — `ref` no formato "JHN.3.16" (ver src/lib/bible/catalog.ts). */
-export interface BibleBookmark {
-  ref: string;
-  created_at: Timestamp;
-}
+/** Marcador de trecho da Bíblia (regras em src/lib/bible/bookmarks.ts). */
+export type BibleBookmark = BookmarkOf<Timestamp>;

@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Bookmark, ChevronLeft, ChevronRight, Copy, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { adjacentChapter, bookHref, chapterHref, findBookBySlug, toRefKey } from '@/lib/bible/catalog'
+import { adjacentChapter, bookHref, chapterHref, findBookBySlug } from '@/lib/bible/catalog'
+import { findBookmarkForVerse } from '@/lib/bible/bookmarks'
 import { getBook, prefetchBible } from '@/lib/bible/loader'
 import { FONT_SIZES, readFontSize, saveFontSize, saveLastRead } from '@/lib/bible/preferences'
 import { copyText, shareText } from '@/lib/share'
@@ -26,7 +27,7 @@ export function ChapterReader({ slug, chapter, focusVerse }: ChapterReaderProps)
   // A página já validou o slug
   const book = findBookBySlug(slug)!
   const { currentUser } = useAuth()
-  const { items, load, toggle } = useBibleBookmarks()
+  const { items, load, saveSelection, remove } = useBibleBookmarks()
 
   const [verses, setVerses] = useState<string[] | null>(null)
   const [failed, setFailed] = useState(false)
@@ -71,8 +72,7 @@ export function ChapterReader({ slug, chapter, focusVerse }: ChapterReaderProps)
     return () => clearTimeout(timer)
   }, [verses, focusVerse])
 
-  const bookmarked = useMemo(() => new Set(items.map((i) => i.ref)), [items])
-  const refKey = (verse: number) => toRefKey({ bookId: book.id, chapter, verse })
+  const bookmarkOf = (verse: number) => findBookmarkForVerse(items, book.id, chapter, verse)
   const prev = adjacentChapter(slug, chapter, -1)
   const next = adjacentChapter(slug, chapter, 1)
 
@@ -84,7 +84,7 @@ export function ChapterReader({ slug, chapter, focusVerse }: ChapterReaderProps)
 
   const selectedText = selected && verses ? verses[selected - 1] : ''
   const selectedLabel = `${book.name} ${chapter}:${selected}`
-  const selectedMarked = selected !== null && bookmarked.has(refKey(selected))
+  const selectedBookmark = selected !== null ? bookmarkOf(selected) : null
   const quote = `"${selectedText}"\n— ${selectedLabel}`
 
   return (
@@ -156,7 +156,7 @@ export function ChapterReader({ slug, chapter, focusVerse }: ChapterReaderProps)
                   {verse}
                 </sup>
                 {text}
-                {bookmarked.has(refKey(verse)) && (
+                {bookmarkOf(verse) && (
                   <Bookmark
                     className="ml-1 inline h-[0.8em] w-[0.8em] fill-amber-500 align-baseline text-amber-500"
                     aria-label="Marcado"
@@ -207,12 +207,15 @@ export function ChapterReader({ slug, chapter, focusVerse }: ChapterReaderProps)
               className="bg-amber-600 hover:bg-amber-700"
               disabled={!currentUser}
               onClick={() => {
-                if (currentUser && selected) toggle(currentUser.uid, refKey(selected))
+                if (currentUser && selected) {
+                  if (selectedBookmark) remove(currentUser.uid, selectedBookmark.id)
+                  else saveSelection(currentUser.uid, { bookId: book.id, chapter, verses: [selected] })
+                }
                 setSelected(null)
               }}
             >
-              <Bookmark className={cn('mr-2 h-4 w-4', selectedMarked && 'fill-white')} />
-              {selectedMarked ? 'Remover marcador' : 'Adicionar marcador'}
+              <Bookmark className={cn('mr-2 h-4 w-4', !!selectedBookmark && 'fill-white')} />
+              {selectedBookmark ? 'Remover marcador' : 'Adicionar marcador'}
             </Button>
             <Button
               variant="outline"
