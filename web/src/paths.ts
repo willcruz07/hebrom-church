@@ -18,6 +18,7 @@ export const ROUTES = {
     PROFILE: '/dashboard/profile',
     ID_CARD: '/dashboard/id-card',
     DAILY_WORD: '/dashboard/daily-word',
+    BIBLE: '/dashboard/bible',
   },
 } as const;
 

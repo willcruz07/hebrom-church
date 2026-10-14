@@ -154,3 +154,9 @@ export interface DailyWord {
   is_auto?: boolean;
   created_at: Timestamp;
 }
+
+/** Marcador da Bíblia — `ref` no formato "JHN.3.16" (ver src/lib/bible/catalog.ts). */
+export interface BibleBookmark {
+  ref: string;
+  created_at: Timestamp;
+}

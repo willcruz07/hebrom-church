@@ -32,7 +32,8 @@ const NAV = {
     name: 'Palavra',
     href: ROUTES.AUTHENTICATED.DAILY_WORD,
     icon: BookOpen,
-    isActive: startsWith(ROUTES.AUTHENTICATED.DAILY_WORD),
+    isActive: (pathname) =>
+      pathname.startsWith(ROUTES.AUTHENTICATED.DAILY_WORD) || pathname.startsWith(ROUTES.AUTHENTICATED.BIBLE),
   },
   mural: {
     name: 'Mural',

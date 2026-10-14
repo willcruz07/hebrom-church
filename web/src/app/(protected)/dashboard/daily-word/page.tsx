@@ -51,6 +51,8 @@ import { BIBLE_SEED_DATA } from '@/lib/bible-seed'
 import { DAILY_WORD_THEMES, getDailyWordTheme } from '@/lib/daily-word-themes'
 import { cn } from '@/lib/utils'
 import { PageTitle } from '@/components/ui/page-title'
+import { PalavraTabs } from '@/components/palavra/PalavraTabs'
+import { shareText } from '@/lib/share'
 
 type Tab = 'today' | 'history' | 'themes' | 'scheduled'
 type SeedVerse = (typeof BIBLE_SEED_DATA)[number]
@@ -83,16 +85,7 @@ function pickRandomVerse(themeId: string): SeedVerse | null {
 
 async function shareWord(word: Pick<DailyWord, 'content' | 'reference'>) {
   const text = `📖 Palavra do Dia\n\n"${word.content}"${word.reference ? `\n— ${word.reference}` : ''}`
-  try {
-    if (navigator.share) {
-      await navigator.share({ text })
-    } else {
-      await navigator.clipboard.writeText(text)
-      toast.success('Palavra copiada!')
-    }
-  } catch {
-    // Usuário cancelou o compartilhamento
-  }
+  await shareText(text, 'Palavra copiada!')
 }
 
 export default function DailyWordPage() {
@@ -313,6 +306,7 @@ export default function DailyWordPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <PalavraTabs />
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <PageTitle
           title="Palavra do Dia"

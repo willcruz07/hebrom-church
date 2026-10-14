@@ -6,7 +6,8 @@
     "dev": "next dev ",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:bible": "node --test src/lib/bible/*.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

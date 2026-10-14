@@ -1,5 +1,5 @@
 // Service Worker for Push Notifications
-const CACHE_NAME = 'hebrom-sys-v5';
+const CACHE_NAME = 'hebrom-sys-v6';
 const urlsToCache = ['/logo.png'];
 
 // Install event - cache resources
@@ -7,7 +7,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Opened cache v5');
+      console.log('Opened cache v6');
       return cache.addAll(urlsToCache);
     }),
   );
@@ -19,7 +19,8 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          // A Bíblia (bible-*) tem cache e versão próprios (src/lib/bible/loader.ts)
+          if (cacheName !== CACHE_NAME && !cacheName.startsWith('bible-')) {
             console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
@@ -55,11 +56,13 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Nunca cachear payload RSC, API nem o runtime do Next — uma resposta velha
-  // aponta para chunks que já não existem no deploy atual.
+  // aponta para chunks que já não existem no deploy atual. A Bíblia (/bible/)
+  // tem cache próprio (src/lib/bible/loader.ts); cachear aqui duplicaria ~4 MB.
   if (
     url.pathname.startsWith('/_next/') ||
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/__/') ||
+    url.pathname.startsWith('/bible/') ||
     url.searchParams.has('_rsc') ||
     event.request.headers.get('RSC') === '1'
   ) {

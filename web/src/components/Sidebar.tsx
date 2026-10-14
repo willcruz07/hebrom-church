@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Heart,
   BookOpen,
+  Book,
   Calendar,
   Users,
   X,
@@ -81,6 +82,13 @@ const navigationItems = [
     href: ROUTES.AUTHENTICATED.DAILY_WORD,
     icon: BookOpen,
     description: 'Versículos e devocionais',
+    permission: 'canViewGeneralFeed', // Todos podem ver
+  },
+  {
+    name: 'Bíblia',
+    href: ROUTES.AUTHENTICATED.BIBLE,
+    icon: Book,
+    description: 'Leitura da Bíblia',
     permission: 'canViewGeneralFeed', // Todos podem ver
   },
 ]
