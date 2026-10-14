@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { parseVerseParam } from '@/lib/bible/bookmarks'
 import { findBookBySlug, isValidChapter, isValidVerse } from '@/lib/bible/catalog'
 import { ChapterReader } from '../../components/ChapterReader'
 
@@ -15,12 +16,7 @@ export default async function BibleChapterPage({
   const chapter = Number(rawChapter)
   if (!book || !/^\d+$/.test(rawChapter) || !isValidChapter(book, chapter)) notFound()
 
-  const verse = Number(v)
-  return (
-    <ChapterReader
-      slug={book.slug}
-      chapter={chapter}
-      focusVerse={isValidVerse(book, chapter, verse) ? verse : undefined}
-    />
-  )
+  // ?v=3 (versículo) ou ?v=1-3,7 (trecho de marcador)
+  const focusVerses = parseVerseParam(v).filter((verse) => isValidVerse(book, chapter, verse))
+  return <ChapterReader slug={book.slug} chapter={chapter} focusVerses={focusVerses} />
 }

@@ -1,40 +1,46 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { Bookmark, ChevronLeft, ChevronRight, Copy, Share2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Bookmark, ChevronLeft, ChevronRight, NotebookPen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { buildQuote, formatBookmarkRef, overlappingBookmarks, type QuoteEntry } from '@/lib/bible/bookmarks'
 import { adjacentChapter, bookHref, chapterHref, findBookBySlug } from '@/lib/bible/catalog'
-import { findBookmarkForVerse } from '@/lib/bible/bookmarks'
 import { getBook, prefetchBible } from '@/lib/bible/loader'
 import { FONT_SIZES, readFontSize, saveFontSize, saveLastRead } from '@/lib/bible/preferences'
 import { copyText, shareText } from '@/lib/share'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/store/useAuth'
 import { useBibleBookmarks } from '@/store/useBibleBookmarks'
+import type { BibleBookmark } from '@/types'
 import { BibleCredit } from './BibleCredit'
+import { BookmarkSheet } from './BookmarkSheet'
+import { SelectionBar } from './SelectionBar'
+import { VerseActionsSheet } from './VerseActionsSheet'
 
 interface ChapterReaderProps {
   slug: string
   chapter: number
-  /** Versículo vindo de ?v= — rola até ele e destaca por alguns segundos. */
-  focusVerse?: number
+  /** Versículos vindos de ?v= — rola até o primeiro e destaca todos por alguns segundos. */
+  focusVerses: number[]
 }
 
-export function ChapterReader({ slug, chapter, focusVerse }: ChapterReaderProps) {
+export function ChapterReader({ slug, chapter, focusVerses }: ChapterReaderProps) {
   // A página já validou o slug
   const book = findBookBySlug(slug)!
   const { currentUser } = useAuth()
-  const { items, load, saveSelection, remove } = useBibleBookmarks()
+  const { items, load, saveSelection, updateNote, remove } = useBibleBookmarks()
 
   const [verses, setVerses] = useState<string[] | null>(null)
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
   const [fontSize, setFontSize] = useState(1)
-  const [selected, setSelected] = useState<number | null>(null)
-  const [flash, setFlash] = useState<number | null>(focusVerse ?? null)
+  const [selection, setSelection] = useState<number[]>([])
+  const [actionsOpen, setActionsOpen] = useState(false)
+  const [activeBookmarkId, setActiveBookmarkId] = useState<string | null>(null)
+  const [flash, setFlash] = useState<number[]>(focusVerses)
+  const focusKey = focusVerses.join(',')
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -44,6 +50,14 @@ export function ChapterReader({ slug, chapter, focusVerse }: ChapterReaderProps)
   useEffect(() => {
     if (currentUser) load(currentUser.uid)
   }, [currentUser, load])
+
+  // Trocar de capítulo limpa a seleção e fecha os sheets
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelection([])
+    setActionsOpen(false)
+    setActiveBookmarkId(null)
+  }, [slug, chapter])
 
   useEffect(() => {
     let cancelled = false
@@ -66,13 +80,24 @@ export function ChapterReader({ slug, chapter, focusVerse }: ChapterReaderProps)
   }, [slug, chapter, attempt])
 
   useEffect(() => {
-    if (!verses || !focusVerse) return
-    document.getElementById(`v${focusVerse}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    const timer = setTimeout(() => setFlash(null), 2500)
+    if (!verses || !focusKey) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFlash(focusKey.split(',').map(Number))
+    document.getElementById(`v${focusKey.split(',')[0]}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const timer = setTimeout(() => setFlash([]), 2500)
     return () => clearTimeout(timer)
-  }, [verses, focusVerse])
+  }, [verses, focusKey])
 
-  const bookmarkOf = (verse: number) => findBookmarkForVerse(items, book.id, chapter, verse)
+  // Versículo → marcador deste capítulo
+  const verseBookmark = useMemo(() => {
+    const map = new Map<number, BibleBookmark>()
+    for (const b of items) {
+      if (b.bookId !== book.id || b.chapter !== chapter) continue
+      for (const v of b.verses) map.set(v, b)
+    }
+    return map
+  }, [items, book.id, chapter])
+
   const prev = adjacentChapter(slug, chapter, -1)
   const next = adjacentChapter(slug, chapter, 1)
 
@@ -82,13 +107,59 @@ export function ChapterReader({ slug, chapter, focusVerse }: ChapterReaderProps)
     saveFontSize(size)
   }
 
-  const selectedText = selected && verses ? verses[selected - 1] : ''
-  const selectedLabel = `${book.name} ${chapter}:${selected}`
-  const selectedBookmark = selected !== null ? bookmarkOf(selected) : null
-  const quote = `"${selectedText}"\n— ${selectedLabel}`
+  const entriesOf = (list: number[]): QuoteEntry[] =>
+    verses ? list.map((verse) => ({ verse, text: verses[verse - 1] })) : []
+
+  const selectionRef = { bookId: book.id, chapter, verses: selection }
+  const selectionLabel = formatBookmarkRef(selectionRef)
+  const selectionEntries = entriesOf(selection)
+  const overlapping = overlappingBookmarks(items, selectionRef)
+  const activeBookmark = items.find((b) => b.id === activeBookmarkId) ?? null
+  const activeEntries = activeBookmark ? entriesOf(activeBookmark.verses) : []
+
+  const tapVerse = (verse: number) => {
+    const marked = verseBookmark.get(verse)
+    if (selection.length === 0 && marked) {
+      setActiveBookmarkId(marked.id)
+      return
+    }
+    setSelection((s) => (s.includes(verse) ? s.filter((v) => v !== verse) : [...s, verse].sort((a, b) => a - b)))
+  }
+
+  const clearSelection = () => {
+    setActionsOpen(false)
+    setSelection([])
+  }
+
+  /** Sem nota fecha na hora (otimista); com nota espera, para o texto não se perder se falhar. */
+  const markSelection = async (note?: string) => {
+    if (!currentUser) return false
+    const pending = saveSelection(currentUser.uid, selectionRef, note)
+    if (!note) {
+      clearSelection()
+      return pending
+    }
+    const ok = await pending
+    if (ok) clearSelection()
+    return ok
+  }
+
+  const copySelection = () => {
+    copyText(buildQuote(selectionEntries, selectionLabel))
+    clearSelection()
+  }
+
+  const shareSelection = () => {
+    shareText(buildQuote(selectionEntries, selectionLabel))
+    clearSelection()
+  }
+
+  const activeQuote = () => (activeBookmark ? buildQuote(activeEntries, formatBookmarkRef(activeBookmark)) : '')
 
   return (
-    <article className="mx-auto max-w-2xl space-y-6 animate-in fade-in duration-500">
+    <article
+      className={cn('mx-auto max-w-2xl space-y-6 animate-in fade-in duration-500', selection.length > 0 && 'pb-28')}
+    >
       <header className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           <Link
@@ -141,27 +212,41 @@ export function ChapterReader({ slug, chapter, focusVerse }: ChapterReaderProps)
         <div className={cn('font-serif leading-relaxed text-slate-800 dark:text-slate-100', FONT_SIZES[fontSize])}>
           {verses.map((text, i) => {
             const verse = i + 1
+            const marked = verseBookmark.get(verse)
+            const isSelected = selection.includes(verse)
+            const isLastOfMarker = marked && marked.verses[marked.verses.length - 1] === verse
             return (
               <button
                 key={verse}
                 id={`v${verse}`}
                 type="button"
-                onClick={() => setSelected(verse)}
+                onClick={() => tapVerse(verse)}
+                aria-pressed={isSelected}
                 className={cn(
                   'block w-full scroll-mt-24 rounded-lg px-2 py-1 text-left transition-colors duration-700 hover:bg-amber-50/70 dark:hover:bg-amber-900/10',
-                  (flash === verse || selected === verse) && 'bg-amber-100 dark:bg-amber-900/30',
+                  marked && 'underline decoration-amber-400/70 decoration-dotted underline-offset-4',
+                  flash.includes(verse) && 'bg-amber-100 dark:bg-amber-900/30',
+                  isSelected &&
+                    'bg-amber-100 shadow-[inset_3px_0_0_var(--color-amber-500)] transition-none dark:bg-amber-900/30',
                 )}
               >
                 <sup className="mr-1 font-sans text-[0.65em] font-bold text-amber-600 dark:text-amber-400">
                   {verse}
                 </sup>
                 {text}
-                {bookmarkOf(verse) && (
-                  <Bookmark
-                    className="ml-1 inline h-[0.8em] w-[0.8em] fill-amber-500 align-baseline text-amber-500"
-                    aria-label="Marcado"
-                  />
-                )}
+                {marked &&
+                  isLastOfMarker &&
+                  (marked.note ? (
+                    <NotebookPen
+                      className="ml-1 inline h-[0.8em] w-[0.8em] align-baseline text-amber-500"
+                      aria-label="Marcado com anotação"
+                    />
+                  ) : (
+                    <Bookmark
+                      className="ml-1 inline h-[0.8em] w-[0.8em] fill-amber-500 align-baseline text-amber-500"
+                      aria-label="Marcado"
+                    />
+                  ))}
               </button>
             )
           })}
@@ -196,50 +281,42 @@ export function ChapterReader({ slug, chapter, focusVerse }: ChapterReaderProps)
 
       <BibleCredit />
 
-      <Sheet open={selected !== null} onOpenChange={(open) => !open && setSelected(null)}>
-        <SheetContent side="bottom" className="rounded-t-3xl">
-          <SheetHeader>
-            <SheetTitle>{selectedLabel}</SheetTitle>
-            <SheetDescription className="line-clamp-3 font-serif italic">{selectedText}</SheetDescription>
-          </SheetHeader>
-          <div className="grid gap-2 px-4 pb-6 sm:grid-cols-3">
-            <Button
-              className="bg-amber-600 hover:bg-amber-700"
-              disabled={!currentUser}
-              onClick={() => {
-                if (currentUser && selected) {
-                  if (selectedBookmark) remove(currentUser.uid, selectedBookmark.id)
-                  else saveSelection(currentUser.uid, { bookId: book.id, chapter, verses: [selected] })
-                }
-                setSelected(null)
-              }}
-            >
-              <Bookmark className={cn('mr-2 h-4 w-4', !!selectedBookmark && 'fill-white')} />
-              {selectedBookmark ? 'Remover marcador' : 'Adicionar marcador'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                copyText(quote)
-                setSelected(null)
-              }}
-            >
-              <Copy className="mr-2 h-4 w-4" />
-              Copiar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                shareText(quote)
-                setSelected(null)
-              }}
-            >
-              <Share2 className="mr-2 h-4 w-4" />
-              Compartilhar
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {selection.length > 0 && (
+        <SelectionBar label={selectionLabel} onClear={clearSelection} onConfirm={() => setActionsOpen(true)} />
+      )}
+
+      <VerseActionsSheet
+        open={actionsOpen}
+        label={selectionLabel}
+        entries={selectionEntries}
+        overlapping={overlapping}
+        canMark={!!currentUser}
+        onOpenChange={setActionsOpen}
+        onMark={markSelection}
+        onCopy={copySelection}
+        onShare={shareSelection}
+      />
+
+      <BookmarkSheet
+        bookmark={activeBookmark}
+        entries={activeEntries}
+        onOpenChange={(open) => !open && setActiveBookmarkId(null)}
+        onSaveNote={(note) =>
+          currentUser && activeBookmark ? updateNote(currentUser.uid, activeBookmark.id, note) : Promise.resolve(false)
+        }
+        onRemove={(id) => {
+          if (currentUser) remove(currentUser.uid, id)
+          setActiveBookmarkId(null)
+        }}
+        onCopy={() => {
+          copyText(activeQuote())
+          setActiveBookmarkId(null)
+        }}
+        onShare={() => {
+          shareText(activeQuote())
+          setActiveBookmarkId(null)
+        }}
+      />
     </article>
   )
 }
