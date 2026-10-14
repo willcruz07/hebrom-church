@@ -47,6 +47,7 @@ import {
   type DailyWordCursor,
 } from '@/services/firebase/daily-word'
 import { DailyWord } from '@/types'
+import { BIBLE_SEED_DATA } from '@/lib/bible-seed'
 import { DAILY_WORD_THEMES, getDailyWordTheme } from '@/lib/daily-word-themes'
 import { cn } from '@/lib/utils'
 import { PageTitle } from '@/components/ui/page-title'
@@ -58,6 +59,13 @@ const HISTORY_PAGE_SIZE = 3
 const THEME_OPTIONS = DAILY_WORD_THEMES.map((t) => ({ value: t.id, label: `${t.icon} ${t.label}` }))
 
 const todayStr = () => dayjs().format('YYYY-MM-DD')
+
+type SeedVerse = (typeof BIBLE_SEED_DATA)[number]
+
+function pickRandomVerse(themeId: string): SeedVerse | null {
+  const verses = BIBLE_SEED_DATA.filter((v) => v.theme === themeId)
+  return verses.length ? verses[Math.floor(Math.random() * verses.length)] : null
+}
 
 const emptyForm = () => ({
   content: '',
@@ -106,6 +114,9 @@ export default function DailyWordPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const [scheduled, setScheduled] = useState<DailyWord[]>([])
+
+  const [selectedTheme, setSelectedTheme] = useState('')
+  const [selectedVerse, setSelectedVerse] = useState<SeedVerse | null>(null)
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -159,6 +170,11 @@ export default function DailyWordPage() {
     loadToday()
     if (canManage) loadScheduled()
   }, [canManage, loadToday, loadScheduled])
+
+  const handleThemeSelect = (themeId: string) => {
+    setSelectedTheme(themeId)
+    setSelectedVerse(pickRandomVerse(themeId))
+  }
 
   const handleCreate = async () => {
     if (!newWord.content.trim() || !currentUser) return
@@ -443,6 +459,85 @@ export default function DailyWordPage() {
           </CardContent>
         </Card>
       )}
+
+      <section className="space-y-3">
+        <SectionTitle icon={<Sparkles className="h-4 w-4 text-amber-600" />}>Explorar por tema</SectionTitle>
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          {DAILY_WORD_THEMES.map((theme) => (
+            <button
+              key={theme.id}
+              type="button"
+              onClick={() => handleThemeSelect(theme.id)}
+              className={cn(
+                'flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300 gap-1.5',
+                selectedTheme === theme.id
+                  ? 'bg-amber-600 border-amber-600 text-white shadow-lg shadow-amber-500/25 scale-105'
+                  : 'bg-white border-slate-200 hover:border-amber-300 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400',
+              )}
+            >
+              <span className="text-2xl">{theme.icon}</span>
+              <span className="text-[11px] font-bold uppercase tracking-tighter">{theme.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <Dialog open={!!selectedTheme} onOpenChange={(open) => !open && setSelectedTheme('')}>
+          <DialogContent className="max-h-[85vh] gap-0 overflow-y-auto rounded-3xl border-none bg-gradient-to-br from-amber-600 to-purple-700 p-0 text-white shadow-2xl sm:max-w-xl [&>[data-slot=dialog-close]]:text-white [&>[data-slot=dialog-close]]:opacity-80">
+            <div className="pointer-events-none absolute top-0 right-0 p-6 opacity-20">
+              <Quote className="h-24 w-24 rotate-180" />
+            </div>
+
+            <div className="relative px-6 pt-10 pb-8 text-center md:px-10">
+              <span className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-widest">
+                {getDailyWordTheme(selectedTheme).icon} {getDailyWordTheme(selectedTheme).label}
+              </span>
+
+              {selectedVerse ? (
+                <div key={selectedVerse.referencia} className="animate-in fade-in duration-500">
+                  <DialogTitle className="font-serif text-xl italic leading-relaxed md:text-3xl">
+                    “{selectedVerse.descricao}”
+                  </DialogTitle>
+                  <DialogDescription className="mt-6 text-base font-bold text-amber-100 md:text-xl">
+                    — {selectedVerse.referencia}
+                  </DialogDescription>
+                </div>
+              ) : (
+                <>
+                  <DialogTitle className="text-lg">Nenhum versículo encontrado</DialogTitle>
+                  <DialogDescription className="mt-2 text-amber-100">
+                    Ainda não há versículos para este tema.
+                  </DialogDescription>
+                </>
+              )}
+            </div>
+
+            <div className="relative flex flex-wrap justify-center gap-2 bg-black/10 px-6 py-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleThemeSelect(selectedTheme)}
+                className="rounded-full text-amber-50 hover:bg-white/10 hover:text-white"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Sortear outro
+              </Button>
+              {selectedVerse && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    shareWord({ content: selectedVerse.descricao, reference: selectedVerse.referencia })
+                  }
+                  className="rounded-full text-amber-50 hover:bg-white/10 hover:text-white"
+                >
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Compartilhar
+                </Button>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </section>
 
       {canManage && scheduled.length > 0 && (
         <section className="space-y-3">
