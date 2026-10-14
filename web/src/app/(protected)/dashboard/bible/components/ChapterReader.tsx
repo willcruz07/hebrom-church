@@ -44,8 +44,9 @@ export function ChapterReader({ slug, chapter, focusVerses }: ChapterReaderProps
   const [flash, setFlash] = useState<number[]>(focusVerses)
   const focusKey = focusVerses.join(',')
 
-  // Foco na leitura: a barra inferior sai ao rolar para baixo e enquanto há seleção
-  const scrolledAway = useHideOnScroll()
+  // Foco na leitura: a barra inferior entra escondida, volta ao rolar para cima ou no fim
+  // do capítulo, e some de novo ao rolar para baixo ou enquanto há seleção
+  const scrolledAway = useHideOnScroll(`${slug}/${chapter}`)
   const setNavHidden = useBottomNav((s) => s.setHidden)
   const navHidden = scrolledAway || selection.length > 0
   useEffect(() => {
