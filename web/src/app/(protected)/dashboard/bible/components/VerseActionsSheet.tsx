@@ -33,6 +33,12 @@ export function VerseActionsSheet({
   onShare,
 }: VerseActionsSheetProps) {
   const [editing, setEditing] = useState(false)
+  const [wasOpen, setWasOpen] = useState(open)
+  // Fechado pelo pai (salvou, trocou de capítulo): a próxima abertura começa nas ações
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (!open) setEditing(false)
+  }
 
   const changeOpen = (next: boolean) => {
     if (!next) setEditing(false)

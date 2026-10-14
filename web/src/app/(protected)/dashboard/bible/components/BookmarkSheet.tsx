@@ -31,7 +31,10 @@ export function BookmarkSheet({
   onShare,
 }: BookmarkSheetProps) {
   const { confirm } = useMessages()
-  const [editing, setEditing] = useState(false)
+  // Guarda qual marcador está em edição: fechar ou trocar de marcador volta às ações
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const editing = !!bookmark && editingId === bookmark.id
+  const setEditing = (on: boolean) => setEditingId(on && bookmark ? bookmark.id : null)
 
   const changeOpen = (next: boolean) => {
     if (!next) setEditing(false)

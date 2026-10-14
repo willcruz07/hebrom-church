@@ -11,6 +11,7 @@ import {
   groupByBook,
   buildQuote,
   bookmarkHref,
+  newBookmarkId,
   formatBookmarkRef,
   formatVerses,
   normalizeBookmarks,
@@ -225,4 +226,21 @@ test('buildQuote: um versículo sem número, vários com sobrescrito', () => {
 
 test('bookmarkHref aponta o trecho no leitor', () => {
   assert.equal(bookmarkHref({ bookId: 'LEV', chapter: 27, verses: [7, 1, 2, 3] }), '/dashboard/bible/levitico/27?v=1-3,7')
+})
+
+test('parseVerseParam ignora ?v repetido (Next entrega array)', () => {
+  assert.deepEqual(parseVerseParam(['1', '2'] as unknown as string), [])
+})
+
+test('newBookmarkId funciona sem crypto.randomUUID (http na rede local)', () => {
+  let n = 0
+  const insecure = { getRandomValues: <T extends ArrayBufferView | null>(a: T) => {
+    new Uint8Array((a as unknown as Uint8Array).buffer).forEach((_, i, arr) => (arr[i] = (n++ * 37 + i) % 256))
+    return a
+  } }
+  const a = newBookmarkId(insecure)
+  const b = newBookmarkId(insecure)
+  assert.match(a, /^[0-9a-f]{32}$/)
+  assert.notEqual(a, b)
+  assert.equal(newBookmarkId({ ...insecure, randomUUID: () => 'uuid-1' }), 'uuid-1')
 })

@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { Timestamp } from 'firebase/firestore'
 import {
   mergeSelection,
+  newBookmarkId,
   setNote,
   withoutBookmark,
   type BookmarkResult,
@@ -86,7 +87,7 @@ export const useBibleBookmarks = create<BibleBookmarksState>((set, get) => {
     },
 
     saveSelection: (uid, sel, note) => {
-      const newId = crypto.randomUUID()
+      const newId = newBookmarkId()
       return commit(
         uid,
         mergeSelection(get().items, sel, { now: Timestamp.now(), newId, note }),

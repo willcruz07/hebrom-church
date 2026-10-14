@@ -66,7 +66,7 @@ export function formatBookmarkRef(sel: VerseSelection): string {
 
 /** "1-3,7" → [1, 2, 3, 7]. Qualquer parte inválida invalida tudo (devolve []). */
 export function parseVerseParam(param: string | undefined): number[] {
-  if (!param) return []
+  if (typeof param !== 'string' || !param) return []
   const verses: number[] = []
   for (const part of param.split(',')) {
     const match = /^(\d+)(?:-(\d+))?$/.exec(part.trim())
@@ -259,4 +259,13 @@ export function buildQuote(entries: QuoteEntry[], label: string): string {
 export function bookmarkHref(sel: VerseSelection): string {
   const slug = findBookById(sel.bookId)?.slug ?? ''
   return `${bookHref(slug)}/${sel.chapter}?v=${formatVerses(sel.verses).replace(/ /g, '')}`
+}
+
+type IdSource = { getRandomValues<T extends ArrayBufferView | null>(array: T): T; randomUUID?: () => string }
+
+/** Id do marcador. `randomUUID` só existe em HTTPS; no http da rede local usa `getRandomValues`. */
+export function newBookmarkId(source: IdSource = globalThis.crypto): string {
+  if (typeof source.randomUUID === 'function') return source.randomUUID()
+  const bytes = source.getRandomValues(new Uint8Array(16))
+  return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
 }

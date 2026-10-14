@@ -8,7 +8,7 @@ export default async function BibleChapterPage({
   searchParams,
 }: {
   params: Promise<{ book: string; chapter: string }>
-  searchParams: Promise<{ v?: string }>
+  searchParams: Promise<{ v?: string | string[] }>
 }) {
   const { book: slug, chapter: rawChapter } = await params
   const { v } = await searchParams
@@ -17,6 +17,9 @@ export default async function BibleChapterPage({
   if (!book || !/^\d+$/.test(rawChapter) || !isValidChapter(book, chapter)) notFound()
 
   // ?v=3 (versículo) ou ?v=1-3,7 (trecho de marcador)
-  const focusVerses = parseVerseParam(v).filter((verse) => isValidVerse(book, chapter, verse))
+  // ?v repetido chega como array: ignorado
+  const focusVerses = parseVerseParam(typeof v === 'string' ? v : undefined).filter((verse) =>
+    isValidVerse(book, chapter, verse),
+  )
   return <ChapterReader slug={book.slug} chapter={chapter} focusVerses={focusVerses} />
 }
