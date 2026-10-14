@@ -128,3 +128,67 @@ export function findBookmarkForVerse<T extends TimestampLike>(
 ): BibleBookmark<T> | null {
   return items.find((b) => b.bookId === bookId && b.chapter === chapter && b.verses.includes(verse)) ?? null
 }
+
+export type BookmarkRuleError = 'limit' | 'note-too-long'
+
+export type BookmarkResult<T extends TimestampLike> =
+  | { ok: true; items: BibleBookmark<T>[] }
+  | { ok: false; error: BookmarkRuleError }
+
+/** Marcadores do mesmo capítulo com pelo menos um versículo da seleção. */
+export function overlappingBookmarks<T extends TimestampLike>(
+  items: BibleBookmark<T>[],
+  sel: VerseSelection,
+): BibleBookmark<T>[] {
+  return items.filter(
+    (b) => b.bookId === sel.bookId && b.chapter === sel.chapter && b.verses.some((v) => sel.verses.includes(v)),
+  )
+}
+
+/**
+ * Salva a seleção: cria um marcador ou funde com os que ela encosta
+ * (versículos unidos, notas mantidas uma embaixo da outra, id/data do mais antigo).
+ */
+export function mergeSelection<T extends TimestampLike>(
+  items: BibleBookmark<T>[],
+  sel: VerseSelection,
+  options: { now: T; newId: string; note?: string },
+): BookmarkResult<T> {
+  const { now, newId } = options
+  const newNote = cleanNote(options.note)
+  const hit = overlappingBookmarks(items, sel)
+
+  if (!hit.length) {
+    if (items.length >= MAX_BIBLE_BOOKMARKS) return { ok: false, error: 'limit' }
+    if (newNote && newNote.length > MAX_BOOKMARK_NOTE_LENGTH) return { ok: false, error: 'note-too-long' }
+    const created = buildBookmark({
+      id: newId,
+      bookId: sel.bookId,
+      chapter: sel.chapter,
+      verses: sortedUnique(sel.verses),
+      note: newNote,
+      created_at: now,
+    })
+    return { ok: true, items: [...items, created] }
+  }
+
+  const note = [...hit]
+    .sort((a, b) => a.verses[0] - b.verses[0])
+    .map((b) => b.note)
+    .concat(newNote)
+    .filter((n): n is string => !!n)
+    .join('\n\n')
+  if (note.length > MAX_BOOKMARK_NOTE_LENGTH) return { ok: false, error: 'note-too-long' }
+
+  const oldest = hit.reduce((a, b) => (b.created_at.toMillis() < a.created_at.toMillis() ? b : a))
+  const merged = buildBookmark({
+    id: oldest.id,
+    bookId: sel.bookId,
+    chapter: sel.chapter,
+    verses: sortedUnique([...sel.verses, ...hit.flatMap((b) => b.verses)]),
+    note: note || undefined,
+    created_at: oldest.created_at,
+    updated_at: now,
+  })
+  return { ok: true, items: [...items.filter((i) => !hit.includes(i)), merged] }
+}

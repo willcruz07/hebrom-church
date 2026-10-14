@@ -3,6 +3,9 @@ import assert from 'node:assert/strict'
 import {
   cleanNote,
   findBookmarkForVerse,
+  MAX_BIBLE_BOOKMARKS,
+  mergeSelection,
+  overlappingBookmarks,
   formatBookmarkRef,
   formatVerses,
   normalizeBookmarks,
@@ -100,4 +103,77 @@ test('findBookmarkForVerse encontra só no mesmo capítulo', () => {
   assert.equal(findBookmarkForVerse(items, 'LEV', 27, 5), null)
   assert.equal(findBookmarkForVerse(items, 'LEV', 26, 2), null)
   assert.equal(findBookmarkForVerse(items, 'JHN', 27, 2), null)
+})
+
+const sel = (verses: number[]) => ({ bookId: 'LEV', chapter: 27, verses })
+const okItems = <T>(r: { ok: true; items: T[] } | { ok: false; error: string }) => {
+  assert.equal(r.ok, true, 'esperava ok')
+  return (r as { ok: true; items: T[] }).items
+}
+
+test('mergeSelection cria marcador novo sem chave note', () => {
+  const now = ts(50)
+  const items = okItems(mergeSelection([], sel([3, 1]), { now, newId: 'n1' }))
+  assert.deepEqual(items, [{ id: 'n1', bookId: 'LEV', chapter: 27, verses: [1, 3], created_at: now }])
+  assert.equal('note' in items[0], false)
+  assert.equal('updated_at' in items[0], false)
+})
+
+test('mergeSelection grava nota aparada e ignora nota só com espaços', () => {
+  const now = ts(50)
+  assert.equal(okItems(mergeSelection([], sel([1]), { now, newId: 'n', note: '  boa  ' }))[0].note, 'boa')
+  assert.equal('note' in okItems(mergeSelection([], sel([1]), { now, newId: 'n', note: ' \n ' }))[0], false)
+})
+
+test('mergeSelection funde com um marcador que encosta', () => {
+  const now = ts(50)
+  // Mesma instância nos dois lados: deepEqual compara as funções toMillis por referência
+  const createdA = ts(10)
+  const existing = bm({ id: 'a', verses: [2, 3], note: 'antiga', created_at: createdA })
+  const other = bm({ id: 'z', chapter: 26, verses: [2] })
+  const items = okItems(mergeSelection([existing, other], sel([1, 2]), { now, newId: 'n', note: 'nova' }))
+  assert.equal(items.length, 2)
+  const merged = items.find((i) => i.chapter === 27)!
+  assert.deepEqual(merged, {
+    id: 'a',
+    bookId: 'LEV',
+    chapter: 27,
+    verses: [1, 2, 3],
+    note: 'antiga\n\nnova',
+    created_at: createdA,
+    updated_at: now,
+  })
+})
+
+test('mergeSelection funde dois marcadores mantendo id e data do mais antigo', () => {
+  const now = ts(50)
+  const a = bm({ id: 'a', verses: [5], note: 'cinco', created_at: ts(30) })
+  const b = bm({ id: 'b', verses: [1], note: 'um', created_at: ts(20) })
+  const items = okItems(mergeSelection([a, b], sel([1, 3, 5]), { now, newId: 'n' }))
+  assert.equal(items.length, 1)
+  assert.equal(items[0].id, 'b')
+  assert.equal(items[0].created_at.toMillis(), 20)
+  assert.deepEqual(items[0].verses, [1, 3, 5])
+  assert.equal(items[0].note, 'um\n\ncinco')
+})
+
+test('overlappingBookmarks só pega o mesmo capítulo com versículo em comum', () => {
+  const items = [bm({ id: 'a', verses: [1] }), bm({ id: 'b', verses: [4] }), bm({ id: 'c', chapter: 26, verses: [1] })]
+  assert.deepEqual(overlappingBookmarks(items, sel([1, 2])).map((b) => b.id), ['a'])
+})
+
+test('mergeSelection bloqueia o marcador além do limite, mas permite fundir', () => {
+  const full = Array.from({ length: MAX_BIBLE_BOOKMARKS }, (_, i) => bm({ id: `x${i}`, chapter: 1, verses: [1] }))
+  full[0] = bm({ id: 'x0', verses: [1] })
+  assert.deepEqual(mergeSelection(full, sel([9]), { now: ts(1), newId: 'n' }), { ok: false, error: 'limit' })
+  assert.equal(okItems(mergeSelection(full, sel([1, 2]), { now: ts(1), newId: 'n' })).length, MAX_BIBLE_BOOKMARKS)
+})
+
+test('mergeSelection recusa nota (nova ou unida) acima de 2000', () => {
+  const long = 'a'.repeat(1500)
+  assert.deepEqual(mergeSelection([], sel([1]), { now: ts(1), newId: 'n', note: 'b'.repeat(2001) }), { ok: false, error: 'note-too-long' })
+  assert.deepEqual(
+    mergeSelection([bm({ id: 'a', verses: [1], note: long })], sel([1]), { now: ts(1), newId: 'n', note: long }),
+    { ok: false, error: 'note-too-long' },
+  )
 })
