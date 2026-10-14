@@ -38,26 +38,92 @@ function DialogOverlay({
   )
 }
 
+/** Arrastar o sheet além disso (px) para baixo fecha o modal. */
+const SHEET_DISMISS_DISTANCE = 100
+
+/**
+ * - `center` (padrão): modal centralizado — confirmações e conteúdo informativo.
+ * - `sheet`: formulários. No mobile vira bottom sheet (encostado nas laterais e no rodapé,
+ *   sobe de baixo, fecha arrastando a alça); a partir de `sm` volta a ser centralizado.
+ *   A animação de entrada/saída do mobile fica em globals.css.
+ */
+type DialogVariant = 'center' | 'sheet'
+
 function DialogContent({
   className,
   children,
   showCloseButton = true,
+  variant = 'center',
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  variant?: DialogVariant
 }) {
+  const isSheet = variant === 'sheet'
+  const contentRef = React.useRef<HTMLDivElement>(null)
+  const closeRef = React.useRef<HTMLButtonElement>(null)
+  const dragStartY = React.useRef<number | null>(null)
+
+  const setDragOffset = (offset: number, animate: boolean) => {
+    const el = contentRef.current
+    if (!el) return
+    el.style.transition = animate ? 'transform 200ms ease-out' : 'none'
+    el.style.transform = offset ? `translateY(${offset}px)` : ''
+  }
+
+  const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragStartY.current = e.clientY
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+
+  const onHandlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragStartY.current === null) return
+    setDragOffset(Math.max(0, e.clientY - dragStartY.current), false)
+  }
+
+  const onHandlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragStartY.current === null) return
+    const offset = e.clientY - dragStartY.current
+    dragStartY.current = null
+    if (offset > SHEET_DISMISS_DISTANCE) {
+      // Sem a transição inline, a animação de saída parte de onde o dedo soltou
+      if (contentRef.current) contentRef.current.style.transition = ''
+      closeRef.current?.click()
+    } else {
+      setDragOffset(0, true)
+    }
+  }
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
       <DialogPrimitive.Content
+        ref={contentRef}
         data-slot="dialog-content"
+        data-variant={variant}
         className={cn(
           'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg',
+          isSheet &&
+            'max-h-[90vh] overflow-y-auto rounded-3xl max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:max-h-[calc(100dvh-env(safe-area-inset-top)-3rem)] max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:overscroll-contain max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0 max-sm:pt-2 max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))]',
           className,
         )}
         {...props}
       >
+        {isSheet && (
+          // Alça do sheet (só mobile): arrastar para baixo fecha
+          <div
+            aria-hidden
+            onPointerDown={onHandlePointerDown}
+            onPointerMove={onHandlePointerMove}
+            onPointerUp={onHandlePointerUp}
+            onPointerCancel={onHandlePointerUp}
+            className="-mb-2 flex cursor-grab touch-none justify-center pt-1 pb-3 sm:hidden"
+          >
+            <span className="h-1.5 w-12 rounded-full bg-slate-300 dark:bg-slate-700" />
+          </div>
+        )}
         {children}
+        {isSheet && <DialogPrimitive.Close ref={closeRef} className="hidden" tabIndex={-1} />}
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
@@ -82,11 +148,15 @@ function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
   )
 }
 
+/**
+ * Padrão do app: ação principal primeiro, "Cancelar" depois (`variant="ghost"`, sem borda).
+ * No mobile empilha nessa ordem; no desktop fica lado a lado, alinhado à direita.
+ */
 function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
+      className={cn('flex flex-col gap-3 sm:flex-row sm:justify-end', className)}
       {...props}
     />
   )

@@ -327,7 +327,7 @@ export default function PrayerPage() {
                 Pedir Oração
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent variant="sheet" className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle className="text-base md:text-xl font-bold">
                   Novo Pedido de Oração
@@ -366,15 +366,19 @@ export default function PrayerPage() {
                 </label>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsNewRequestOpen(false)}>
-                  Cancelar
-                </Button>
                 <Button
                   onClick={handleCreateRequest}
                   disabled={!newRequestText.trim()}
-                  className="bg-amber-600 hover:bg-amber-700"
+                  className="h-11 w-full sm:w-auto rounded-xl bg-amber-600 px-8 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
                 >
                   Enviar Pedido
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsNewRequestOpen(false)}
+                  className="h-11 w-full sm:w-auto rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  Cancelar
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -699,24 +703,24 @@ export default function PrayerPage() {
                 )}
               </div>
 
-              <DialogFooter className="gap-2">
-                {canManage(selectedPrayer) && selectedPrayer.status !== 'answered' && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleMarkAnswered(selectedPrayer)}
-                    className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                  >
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Marcar como atendido
-                  </Button>
-                )}
+              <DialogFooter>
                 {isPastor && (
                   <Button
                     onClick={handlePastorResponse}
                     disabled={!pastorResponse.trim()}
-                    className="bg-amber-600 hover:bg-amber-700"
+                    className="h-11 w-full sm:w-auto rounded-xl bg-amber-600 px-8 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
                   >
                     Enviar Resposta
+                  </Button>
+                )}
+                {canManage(selectedPrayer) && selectedPrayer.status !== 'answered' && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleMarkAnswered(selectedPrayer)}
+                    className="h-11 w-full sm:w-auto rounded-xl font-bold text-purple-700 hover:bg-purple-50 hover:text-purple-700 dark:text-purple-400 dark:hover:bg-purple-900/20"
+                  >
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Marcar como atendido
                   </Button>
                 )}
               </DialogFooter>

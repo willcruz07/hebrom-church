@@ -187,7 +187,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess, event }: CreateEv
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] overflow-y-auto max-h-[90vh] rounded-3xl">
+      <DialogContent variant="sheet" className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="text-base md:text-2xl font-black uppercase tracking-tight">
             {isEditing ? 'Editar Evento' : 'Novo Evento'}
@@ -350,19 +350,11 @@ export function CreateEventModal({ isOpen, onClose, onSuccess, event }: CreateEv
             </div>
           </div>
 
-          <DialogFooter className="flex flex-col sm:flex-row gap-3">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleClose}
-              className="w-full sm:w-auto rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 font-bold"
-            >
-              Cancelar
-            </Button>
+          <DialogFooter>
             <Button
               type="submit"
               disabled={isSubmitting || isUploading}
-              className="w-full sm:w-auto rounded-xl bg-amber-600 px-8 py-6 sm:py-2 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
+              className="h-11 w-full sm:w-auto rounded-xl bg-amber-600 px-8 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
             >
               {isSubmitting || isUploading ? (
                 <div className="flex items-center gap-2">
@@ -372,6 +364,14 @@ export function CreateEventModal({ isOpen, onClose, onSuccess, event }: CreateEv
               ) : (
                 isEditing ? 'Salvar Alterações' : 'Criar Evento'
               )}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleClose}
+              className="h-11 w-full sm:w-auto rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Cancelar
             </Button>
           </DialogFooter>
         </form>

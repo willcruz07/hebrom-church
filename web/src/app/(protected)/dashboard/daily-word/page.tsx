@@ -312,7 +312,7 @@ export default function DailyWordPage() {
                 <Plus className="mr-2 h-4 w-4" /> Lançar Palavra
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] rounded-2xl">
+            <DialogContent variant="sheet" className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>Nova Palavra do Dia</DialogTitle>
                 <DialogDescription>
@@ -356,15 +356,19 @@ export default function DailyWordPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancelar
-                </Button>
                 <Button
                   onClick={handleCreate}
                   disabled={isSubmitting || !newWord.content.trim()}
-                  className="bg-amber-600 hover:bg-amber-700"
+                  className="h-11 w-full sm:w-auto rounded-xl bg-amber-600 px-8 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
                 >
                   {isSubmitting ? <HebromSpinner size="sm" className="brightness-200" /> : 'Lançar'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsDialogOpen(false)}
+                  className="h-11 w-full sm:w-auto rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  Cancelar
                 </Button>
               </DialogFooter>
             </DialogContent>

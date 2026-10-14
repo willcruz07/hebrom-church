@@ -145,7 +145,7 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px] rounded-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent variant="sheet" className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg md:text-xl font-black text-slate-900 dark:text-white">
             <Edit className="h-4 w-4 md:h-5 md:w-5 text-amber-600" />
@@ -264,11 +264,11 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
             </p>
           </div>
 
-          <DialogFooter className="pt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <DialogFooter className="pt-4">
             <Button
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 h-11 rounded-xl font-black shadow-lg shadow-amber-200 dark:shadow-none order-first sm:order-last"
+              className="h-11 w-full sm:w-auto rounded-xl bg-amber-600 px-8 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
             >
               {loading ? (
                 <HebromSpinner size="sm" className="mr-2 brightness-200" />
@@ -281,7 +281,7 @@ export function EditMemberModal({ isOpen, onClose, member, onSuccess }: EditMemb
               type="button"
               variant="ghost"
               onClick={onClose}
-              className="w-full sm:w-auto h-11 rounded-xl text-slate-500 font-bold"
+              className="h-11 w-full sm:w-auto rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Cancelar
             </Button>

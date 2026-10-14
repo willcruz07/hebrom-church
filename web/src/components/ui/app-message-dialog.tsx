@@ -49,19 +49,23 @@ export function AppMessageDialog() {
         <DialogFooter>
           {type === 'QUESTION' ? (
             <>
-              <Button variant="outline" onClick={handleCancel} className="rounded-xl">
-                Cancelar
-              </Button>
               <Button
                 onClick={handleConfirm}
                 className={cn(
-                  'rounded-xl text-white',
+                  'h-11 w-full sm:w-auto rounded-xl px-8 font-black text-white active:scale-95',
                   messageType === 'error'
                     ? 'bg-red-600 hover:bg-red-700'
-                    : 'bg-amber-600 hover:bg-amber-700',
+                    : 'bg-amber-600 shadow-lg shadow-amber-500/25 hover:bg-amber-700',
                 )}
               >
                 {buttonText || 'Sim, confirmar'}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleCancel}
+                className="h-11 w-full sm:w-auto rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                Cancelar
               </Button>
             </>
           ) : (

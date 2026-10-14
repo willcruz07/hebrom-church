@@ -116,24 +116,24 @@ export function EventDetailModal({ event, isOpen, onClose, canManage, onEdit }: 
         </div>
 
         {canManage && (
-          <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleDelete}
-              className="w-full gap-2 rounded-xl font-bold text-red-600 hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-900/20 sm:w-auto"
-            >
-              <Trash2 className="h-4 w-4" /> Excluir Evento
-            </Button>
+          <DialogFooter>
             {onEdit && (
               <Button
                 type="button"
                 onClick={() => onEdit(displayEvent)}
-                className="w-full gap-2 rounded-xl bg-amber-600 font-bold text-white hover:bg-amber-700 sm:w-auto"
+                className="h-11 w-full gap-2 rounded-xl bg-amber-600 px-8 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95 sm:w-auto"
               >
                 <Pencil className="h-4 w-4" /> Editar Evento
               </Button>
             )}
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleDelete}
+              className="h-11 w-full gap-2 rounded-xl font-bold text-red-600 hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-900/20 sm:w-auto"
+            >
+              <Trash2 className="h-4 w-4" /> Excluir Evento
+            </Button>
           </DialogFooter>
         )}
       </DialogContent>

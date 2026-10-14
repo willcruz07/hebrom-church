@@ -120,7 +120,7 @@ export function CreateMemberModal({ isOpen, onClose, onSuccess }: CreateMemberMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px] rounded-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent variant="sheet" className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg md:text-xl font-black text-slate-900 dark:text-white">
             <UserPlus className="h-5 w-5 md:h-6 md:w-6 text-amber-600" />
@@ -212,12 +212,12 @@ export function CreateMemberModal({ isOpen, onClose, onSuccess }: CreateMemberMo
             </div>
           </div>
 
-          <DialogFooter className="pt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 h-11 rounded-xl font-black shadow-lg shadow-amber-200 dark:shadow-none order-first sm:order-last">
+          <DialogFooter className="pt-6">
+            <Button type="submit" disabled={loading} className="h-11 w-full sm:w-auto rounded-xl bg-amber-600 px-8 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95">
               {loading ? <HebromSpinner size="sm" className="mr-2 brightness-200" /> : <Check className="mr-2 h-4 w-4" />}
               Cadastrar Membro
             </Button>
-            <Button type="button" variant="ghost" onClick={onClose} className="w-full sm:w-auto h-11 rounded-xl font-bold text-slate-500">
+            <Button type="button" variant="ghost" onClick={onClose} className="h-11 w-full sm:w-auto rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">
               Cancelar
             </Button>
           </DialogFooter>

@@ -112,19 +112,19 @@ export function ImageCropper({
             />
           </div>
 
-          <DialogFooter className="flex gap-2 sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="rounded-xl"
-            >
-              Cancelar
-            </Button>
+          <DialogFooter>
             <Button
               onClick={handleConfirm}
-              className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white"
+              className="h-11 w-full sm:w-auto rounded-xl bg-amber-600 px-8 font-black text-white shadow-lg shadow-amber-500/25 hover:bg-amber-700 active:scale-95"
             >
               Confirmar Corte
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              className="h-11 w-full sm:w-auto rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Cancelar
             </Button>
           </DialogFooter>
         </div>

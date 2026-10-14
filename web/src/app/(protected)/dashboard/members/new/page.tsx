@@ -158,9 +158,6 @@ export default function MemberCreatePage() {
             description="Cadastre um novo membro com todas as informações necessárias."
           />
           <div className="hidden sm:flex gap-3">
-            <Button variant="outline" onClick={() => router.back()} className="rounded-xl">
-              Cancelar
-            </Button>
             <Button
               onClick={handleSubmit(onSubmit)}
               disabled={loading}
@@ -172,6 +169,13 @@ export default function MemberCreatePage() {
                 <Save className="mr-2 h-4 w-4" />
               )}
               Cadastrar Membro
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => router.back()}
+              className="rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Cancelar
             </Button>
           </div>
         </div>
@@ -563,9 +567,9 @@ export default function MemberCreatePage() {
             </Button>
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => router.back()}
-              className="h-12 w-full rounded-2xl text-slate-500 font-bold border-slate-200 dark:border-slate-800"
+              className="h-12 w-full rounded-2xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Cancelar e Sair
             </Button>
