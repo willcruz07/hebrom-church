@@ -128,7 +128,8 @@ function toFormValues(userData: AppUser): MemberFormData {
     zip_code: userData.profile.zip_code || '',
     communion_date: userData.profile.communion_date || '',
     baptism_date: userData.profile.baptism_date || '',
-    atribuicao_principal: userData.atribuicao_principal,
+    // O Firestore grava `null` quando não há atribuição; o schema (.optional()) só aceita undefined.
+    atribuicao_principal: userData.atribuicao_principal ?? undefined,
     atribuicoes_secundarias: userData.atribuicoes_secundarias || [],
     can_post_mural: userData.can_post_mural ?? false,
     emergency_contact_name: userData.profile.emergency_contact_name || '',
@@ -240,6 +241,12 @@ function MemberEditContent() {
     }
   }
 
+  // Sem isso, um erro de validação em campo sem mensagem na tela (ou em outra aba) não dá feedback nenhum.
+  const onInvalid = (fieldErrors: typeof errors) => {
+    const [field, error] = Object.entries(fieldErrors)[0] ?? []
+    toast.error(error?.message ? `${field}: ${error.message}` : 'Verifique os campos do formulário')
+  }
+
   if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -335,7 +342,7 @@ function MemberEditContent() {
             <div className="hidden md:flex flex-col gap-2 min-w-[160px]">
               <Button
                 className="w-full bg-amber-600 hover:bg-amber-700 rounded-xl font-bold"
-                onClick={handleSubmit(onSubmit)}
+                onClick={handleSubmit(onSubmit, onInvalid)}
                 disabled={saving}
               >
                 {saving ? (
@@ -410,7 +417,7 @@ function MemberEditContent() {
           </TabsList>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
           <TabsContent value="personal">
             <SectionCard
               title="Informações Básicas"
@@ -710,7 +717,7 @@ function MemberEditContent() {
         <div className=" flex flex-col gap-4 md:hidden">
           <Button
             className="w-full bg-amber-600 hover:bg-amber-700 h-12 rounded-xl text-base font-black shadow-lg shadow-amber-500/25 dark:shadow-none"
-            onClick={handleSubmit(onSubmit)}
+            onClick={handleSubmit(onSubmit, onInvalid)}
             disabled={saving}
           >
             {saving ? (
