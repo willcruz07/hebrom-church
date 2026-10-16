@@ -103,6 +103,50 @@ const memberSchema = z.object({
 
 type MemberFormData = z.infer<typeof memberSchema>
 
+type MemberTab = 'personal' | 'family' | 'address' | 'docs' | 'church' | 'health'
+
+const TAB_LABELS: Record<MemberTab, string> = {
+  personal: 'Informações',
+  family: 'Família',
+  address: 'Endereço',
+  docs: 'Documentos',
+  church: 'Igreja',
+  health: 'Saúde',
+}
+
+// Onde cada campo está na tela — usado para apontar a aba certa quando a validação falha
+const FIELD_LOCATION: Record<keyof MemberFormData, { tab: MemberTab; label: string }> = {
+  full_name: { tab: 'personal', label: 'Nome Completo' },
+  phone: { tab: 'personal', label: 'Telefone' },
+  birth_date: { tab: 'personal', label: 'Data de Nascimento' },
+  naturalness: { tab: 'personal', label: 'Naturalidade' },
+  gender: { tab: 'personal', label: 'Sexo' },
+  father_name: { tab: 'family', label: 'Nome do Pai' },
+  mother_name: { tab: 'family', label: 'Nome da Mãe' },
+  marital_status: { tab: 'family', label: 'Estado Civil' },
+  children_count: { tab: 'family', label: 'Quantidade de Filhos' },
+  spouse_name: { tab: 'family', label: 'Nome do Cônjuge' },
+  zip_code: { tab: 'address', label: 'CEP' },
+  address: { tab: 'address', label: 'Logradouro / Rua' },
+  address_number: { tab: 'address', label: 'Número' },
+  address_complement: { tab: 'address', label: 'Complemento' },
+  neighborhood: { tab: 'address', label: 'Bairro' },
+  city: { tab: 'address', label: 'Cidade' },
+  state: { tab: 'address', label: 'Estado (UF)' },
+  cpf: { tab: 'docs', label: 'CPF' },
+  rg: { tab: 'docs', label: 'RG' },
+  profession: { tab: 'docs', label: 'Profissão' },
+  role: { tab: 'church', label: 'Permissão do Sistema' },
+  atribuicao_principal: { tab: 'church', label: 'Cargo principal' },
+  atribuicoes_secundarias: { tab: 'church', label: 'Atribuições extras' },
+  baptism_date: { tab: 'church', label: 'Data de Batismo' },
+  communion_date: { tab: 'church', label: 'Data de Comunhão' },
+  can_post_mural: { tab: 'church', label: 'Pode postar/gerenciar no mural' },
+  blood_type: { tab: 'health', label: 'Tipo Sanguíneo' },
+  emergency_contact_name: { tab: 'health', label: 'Nome do Contato de Emergência' },
+  emergency_contact_phone: { tab: 'health', label: 'Telefone de Emergência' },
+}
+
 function toFormValues(userData: AppUser): MemberFormData {
   return {
     full_name: userData.profile.full_name,
@@ -157,6 +201,7 @@ function MemberEditContent() {
   const [loading, setLoading] = useState(!cachedMember)
   const [saving, setSaving] = useState(false)
   const [member, setMember] = useState<AppUser | null>(cachedMember ?? null)
+  const [activeTab, setActiveTab] = useState<MemberTab>('personal')
 
   const {
     register,
@@ -242,9 +287,31 @@ function MemberEditContent() {
   }
 
   // Sem isso, um erro de validação em campo sem mensagem na tela (ou em outra aba) não dá feedback nenhum.
+  // Leva o usuário para a primeira aba com problema e diz quais campos revisar.
   const onInvalid = (fieldErrors: typeof errors) => {
-    const [field, error] = Object.entries(fieldErrors)[0] ?? []
-    toast.error(error?.message ? `${field}: ${error.message}` : 'Verifique os campos do formulário')
+    const invalidFields = (Object.keys(fieldErrors) as (keyof MemberFormData)[])
+      .map((field) => FIELD_LOCATION[field])
+      .filter(Boolean)
+
+    if (invalidFields.length === 0) {
+      toast.error('Não foi possível salvar', {
+        description: 'Verifique os campos do formulário.',
+      })
+      return
+    }
+
+    const firstTab = invalidFields[0].tab
+    const labels = invalidFields.filter((f) => f.tab === firstTab).map((f) => f.label)
+    const otherTabs = [...new Set(invalidFields.map((f) => f.tab))].filter((t) => t !== firstTab)
+
+    setActiveTab(firstTab)
+    toast.error(`Verifique a aba ${TAB_LABELS[firstTab]}`, {
+      description:
+        `${labels.length > 1 ? 'Campos' : 'Campo'} com problema: ${labels.join(', ')}.` +
+        (otherTabs.length
+          ? ` Também há pendências em: ${otherTabs.map((t) => TAB_LABELS[t]).join(', ')}.`
+          : ''),
+    })
   }
 
   if (loading) {
@@ -375,7 +442,11 @@ function MemberEditContent() {
         </div>
       </header>
 
-      <Tabs defaultValue="personal" className="w-full">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as MemberTab)}
+        className="w-full"
+      >
         <div className="relative w-full overflow-x-auto mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
           <TabsList className="overflow-x-auto no-scrollbar inline-flex h-11 w-max min-w-full items-center justify-start rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
             <TabsTrigger
