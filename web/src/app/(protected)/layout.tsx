@@ -40,7 +40,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   }, [currentUser?.uid, router]);
 
   useEffect(() => {
-    // Garante que os 20 grupos fixos por atribuição existam — ver specs/mural-grupos.md
+    // Garante que os grupos fixos por atribuição existam — ver specs/mural-grupos.md
     if (currentUser && (currentUser.role === 'secretary' || currentUser.role === 'pastor')) {
       seedFixedGroups().catch((error) => {
         console.error('Erro ao configurar grupos padrão:', error);

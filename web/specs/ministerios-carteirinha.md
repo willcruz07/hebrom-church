@@ -21,9 +21,9 @@ Cada membro pode pertencer a um ou mais ministérios da igreja, com uma atribui�
 ## Design alvo
 
 ### Lista de atribuições/papéis
-Lista única (flat) de 20 opções, definida pelo usuário. Mistura de propósito ministério/grupo, ofício eclesiástico e liderança — modelada como uma lista só (não separada em campos distintos) porque cada "Líder X" é tratado como um valor independente na mesma lista, não como um flag sobre o item base:
+Lista única (flat) de 22 opções, definida pelo usuário. Mistura de propósito ministério/grupo, ofício eclesiástico e liderança — modelada como uma lista só (não separada em campos distintos) porque cada "Líder X" é tratado como um valor independente na mesma lista, não como um flag sobre o item base:
 
-Ministério de Dança, Ministério Kids e Juniores, Obreiro, Evangelista (a), Presbítero (a), Mídia, Diácono (a), Cantina, Músico, Ministério de Louvor, Intercessão, Missionário (a), Pastor (a), Líder Intercessão, Líder Cantina, Líder Músico, Líder Mídia, Líder Kids, Líder Obreiro, Líder Louvor.
+Ministério de Dança, Ministério Kids e Juniores, Obreiro, Evangelista (a), Presbítero (a), Mídia, Diácono (a), Cantina, Músico, Ministério de Louvor, Intercessão, Missionário (a), Recepção, Estacionamento, Pastor (a), Líder Intercessão, Líder Cantina, Líder Músico, Líder Mídia, Líder Kids, Líder Obreiro, Líder Louvor.
 
 ### Atribuição principal/secundárias
 Cada usuário tem:
@@ -59,6 +59,8 @@ A atribuição **principal** determina o tema visual (cor de fundo/destaque) da 
 | 10 | Ministério de Louvor | Música | `#7C3AED` (violeta-600) | `#FFFFFF` | `#8B5CF6` (violeta-500) | `#FAFAFA` | Tom irmão do Músico |
 | 11 | Intercessão | Intercessão | `#4338CA` (índigo-700) | `#FFFFFF` | `#4F46E5` (índigo-600) | `#FAFAFA` | Espiritual/oração |
 | 12 | Missionário (a) | Missão | `#0D9488` (teal-600) | `#FFFFFF` | `#14B8A6` (teal-500) | `#FAFAFA` | Tom irmão do Evangelista |
+| 12a | Recepção | Acolhimento | `#65A30D` (lima-600) | `#FFFFFF` | `#84CC16` (lima-500) | `#1A2E05` | Boas-vindas; texto escuro no dark por contraste |
+| 12b | Estacionamento | Apoio | `#475569` (ardósia-600) | `#FFFFFF` | `#64748B` (ardósia-500) | `#FAFAFA` | Tom "asfalto", neutro |
 | 13 | Pastor (a) | Pastoral | `#14141A` (grafite quase-preto) | `#F5F0E6` | `#2A2A33` | `#F5F0E6` | + acento dourado (`#C9A227` light / `#E8C55A` dark); + borda sutil no dark |
 | 14 | Líder Intercessão | Intercessão | `#1E1B4B` (índigo profundo) | `#FFFFFF` | `#312C85` (índigo-800) | `#FAFAFA` | + acento dourado; + borda sutil no dark |
 | 15 | Líder Cantina | Cantina | `#881337` (rosa-vermelho profundo) | `#FFFFFF` | `#BE123C` (rosa-vermelho-700) | `#FAFAFA` | + acento dourado; + borda sutil no dark |
