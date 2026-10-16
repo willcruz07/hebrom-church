@@ -22,6 +22,8 @@ export const MINISTRY_ATTRIBUTIONS = [
   'Líder Kids',
   'Líder Obreiro',
   'Líder Louvor',
+  'Líder Recepção',
+  'Líder Estacionamento',
 ] as const
 
 export type MinistryAttribution = (typeof MINISTRY_ATTRIBUTIONS)[number]
@@ -56,6 +58,8 @@ export const MINISTRY_ATTRIBUTION_THEME: Record<MinistryAttribution, MinistryAtt
   'Líder Kids': { bg: '#FFDD85', text: '#2B2E4A', isLeader: true },
   'Líder Obreiro': { bg: '#92400E', text: '#FFF7ED', isLeader: true },
   'Líder Louvor': { bg: '#6D28D9', text: '#FAFAFA', isLeader: true },
+  'Líder Recepção': { bg: '#4D7C0F', text: '#FAFAFA', isLeader: true },
+  'Líder Estacionamento': { bg: '#334155', text: '#FAFAFA', isLeader: true },
 }
 
 // Acento dourado compartilhado por todo "Líder X" (mesma regra da carteirinha)
