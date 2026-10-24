@@ -33,6 +33,7 @@ export interface GuardianInfo {
   uid: string
   name: string
   avatar_url: string | null
+  phone?: string
 }
 
 const toChildren = (docs: QueryDocumentSnapshot[]) =>
@@ -94,16 +95,35 @@ export async function findUserByEmail(email: string): Promise<GuardianInfo | nul
   const found = snapshot.docs[0]
   if (!found) return null
   const data = found.data()
-  return { uid: found.id, name: data.profile?.full_name ?? data.email, avatar_url: data.profile?.avatar_url ?? null }
+  return {
+    uid: found.id,
+    name: data.profile?.full_name ?? data.email,
+    avatar_url: data.profile?.avatar_url ?? null,
+    ...(data.profile?.phone ? { phone: data.profile.phone } : {}),
+  }
 }
 
-/** Nome e foto dos responsáveis (no máximo 4 leituras). `null` = conta não existe mais. */
-export async function getGuardians(uids: string[]): Promise<Record<string, GuardianInfo | null>> {
+/**
+ * Nome, foto e telefone dos responsáveis (no máximo 4 leituras).
+ * `null` = conta não existe mais; `undefined` = falha de leitura (tentar de novo depois).
+ */
+export async function getGuardians(uids: string[]): Promise<Record<string, GuardianInfo | null | undefined>> {
   const entries = await Promise.all(
     uids.map(async (uid) => {
-      const user = await getUserById(uid).catch(() => null)
+      let user: Awaited<ReturnType<typeof getUserById>>
+      try {
+        user = await getUserById(uid)
+      } catch (error) {
+        console.error(error)
+        return [uid, undefined] as const
+      }
       const info: GuardianInfo | null = user
-        ? { uid, name: user.profile.full_name, avatar_url: user.profile.avatar_url }
+        ? {
+            uid,
+            name: user.profile.full_name,
+            avatar_url: user.profile.avatar_url,
+            ...(user.profile.phone ? { phone: user.profile.phone } : {}),
+          }
         : null
       return [uid, info] as const
     }),

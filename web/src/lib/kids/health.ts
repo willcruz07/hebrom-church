@@ -80,3 +80,13 @@ export function entriesOf(health: KidHealth): HealthEntry[] {
 }
 
 export const alertsOf = (health: KidHealth) => entriesOf(health).filter((e) => e.alert)
+
+/** Itens do cadastro rápido de visitante (os alertas e o lanche). */
+export const QUICK_HEALTH_ITEM_IDS: readonly KidHealthItemId[] = [
+  'food_allergy',
+  'asthma',
+  'epilepsy',
+  'diabetes',
+  'drug_allergy',
+  'no_church_snack',
+]

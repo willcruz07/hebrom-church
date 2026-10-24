@@ -32,7 +32,11 @@ export function GuardiansField({ currentUid, guardianUids, canRemoveSelf, onChan
     if (!missing.length) return
     let cancelled = false
     getGuardians(missing).then((found) => {
-      if (!cancelled) setInfo((current) => ({ ...current, ...found }))
+      // Só guarda o que foi lido de fato (falha de rede continua como "…" sem entrar em loop)
+      const loaded = Object.fromEntries(
+        Object.entries(found).filter((entry): entry is [string, GuardianInfo | null] => entry[1] !== undefined),
+      )
+      if (!cancelled && Object.keys(loaded).length) setInfo((current) => ({ ...current, ...loaded }))
     })
     return () => {
       cancelled = true

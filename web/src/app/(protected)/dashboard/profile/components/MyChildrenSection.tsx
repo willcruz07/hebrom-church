@@ -34,7 +34,16 @@ export function MyChildrenSection() {
 
       <div className="grid gap-3 sm:grid-cols-2">
         {children.map((child) => (
-          <KidCard key={child.id} child={child} onClick={() => setModal({ open: true, child })} />
+          <KidCard
+            key={child.id}
+            child={child}
+            subtitle={
+              child.is_visitor && child.created_by !== currentUser?.uid
+                ? 'Cadastro rápido da equipe Kids — complete o prontuário'
+                : undefined
+            }
+            onClick={() => setModal({ open: true, child })}
+          />
         ))}
         <button
           type="button"

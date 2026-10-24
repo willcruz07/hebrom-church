@@ -27,7 +27,14 @@ export function KidCard({ child, subtitle, onClick }: KidCardProps) {
     >
       <UserAvatar src={child.photo_url} name={child.name} size={48} />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-bold text-slate-900 dark:text-white">{child.name}</p>
+        <p className="truncate font-bold text-slate-900 dark:text-white">
+          {child.name}
+          {child.is_visitor && (
+            <span className="ml-1.5 rounded bg-slate-100 px-1.5 py-0.5 align-middle text-[9px] font-bold uppercase text-slate-500 dark:bg-slate-800">
+              Visitante
+            </span>
+          )}
+        </p>
         <p className="text-xs text-slate-500 dark:text-slate-400">
           {formatAge(child.birth_date, today)} · {roomLabelOf(child.birth_date, today)}
         </p>

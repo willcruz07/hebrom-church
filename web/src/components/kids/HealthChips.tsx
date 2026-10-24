@@ -16,13 +16,16 @@ type HealthItem = (typeof HEALTH_ITEMS)[number]
 interface HealthChipsProps {
   health: KidHealth
   onChange: (health: KidHealth) => void
-  photoConsent: boolean
-  onPhotoConsentChange: (value: boolean) => void
+  /** Sem `onPhotoConsentChange`, a seção Autorizações não aparece (cadastro rápido). */
+  photoConsent?: boolean
+  onPhotoConsentChange?: (value: boolean) => void
+  /** Só estes itens (cadastro rápido). Sem isso, o catálogo inteiro. */
+  itemIds?: readonly KidHealthItemId[]
   errors?: Partial<Record<KidHealthItemId, string>>
 }
 
 /** Anamnese em chips; itens com "qual?" abrem um campo curto quando marcados. */
-export function HealthChips({ health, onChange, photoConsent, onPhotoConsentChange, errors }: HealthChipsProps) {
+export function HealthChips({ health, onChange, photoConsent, onPhotoConsentChange, errors, itemIds }: HealthChipsProps) {
   const toggle = (item: HealthItem) => {
     const next = { ...health }
     if (next[item.id] !== undefined) delete next[item.id]
@@ -33,7 +36,8 @@ export function HealthChips({ health, onChange, photoConsent, onPhotoConsentChan
   return (
     <div className="space-y-4">
       {HEALTH_GROUPS.map((group) => {
-        const items = HEALTH_ITEMS.filter((item) => item.group === group.id)
+        const items = HEALTH_ITEMS.filter((item) => item.group === group.id && (!itemIds || itemIds.includes(item.id)))
+        if (!items.length) return null
         const openDetails = items.filter((item) => item.detail && health[item.id] !== undefined)
         return (
           <div key={group.id} className="space-y-2">
@@ -66,14 +70,16 @@ export function HealthChips({ health, onChange, photoConsent, onPhotoConsentChan
         )
       })}
 
-      <div className="space-y-2">
-        <GroupLabel>Autorizações</GroupLabel>
-        <div className="flex flex-wrap gap-2">
-          <Chip active={photoConsent} onClick={() => onPhotoConsentChange(!photoConsent)}>
-            Pode ser fotografada (redes da igreja)
-          </Chip>
+      {onPhotoConsentChange && (
+        <div className="space-y-2">
+          <GroupLabel>Autorizações</GroupLabel>
+          <div className="flex flex-wrap gap-2">
+            <Chip active={!!photoConsent} onClick={() => onPhotoConsentChange(!photoConsent)}>
+              Pode ser fotografada (redes da igreja)
+            </Chip>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

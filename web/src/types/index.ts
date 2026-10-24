@@ -2,6 +2,7 @@ import { Timestamp } from 'firebase/firestore';
 import { MinistryAttribution } from '@/lib/ministry-attributions';
 import type { BibleBookmark as BookmarkOf } from '@/lib/bible/types';
 import type { KidChildOf } from '@/lib/kids/child';
+import type { KidPassOf, KidSessionOf } from '@/lib/kids/session';
 
 export type UserRole = 'visitor' | 'pending_member' | 'member' | 'secretary' | 'pastor';
 
@@ -162,3 +163,9 @@ export type BibleBookmark = BookmarkOf<Timestamp>;
 
 /** Criança da Área Kids (regras em src/lib/kids/). */
 export type KidChild = KidChildOf<Timestamp>;
+
+/** Sessão da Área Kids (aberta/fechada, tias servindo). */
+export type KidSession = KidSessionOf<Timestamp>;
+
+/** Passagem de uma criança por uma sessão (entrada/saída). */
+export type KidPass = KidPassOf<Timestamp>;

@@ -19,6 +19,7 @@ export const ROUTES = {
     ID_CARD: '/dashboard/id-card',
     DAILY_WORD: '/dashboard/daily-word',
     BIBLE: '/dashboard/bible',
+    KIDS: '/dashboard/kids',
   },
 } as const;
 

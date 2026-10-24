@@ -15,6 +15,7 @@ import {
   Users,
   BookOpen,
   IdCard,
+  Baby,
 } from 'lucide-react'
 import { useAuth } from '@/store/useAuth'
 import { useBottomNav } from '@/store/useBottomNav'
@@ -73,6 +74,12 @@ const NAV = {
     icon: Calendar,
     isActive: startsWith(ROUTES.AUTHENTICATED.AGENDA),
   },
+  kids: {
+    name: 'Kids',
+    href: ROUTES.AUTHENTICATED.KIDS,
+    icon: Baby,
+    isActive: startsWith(ROUTES.AUTHENTICATED.KIDS),
+  },
   idCard: {
     name: 'Carteirinha',
     href: ROUTES.AUTHENTICATED.ID_CARD,
@@ -97,7 +104,7 @@ function getNavLayout(
 ): { left: NavItem[]; home: NavItem | null; right: NavItem[] } {
   // Visitante não tem menu ☰ nem carteirinha: mantém mural e configuração na barra
   if (isVisitor) {
-    return { left: [], home: null, right: [NAV.mural, NAV.dailyWord, NAV.agenda, NAV.settings] }
+    return { left: [], home: null, right: [NAV.mural, NAV.dailyWord, NAV.kids, NAV.agenda, NAV.settings] }
   }
   // Membro pendente ainda não pode pedir oração nem tem carteirinha
   const idCardOrSettings = permissions.canViewProfileCard ? NAV.idCard : NAV.settings

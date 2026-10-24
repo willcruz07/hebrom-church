@@ -18,12 +18,13 @@ import { useKidsStore } from '@/store/useKidsStore'
 import { useMembersStore } from '@/store/useMembersStore'
 import { MembersTabs } from '../components/MembersTabs'
 
-type KidFilter = 'all' | RoomId | 'alerts'
+type KidFilter = 'all' | RoomId | 'alerts' | 'visitors'
 
 const FILTERS: { id: KidFilter; label: string }[] = [
   { id: 'all', label: 'Todas' },
   ...ROOMS.map((room) => ({ id: room.id, label: room.label })),
   { id: 'alerts', label: 'Com alertas' },
+  { id: 'visitors', label: 'Visitantes' },
 ]
 
 export default function MembersKidsPage() {
@@ -62,7 +63,8 @@ export default function MembersKidsPage() {
       children
         .filter((child) => {
           if (filter === 'alerts' && alertsOf(child.health).length === 0) return false
-          if (filter !== 'all' && filter !== 'alerts' && suggestRoom(child.birth_date, today)?.id !== filter) return false
+          if (filter === 'visitors' && !child.is_visitor) return false
+          if (filter !== 'all' && filter !== 'alerts' && filter !== 'visitors' && suggestRoom(child.birth_date, today)?.id !== filter) return false
           const names = child.guardian_uids
             .map((uid) => memberById.get(uid)?.profile.full_name)
             .filter((n): n is string => !!n)
@@ -148,8 +150,18 @@ export default function MembersKidsPage() {
           child={selected}
           open={detail.open && !!selected}
           onOpenChange={(open) => setDetail((d) => ({ ...d, open }))}
-          guardianOf={(uid) => memberById.get(uid)}
-          guardiansLoaded={membersLoaded}
+          guardianOf={(uid) => {
+            if (!membersLoaded) return undefined
+            const member = memberById.get(uid)
+            if (!member) return null
+            return {
+              uid,
+              name: member.profile.full_name,
+              avatar_url: member.profile.avatar_url,
+              ...(member.profile.phone ? { phone: member.profile.phone } : {}),
+            }
+          }}
+          linkGuardians
         />
       </div>
     </PermissionGuard>

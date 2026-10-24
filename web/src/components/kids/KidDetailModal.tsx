@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { AlertTriangle, MessageCircle, Phone } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -9,7 +10,8 @@ import { entriesOf } from '@/lib/kids/health'
 import { roomLabelOf } from '@/lib/kids/rooms'
 import { formatPhone, whatsappUrl } from '@/lib/utils'
 import { ROUTES } from '@/paths'
-import type { AppUser, KidChild } from '@/types'
+import type { GuardianInfo } from '@/services/firebase/kids'
+import type { KidChild } from '@/types'
 import { kidsToday } from './kids-today'
 
 interface KidDetailModalProps {
@@ -17,13 +19,16 @@ interface KidDetailModalProps {
   child: KidChild | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  guardianOf: (uid: string) => AppUser | undefined
-  /** Enquanto a lista de membros carrega, não dá para afirmar que um responsável foi removido. */
-  guardiansLoaded: boolean
+  /** `undefined` = carregando; `null` = conta não existe mais. */
+  guardianOf: (uid: string) => GuardianInfo | null | undefined
+  /** Link para o perfil de membro (só para quem acessa Membros). */
+  linkGuardians?: boolean
+  /** Ações extras no fim da ficha (ex.: registrar saída na Sala). */
+  actions?: ReactNode
 }
 
-/** Ficha da criança em modo leitura (secretaria/pastor). */
-export function KidDetailModal({ child, open, onOpenChange, guardianOf, guardiansLoaded }: KidDetailModalProps) {
+/** Ficha da criança em modo leitura. */
+export function KidDetailModal({ child, open, onOpenChange, guardianOf, linkGuardians = false, actions }: KidDetailModalProps) {
   const today = kidsToday()
   const entries = child ? entriesOf(child.health) : []
   const alerts = entries.filter((e) => e.alert)
@@ -40,6 +45,7 @@ export function KidDetailModal({ child, open, onOpenChange, guardianOf, guardian
               <DialogTitle className="truncate text-base font-black md:text-xl">{child?.name ?? ''}</DialogTitle>
               <DialogDescription className="text-xs md:text-sm">
                 {child ? `${formatAge(child.birth_date, today)} · ${roomLabelOf(child.birth_date, today)}` : ''}
+                {child?.is_visitor ? ' · Visitante' : ''}
               </DialogDescription>
             </div>
           </div>
@@ -96,31 +102,34 @@ export function KidDetailModal({ child, open, onOpenChange, guardianOf, guardian
                   if (!guardian) {
                     return (
                       <li key={uid} className="text-sm text-slate-400">
-                        {guardiansLoaded ? 'Responsável removido' : '…'}
+                        {guardian === null ? 'Responsável removido' : '…'}
                       </li>
                     )
                   }
-                  const phone = guardian.profile.phone
-                  const whatsapp = whatsappUrl(phone)
+                  const whatsapp = whatsappUrl(guardian.phone)
+                  const identity = (
+                    <>
+                      <span className="block truncate text-sm font-bold text-slate-900 dark:text-white">{guardian.name}</span>
+                      <span className="block text-xs text-slate-500">{formatPhone(guardian.phone)}</span>
+                    </>
+                  )
                   return (
-                    <li
-                      key={uid}
-                      className="flex items-center gap-3 rounded-xl border border-slate-200 p-2 dark:border-slate-800"
-                    >
-                      <UserAvatar src={guardian.profile.avatar_url} name={guardian.profile.full_name} size={40} />
-                      <Link
-                        href={`${ROUTES.AUTHENTICATED.MEMBERS}/${uid}`}
-                        onClick={() => onOpenChange(false)}
-                        className="min-w-0 flex-1"
-                      >
-                        <span className="block truncate text-sm font-bold text-slate-900 hover:text-amber-700 dark:text-white">
-                          {guardian.profile.full_name}
-                        </span>
-                        <span className="block text-xs text-slate-500">{formatPhone(phone)}</span>
-                      </Link>
-                      {phone && (
+                    <li key={uid} className="flex items-center gap-3 rounded-xl border border-slate-200 p-2 dark:border-slate-800">
+                      <UserAvatar src={guardian.avatar_url} name={guardian.name} size={40} />
+                      {linkGuardians ? (
+                        <Link
+                          href={`${ROUTES.AUTHENTICATED.MEMBERS}/${uid}`}
+                          onClick={() => onOpenChange(false)}
+                          className="min-w-0 flex-1 hover:text-amber-700"
+                        >
+                          {identity}
+                        </Link>
+                      ) : (
+                        <div className="min-w-0 flex-1">{identity}</div>
+                      )}
+                      {guardian.phone && (
                         <a
-                          href={`tel:${phone.replace(/\D/g, '')}`}
+                          href={`tel:${guardian.phone.replace(/\D/g, '')}`}
                           aria-label="Ligar"
                           className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400"
                         >
@@ -143,6 +152,8 @@ export function KidDetailModal({ child, open, onOpenChange, guardianOf, guardian
                 })}
               </ul>
             </Section>
+
+            {actions}
           </div>
         )}
       </DialogContent>
@@ -150,7 +161,7 @@ export function KidDetailModal({ child, open, onOpenChange, guardianOf, guardian
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="space-y-2">
       <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{title}</p>

@@ -25,6 +25,7 @@ import {
   Users,
   X,
   IdCard,
+  Baby,
 } from 'lucide-react'
 import { useWindowSize } from 'usehooks-ts'
 import { Sheet, SheetContent } from './ui/sheet'
@@ -89,6 +90,13 @@ const navigationItems = [
     href: ROUTES.AUTHENTICATED.BIBLE,
     icon: Book,
     description: 'Leitura da Bíblia',
+    permission: 'canViewGeneralFeed', // Todos podem ver
+  },
+  {
+    name: 'Kids',
+    href: ROUTES.AUTHENTICATED.KIDS,
+    icon: Baby,
+    description: 'Área Kids e QR do responsável',
     permission: 'canViewGeneralFeed', // Todos podem ver
   },
 ]
