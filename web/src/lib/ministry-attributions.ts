@@ -12,6 +12,8 @@ export const MINISTRY_ATTRIBUTIONS = [
   'Ministério de Louvor',
   'Intercessão',
   'Missionário (a)',
+  'Recepção',
+  'Estacionamento',
   'Pastor (a)',
   'Líder Intercessão',
   'Líder Cantina',
@@ -20,6 +22,8 @@ export const MINISTRY_ATTRIBUTIONS = [
   'Líder Kids',
   'Líder Obreiro',
   'Líder Louvor',
+  'Líder Recepção',
+  'Líder Estacionamento',
 ] as const
 
 export type MinistryAttribution = (typeof MINISTRY_ATTRIBUTIONS)[number]
@@ -44,6 +48,8 @@ export const MINISTRY_ATTRIBUTION_THEME: Record<MinistryAttribution, MinistryAtt
   'Ministério de Louvor': { bg: '#8B5CF6', text: '#FAFAFA', isLeader: false },
   Intercessão: { bg: '#4F46E5', text: '#FAFAFA', isLeader: false },
   'Missionário (a)': { bg: '#14B8A6', text: '#FAFAFA', isLeader: false },
+  Recepção: { bg: '#84CC16', text: '#1A2E05', isLeader: false },
+  Estacionamento: { bg: '#64748B', text: '#FAFAFA', isLeader: false },
   'Pastor (a)': { bg: '#2A2A33', text: '#F5F0E6', isLeader: false },
   'Líder Intercessão': { bg: '#312C85', text: '#FAFAFA', isLeader: true },
   'Líder Cantina': { bg: '#BE123C', text: '#FAFAFA', isLeader: true },
@@ -52,6 +58,8 @@ export const MINISTRY_ATTRIBUTION_THEME: Record<MinistryAttribution, MinistryAtt
   'Líder Kids': { bg: '#FFDD85', text: '#2B2E4A', isLeader: true },
   'Líder Obreiro': { bg: '#92400E', text: '#FFF7ED', isLeader: true },
   'Líder Louvor': { bg: '#6D28D9', text: '#FAFAFA', isLeader: true },
+  'Líder Recepção': { bg: '#4D7C0F', text: '#FAFAFA', isLeader: true },
+  'Líder Estacionamento': { bg: '#334155', text: '#FAFAFA', isLeader: true },
 }
 
 // Acento dourado compartilhado por todo "Líder X" (mesma regra da carteirinha)
