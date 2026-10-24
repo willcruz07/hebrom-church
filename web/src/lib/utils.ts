@@ -101,6 +101,21 @@ export function maskCPF(value: string) {
     .substring(0, 14)
 }
 
+// 00.000.000-0 — o dígito verificador pode ser "X" (comum no RG de SP)
+export function maskRG(value: string) {
+  // Até 9 caracteres; "X" só vale na última posição
+  let cleaned = ''
+  for (const char of value.toUpperCase().replace(/[^0-9X]/g, '')) {
+    if (cleaned.length === 9) break
+    if (char === 'X' && cleaned.length !== 8) continue
+    cleaned += char
+  }
+  return cleaned
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2}\.\d{3})(\d)/, '$1.$2')
+    .replace(/^(\d{2}\.\d{3}\.\d{3})([\dX])/, '$1-$2')
+}
+
 export function maskCEP(value: string) {
   const cleaned = value.replace(/\D/g, '')
   return cleaned

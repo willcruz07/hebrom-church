@@ -6,15 +6,14 @@ import { usePermissions } from '@/hooks/usePermissions'
 import {
   User,
   Mail,
-  Phone,
-  Calendar,
   Shield,
   CreditCard,
   Save,
   Camera,
-  MapPin,
   CheckCircle2,
   Info,
+  ClipboardList,
+  Pencil,
 } from 'lucide-react'
 import { HebromSpinner } from '@/components/ui/HebromSpinner'
 import { useForm } from 'react-hook-form'
@@ -24,7 +23,6 @@ import { updateUserProfile } from '@/services/firebase/users'
 import { useFirebaseStorage } from '@/services/firebase/storage'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
-import { maskPhone } from '@/lib/utils'
 import { ImageCropper } from '@/components/ui/ImageCropper'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 import { PageTitle } from '@/components/ui/page-title'
@@ -33,31 +31,17 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { getRoleLabel } from '@/lib/member-options'
 import { MyChildrenSection } from './components/MyChildrenSection'
+import { MyDataModal } from './components/MyDataModal'
 
 const profileSchema = z.object({
   full_name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
   bio: z.string().max(160, 'A bio deve ter no máximo 160 caracteres').optional().or(z.literal('')),
-  phone: z
-    .string()
-    .optional()
-    .or(z.literal(''))
-    .refine(
-      (val) => !val || val.replace(/\D/g, '').length >= 10,
-      'Telefone inválido (mínimo 10 dígitos)',
-    ),
-  address: z
-    .string()
-    .optional()
-    .or(z.literal(''))
-    .refine((val) => !val || val.length >= 5, 'Endereço muito curto'),
-  birth_date: z.string().optional().or(z.literal('')),
-  baptism_date: z.string().optional().or(z.literal('')),
 })
 
 type ProfileFormValues = z.infer<typeof profileSchema>
 
 export default function ProfilePage() {
-  const { currentUser, checkAuth } = useAuth()
+  const { currentUser, refreshCurrentUser } = useAuth()
   const { permissions, role: userRole } = usePermissions()
   const [isSaving, setIsSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -66,6 +50,7 @@ export default function ProfilePage() {
   const [newImageURL, setNewImageURL] = useState<string | null>(null)
   const [isCropperOpen, setIsCropperOpen] = useState(false)
   const [originalFileName, setOriginalFileName] = useState<string>('')
+  const [isMyDataOpen, setIsMyDataOpen] = useState(false)
 
   const {
     loading: isUploading,
@@ -78,17 +63,12 @@ export default function ProfilePage() {
     register,
     handleSubmit,
     reset,
-    setValue,
     formState: { errors },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       full_name: '',
       bio: '',
-      phone: '',
-      address: '',
-      birth_date: '',
-      baptism_date: '',
     },
   })
 
@@ -97,10 +77,6 @@ export default function ProfilePage() {
       reset({
         full_name: currentUser.profile.full_name || '',
         bio: currentUser.profile.bio || '',
-        phone: maskPhone(currentUser.profile.phone || ''),
-        address: currentUser.profile.address || '',
-        birth_date: currentUser.profile.birth_date || '',
-        baptism_date: currentUser.profile.baptism_date || '',
       })
     }
   }, [currentUser, reset])
@@ -111,7 +87,7 @@ export default function ProfilePage() {
     setIsSaving(true)
     try {
       await updateUserProfile(currentUser.uid, data)
-      await checkAuth() // Refresh Zustand state
+      await refreshCurrentUser()
       toast.success('Perfil atualizado com sucesso!', {
         description: 'Suas informações foram salvas em nossa base de dados.',
       })
@@ -163,12 +139,16 @@ export default function ProfilePage() {
   }
 
   // Handle successful upload
+  // O refreshCurrentUser troca o currentUser e reexecuta este efeito: a ref garante que
+  // cada URL enviada seja gravada uma vez só.
+  const savedUploadUrlRef = useRef<string | null>(null)
   useEffect(() => {
     const updateAvatar = async () => {
-      if (uploadUrl && currentUser) {
+      if (uploadUrl && currentUser && savedUploadUrlRef.current !== uploadUrl) {
+        savedUploadUrlRef.current = uploadUrl
         try {
           await updateUserProfile(currentUser.uid, { avatar_url: uploadUrl })
-          await checkAuth()
+          await refreshCurrentUser()
           setNewImageURL(uploadUrl)
           toast.success('Foto de perfil atualizada!')
         } catch (error) {
@@ -178,7 +158,7 @@ export default function ProfilePage() {
     }
 
     updateAvatar()
-  }, [uploadUrl, currentUser, checkAuth])
+  }, [uploadUrl, currentUser, refreshCurrentUser])
 
   // Handle upload errors
   useEffect(() => {
@@ -297,64 +277,6 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>
-                      Telefone / WhatsApp
-                    </Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        inputMode="numeric"
-                        {...register('phone', {
-                          onChange: (e) => {
-                            const masked = maskPhone(e.target.value)
-                            setValue('phone', masked)
-                          },
-                        })}
-                        className="h-11 rounded-xl pl-10"
-                        aria-invalid={!!errors.phone}
-                        placeholder="(00) 00000-0000"
-                      />
-                    </div>
-                    {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>
-                      Data de Nascimento
-                    </Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        {...register('birth_date')}
-                        type="date"
-                        className="h-11 rounded-xl pl-10"
-                        aria-invalid={!!errors.birth_date}
-                      />
-                    </div>
-                    {errors.birth_date && (
-                      <p className="text-xs text-red-500">{errors.birth_date.message}</p>
-                    )}
-                  </div>
-
-                  <div className="md:col-span-2 space-y-2">
-                    <Label>
-                      Endereço Completo
-                    </Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        {...register('address')}
-                        className="h-11 rounded-xl pl-10"
-                        aria-invalid={!!errors.address}
-                        placeholder="Rua, Número, Bairro, Cidade - UF"
-                      />
-                    </div>
-                    {errors.address && (
-                      <p className="text-xs text-red-500">{errors.address.message}</p>
-                    )}
-                  </div>
-
                   <div className="md:col-span-2 space-y-2">
                     <Label>
                       Bio / Sobre você
@@ -394,6 +316,29 @@ export default function ProfilePage() {
               </div>
             </div>
           </form>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="flex items-center gap-2 text-base md:text-lg font-bold text-slate-900 dark:text-white">
+                  <ClipboardList className="h-5 w-5 text-amber-500" />
+                  Ficha Cadastral
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Família, endereço completo, documentos e saúde — os mesmos dados que a
+                  secretaria mantém sobre você.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMyDataOpen(true)}
+                className="flex shrink-0 items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-amber-50 px-5 py-2.5 text-sm font-bold text-amber-700 transition-colors hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30"
+              >
+                <Pencil className="h-4 w-4" />
+                Editar meus dados
+              </button>
+            </div>
+          </div>
 
           {/* Ministerial Data (Read Only for Members, Edit by Admin in future) */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
@@ -476,6 +421,8 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      <MyDataModal open={isMyDataOpen} onOpenChange={setIsMyDataOpen} />
 
       {imageToCrop && (
         <ImageCropper

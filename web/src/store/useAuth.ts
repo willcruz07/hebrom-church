@@ -28,6 +28,7 @@ interface UseAuthStore {
   currentUser: AppUser | null
   loading: LoadingState
   checkAuth(): void
+  refreshCurrentUser(): Promise<AppUser | null>
   signInWithEmail(email: string, password: string): Promise<void>
   signUpWithEmail(name: string, email: string, password: string): Promise<void>
   signInWithGoogle(): Promise<void>
@@ -255,6 +256,20 @@ export const useAuth = create<UseAuthStore>((set, get) => ({
         })
         .catch((error) => console.error('Erro ao espelhar foto do Google:', error))
     }
+  },
+
+  // checkAuth() só registra o listener uma vez — depois de editar o próprio cadastro,
+  // é isto que relê o documento do usuário logado e atualiza currentUser + cache.
+  async refreshCurrentUser() {
+    const uid = get().currentUser?.uid ?? firebaseAuth.currentUser?.uid
+    if (!uid) return null
+
+    const userData = await getUserById(uid)
+    if (userData && get().currentUser?.uid === uid) {
+      set({ currentUser: userData })
+      writeCachedUser(userData)
+    }
+    return userData
   },
 
   // Os métodos signIn* só autenticam no Firebase. O onAuthStateChanged de checkAuth()

@@ -21,9 +21,9 @@ Cada membro pode pertencer a um ou mais ministérios da igreja, com uma atribui�
 ## Design alvo
 
 ### Lista de atribuições/papéis
-Lista única (flat) de 24 opções, definida pelo usuário. Mistura de propósito ministério/grupo, ofício eclesiástico e liderança — modelada como uma lista só (não separada em campos distintos) porque cada "Líder X" é tratado como um valor independente na mesma lista, não como um flag sobre o item base:
+Lista única (flat) de 28 opções, definida pelo usuário. Mistura de propósito ministério/grupo, ofício eclesiástico e liderança — modelada como uma lista só (não separada em campos distintos) porque cada "Líder X" é tratado como um valor independente na mesma lista, não como um flag sobre o item base:
 
-Ministério de Dança, Ministério Kids e Juniores, Obreiro, Evangelista (a), Presbítero (a), Mídia, Diácono (a), Cantina, Músico, Ministério de Louvor, Intercessão, Missionário (a), Recepção, Estacionamento, Pastor (a), Líder Intercessão, Líder Cantina, Líder Músico, Líder Mídia, Líder Kids, Líder Obreiro, Líder Louvor, Líder Recepção, Líder Estacionamento.
+Ministério de Dança, Ministério Kids e Juniores, Obreiro, Evangelista (a), Presbítero (a), Mídia, Diácono (a), Cantina, Músico, Ministério de Louvor, Intercessão, Missionário (a), Recepção, Estacionamento, Pastor (a), Líder Intercessão, Líder Cantina, Líder Músico, Líder Mídia, Líder Kids, Líder Obreiro, Líder Louvor, Líder Recepção, Líder Estacionamento, Líder de Célula, Membro, Equipe de Mulheres, Líder de Casados Para Sempre.
 
 ### Atribuição principal/secundárias
 Cada usuário tem:
@@ -71,6 +71,10 @@ A atribuição **principal** determina o tema visual (cor de fundo/destaque) da 
 | 20 | Líder Louvor | Música | `#5B21B6` (violeta profundo) | `#FFFFFF` | `#6D28D9` (violeta-700) | `#FAFAFA` | + acento dourado; + borda sutil no dark |
 | 21 | Líder Recepção | Acolhimento | `#365314` (lima profundo) | `#FFFFFF` | `#4D7C0F` (lima-700) | `#FAFAFA` | + acento dourado; + borda sutil no dark |
 | 22 | Líder Estacionamento | Apoio | `#1E293B` (ardósia profunda) | `#FFFFFF` | `#334155` (ardósia-700) | `#FAFAFA` | + acento dourado; + borda sutil no dark |
+| 23 | Líder de Célula | Células | `#155E75` (ciano profundo) | `#FFFFFF` | `#0E7490` (ciano-700) | `#FAFAFA` | + acento dourado; + borda sutil no dark — cor provisória |
+| 24 | Membro | Geral | `#57534E` (pedra-600) | `#FFFFFF` | `#78716C` (pedra-500) | `#FAFAFA` | Neutro, sem família ministerial — cor provisória |
+| 25 | Equipe de Mulheres | Mulheres | `#A21CAF` (fúcsia-700) | `#FFFFFF` | `#C026D3` (fúcsia-600) | `#FAFAFA` | Distinto do rosa da Dança — cor provisória |
+| 26 | Líder de Casados Para Sempre | Casais | `#881337` (vinho) | `#FFFFFF` | `#9F1239` (rosa-800) | `#FAFAFA` | + acento dourado; + borda sutil no dark — cor provisória |
 
 ### Carteirinha — tema visual das atribuições secundárias
 A carteirinha só tem uma cor de fundo dominante (a da atribuição **principal**) — como `secundárias` não tem limite de quantidade, elas **não** ganham cada uma seu próprio card colorido (isso poluiria o layout); em vez disso aparecem como **chips/badges pequenos** abaixo do bloco principal, um por atribuição secundária, reaproveitando a mesma cor já mapeada na tabela acima — sem precisar de uma tabela nova de hex.

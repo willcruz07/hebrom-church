@@ -23,17 +23,11 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { maskPhone, maskCPF, maskCEP } from '@/lib/utils'
-import { MINISTRY_ATTRIBUTIONS } from '@/lib/ministry-attributions'
+import { maskPhone, maskCPF, maskRG, maskCEP } from '@/lib/utils'
+import { MINISTRY_ATTRIBUTIONS, MINISTRY_ATTRIBUTION_THEME } from '@/lib/ministry-attributions'
 import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
+import { ListSingleSelect } from '@/components/ui/list-single-select'
 import { SectionCard } from '@/components/ui/section-card'
 import { SelectField } from '@/components/ui/select-field'
 import {
@@ -420,7 +414,12 @@ export default function MemberCreatePage() {
               </div>
               <div className="space-y-2">
                 <Label>RG</Label>
-                <Input {...register('rg')} placeholder="00.000.000-0" className="h-11 rounded-xl" />
+                <Input
+                  {...register('rg')}
+                  onChange={(e) => setValue('rg', maskRG(e.target.value))}
+                  placeholder="00.000.000-0"
+                  className="h-11 rounded-xl uppercase"
+                />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Profissão</Label>
@@ -442,22 +441,18 @@ export default function MemberCreatePage() {
               <div className="grid gap-6 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label>Cargo principal</Label>
-                  <Select
-                    onValueChange={(v) =>
+                  <ListSingleSelect
+                    title="Cargo principal"
+                    options={MINISTRY_ATTRIBUTIONS.map((a) => ({
+                      id: a,
+                      label: a,
+                      color: MINISTRY_ATTRIBUTION_THEME[a].bg,
+                    }))}
+                    selected={selectedAttribution}
+                    onChange={(v) =>
                       setValue('atribuicao_principal', v as MemberFormData['atribuicao_principal'])
                     }
-                  >
-                    <SelectTrigger className="h-11 rounded-xl">
-                      <SelectValue placeholder="Nenhum" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MINISTRY_ATTRIBUTIONS.map((attribution) => (
-                        <SelectItem key={attribution} value={attribution}>
-                          {attribution}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
                 <SelectField
                   label="Permissão do Sistema"

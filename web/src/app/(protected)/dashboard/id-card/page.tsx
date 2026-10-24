@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import type { AppUser, UserRole } from '@/types'
 import { useEffect, useState } from 'react'
-import { formatPhone, formatDate, cn } from '@/lib/utils'
+import { formatPhone, formatDate, maskCPF, maskRG, cn } from '@/lib/utils'
 import { formatMaritalStatus } from '@/lib/member-options'
 import Image from 'next/image'
 import { useNavigation } from '@/hooks/useNavigation'
@@ -88,9 +88,15 @@ function getViewMode(): ViewMode {
  * tela ou densidade. Os `clamp()` garantem um mínimo legível nos cartões menores.
  */
 export default function IdCardPage() {
-  const { currentUser } = useAuth()
+  const { currentUser, refreshCurrentUser } = useAuth()
   const { navigateBack } = useNavigation()
   const [viewMode, setViewMode] = useState<ViewMode | null>(null)
+
+  // A secretaria pode ter mudado cargo/dados depois do boot (o currentUser não escuta o
+  // documento): relê a ficha ao abrir a carteirinha — 1 leitura, sem listener.
+  useEffect(() => {
+    refreshCurrentUser().catch((error) => console.error('Erro ao atualizar carteirinha:', error))
+  }, [refreshCurrentUser])
 
   useEffect(() => {
     const update = () => setViewMode(getViewMode())
@@ -112,17 +118,16 @@ export default function IdCardPage() {
     ? MINISTRY_ATTRIBUTION_THEME[currentUser.atribuicao_principal]
     : null
 
-  // O cargo principal já aparece em destaque abaixo do nome; aqui entram só as
-  // atribuições secundárias (cada uma é um grupo do mural — ver resolveAttributionGroupIds).
-  const otherGroups = (currentUser?.atribuicoes_secundarias ?? []).filter(
-    (g) => g !== currentUser?.atribuicao_principal,
-  )
-  const otherGroupsValue =
-    otherGroups.length === 0
+  // Cargo principal + contador das atribuições extras (lista completa no tooltip)
+  const principal = currentUser?.atribuicao_principal
+  const otherGroups = (currentUser?.atribuicoes_secundarias ?? []).filter((g) => g !== principal)
+  const activities = principal ? [principal, ...otherGroups] : otherGroups
+  const activitiesValue =
+    activities.length === 0
       ? '-'
-      : otherGroups.length === 1
-        ? otherGroups[0]
-        : `${otherGroups[0]} +${otherGroups.length - 1}`
+      : activities.length === 1
+        ? activities[0]
+        : `${activities[0]} +${activities.length - 1}`
 
   // Para membros, a data de comunhão (lançada pela secretaria) é o "membro desde" real;
   // sem ela, cai na data do primeiro acesso.
@@ -146,8 +151,8 @@ export default function IdCardPage() {
     {
       icon: Users,
       label: 'Atividade Principal',
-      value: otherGroupsValue,
-      title: otherGroups.join(', '),
+      value: activitiesValue,
+      title: activities.join(', '),
     },
   ]
 
@@ -206,6 +211,28 @@ export default function IdCardPage() {
               </span>
             </div>
           </div>
+
+          {/* CPF: fica no painel esquerdo porque a grade da direita já ocupa toda a altura do cartão */}
+          <div className="mt-[2.2cqw] w-full text-center">
+            <span className="block text-[clamp(7px,1.35cqw,10px)] font-black tracking-widest text-slate-500 uppercase">
+              CPF
+            </span>
+            <span className="mt-[0.4cqw] block truncate text-[clamp(9px,2cqw,15px)] tracking-wide text-slate-300 tabular-nums">
+              {profile?.cpf ? maskCPF(profile.cpf) : '-'}
+            </span>
+          </div>
+
+          {/* RG: só aparece quando preenchido; exibido no formato 00.000.000-0 */}
+          {profile?.rg?.trim() && (
+            <div className="mt-[1.4cqw] w-full text-center">
+              <span className="block text-[clamp(7px,1.35cqw,10px)] font-black tracking-widest text-slate-500 uppercase">
+                RG
+              </span>
+              <span className="mt-[0.4cqw] block truncate text-[clamp(9px,2cqw,15px)] tracking-wide text-slate-300 tabular-nums">
+                {maskRG(profile.rg)}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* RIGHT PANEL: Identity & Church Details */}

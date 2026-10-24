@@ -29,23 +29,21 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { toast } from 'sonner'
 import { AppUser } from '@/types'
 import { getUserById, updateUserProfile, deleteUser } from '@/services/firebase/users'
 import { doc, updateDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/services/firebase/config'
 import Image from 'next/image'
-import { maskPhone, maskCPF, maskCEP, cn, whatsappUrl } from '@/lib/utils'
+import { maskPhone, maskCPF, maskRG, maskCEP, cn, whatsappUrl } from '@/lib/utils'
 import { AvatarLightbox } from '@/components/ui/AvatarLightbox'
-import { MINISTRY_ATTRIBUTIONS, resolveAttributionGroupIds } from '@/lib/ministry-attributions'
+import {
+  MINISTRY_ATTRIBUTIONS,
+  MINISTRY_ATTRIBUTION_THEME,
+  resolveAttributionGroupIds,
+} from '@/lib/ministry-attributions'
 import { ChipMultiSelect } from '@/components/ui/chip-multi-select'
+import { ListSingleSelect } from '@/components/ui/list-single-select'
 import { SectionCard } from '@/components/ui/section-card'
 import { SelectField } from '@/components/ui/select-field'
 import {
@@ -57,6 +55,7 @@ import {
 } from '@/lib/member-options'
 import { Switch } from '@/components/ui/switch'
 import { useMembersStore } from '@/store/useMembersStore'
+import { useAuth } from '@/store/useAuth'
 import { PermissionGuard } from '@/components/PermissionGuard'
 import { PageTitle } from '@/components/ui/page-title'
 
@@ -161,7 +160,7 @@ function toFormValues(userData: AppUser): MemberFormData {
     mother_name: userData.profile.mother_name || '',
     naturalness: userData.profile.naturalness || '',
     profession: userData.profile.profession || '',
-    rg: userData.profile.rg || '',
+    rg: maskRG(userData.profile.rg || ''),
     cpf: userData.profile.cpf || '',
     address: userData.profile.address || '',
     address_number: userData.profile.address_number || '',
@@ -195,6 +194,8 @@ function MemberEditContent() {
   const { confirm: confirmAction } = useMessages()
   const { uid } = useParams() as { uid: string }
   const router = useRouter()
+  const currentUid = useAuth((s) => s.currentUser?.uid)
+  const refreshCurrentUser = useAuth((s) => s.refreshCurrentUser)
   // Vindo da lista, o membro já está no useMembersStore: abre na hora, sem buscar de novo.
   // Lido só na montagem — atualizações do listener não sobrescrevem o formulário em edição.
   const [cachedMember] = useState(() => useMembersStore.getState().getMember(uid))
@@ -277,6 +278,8 @@ function MemberEditContent() {
         updated_at: Timestamp.now(),
       })
 
+      // Editou a própria ficha: atualiza a sessão (carteirinha, perfil, permissões na UI)
+      if (uid === currentUid) await refreshCurrentUser()
       toast.success('Perfil atualizado com sucesso!')
       router.refresh()
     } catch (error) {
@@ -650,7 +653,12 @@ function MemberEditContent() {
               </div>
               <div className="space-y-2">
                 <Label>RG</Label>
-                <Input {...register('rg')} placeholder="00.000.000-0" className="h-11 rounded-xl" />
+                <Input
+                  {...register('rg')}
+                  onChange={(e) => setValue('rg', maskRG(e.target.value))}
+                  placeholder="00.000.000-0"
+                  className="h-11 rounded-xl uppercase"
+                />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Profissão</Label>
@@ -672,26 +680,18 @@ function MemberEditContent() {
               <div className="grid gap-6 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label>Cargo principal</Label>
-                  <Select
-                    onValueChange={(v) =>
-                      setValue(
-                        'atribuicao_principal',
-                        v as MemberFormData['atribuicao_principal'],
-                      )
+                  <ListSingleSelect
+                    title="Cargo principal"
+                    options={MINISTRY_ATTRIBUTIONS.map((a) => ({
+                      id: a,
+                      label: a,
+                      color: MINISTRY_ATTRIBUTION_THEME[a].bg,
+                    }))}
+                    selected={selectedAttribution}
+                    onChange={(v) =>
+                      setValue('atribuicao_principal', v as MemberFormData['atribuicao_principal'])
                     }
-                    defaultValue={member?.atribuicao_principal}
-                  >
-                    <SelectTrigger className="h-11 rounded-xl">
-                      <SelectValue placeholder="Nenhum" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MINISTRY_ATTRIBUTIONS.map((attribution) => (
-                        <SelectItem key={attribution} value={attribution}>
-                          {attribution}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
                 <SelectField
                   label="Permissão do Sistema"
