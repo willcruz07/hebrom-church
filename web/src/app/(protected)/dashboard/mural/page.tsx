@@ -1,7 +1,7 @@
 'use client'
 
 import { useMessages } from '@/hooks/useMessages'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/store/useAuth'
 import { MessageSquare, Bell, ScrollText, Heart, MoreHorizontal, Trash2 } from 'lucide-react'
@@ -16,9 +16,10 @@ import {
 import { CreatePostModal } from './components/CreatePostModal'
 import { PostComments } from './components/PostComments'
 import { DailyWordHighlight } from './components/DailyWordHighlight'
-import { subscribeToPosts, deletePost, toggleLike } from '@/services/firebase/mural'
-import { getGroups } from '@/services/firebase/groups'
-import { FeedPost, ChurchGroup } from '@/types'
+import { deletePost, toggleLike } from '@/services/firebase/mural'
+import { useMuralStore } from '@/store/useMuralStore'
+import { mergeFeed } from '@/lib/mural/feed'
+import { FeedPost } from '@/types'
 import dayjs from '@/lib/dayjs'
 import { toJsDate, cn } from '@/lib/utils'
 import { isPostActive, sortMuralPosts } from '@/lib/mural-visibility'
@@ -34,57 +35,87 @@ export default function MuralPage() {
   const { permissions } = usePermissions()
   const { currentUser } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [posts, setPosts] = useState<FeedPost[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [myGroups, setMyGroups] = useState<ChurchGroup[]>([])
   const [activeFilters, setActiveFilters] = useState<string[]>([])
 
   const [selectedPostForComments, setSelectedPostForComments] = useState<FeedPost | null>(null)
 
+  const live = useMuralStore((s) => s.live)
+  const older = useMuralStore((s) => s.older)
+  const status = useMuralStore((s) => s.status)
+  const hasMore = useMuralStore((s) => s.hasMore)
+  const loadingMore = useMuralStore((s) => s.loadingMore)
+  const loadMoreFailed = useMuralStore((s) => s.loadMoreFailed)
+  const allGroups = useMuralStore((s) => s.groups)
+  const { start, loadMore, updatePost, removePost } = useMuralStore.getState()
+
   useEffect(() => {
-    setIsLoading(true)
-    const unsubscribe = subscribeToPosts((data) => {
-      setPosts(data)
-      setIsLoading(false)
-    })
+    start()
+  }, [start])
 
-    return () => unsubscribe()
-  }, [])
+  const posts = useMemo(() => mergeFeed(live, older), [live, older])
+  const isLoading = status === 'idle' || status === 'loading'
 
+  const subGroups = currentUser?.sub_groups
+  const myGroups = useMemo(
+    () => (subGroups?.length ? allGroups.filter((g) => subGroups.includes(g.id)) : []),
+    [allGroups, subGroups],
+  )
+
+  // Rolagem infinita: o marcador no fim da lista pede a próxima página ao se aproximar da
+  // tela. O observer é recriado a cada página carregada — se o marcador continuar visível
+  // (ex: o filtro escondeu quase tudo), a observação inicial já pede mais uma.
+  const sentinelRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (!currentUser?.sub_groups?.length) {
-      setMyGroups([])
-      return
-    }
-    getGroups().then((all) => setMyGroups(all.filter((g) => currentUser.sub_groups.includes(g.id))))
-  }, [currentUser?.sub_groups])
+    const sentinel = sentinelRef.current
+    if (!sentinel || !hasMore || loadMoreFailed) return
 
-  const filteredPosts = sortMuralPosts(posts.filter((post) => isPostActive(post))).filter((post) => {
-    const isGeral = post.target_groups.length === 0
-    const isFromMyGroup = myGroups.some((g) => post.target_groups.includes(g.name))
-
-    if (activeFilters.length === 0) {
-      // Default: geral + grupos que participa
-      return isGeral || isFromMyGroup || post.author.uid === currentUser?.uid
-    }
-
-    const wantsGeneral = activeFilters.includes(GENERAL_FILTER_ID)
-    const wantsGroupNames = activeFilters
-      .filter((f) => f !== GENERAL_FILTER_ID)
-      .map((id) => myGroups.find((g) => g.id === id)?.name)
-      .filter((name): name is string => Boolean(name))
-
-    return (
-      (wantsGeneral && isGeral) ||
-      post.target_groups.some((groupName) => wantsGroupNames.includes(groupName))
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore()
+      },
+      { rootMargin: '600px 0px' },
     )
-  })
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, loadMoreFailed, older.length, status, loadMore])
+
+  const filteredPosts = sortMuralPosts(posts.filter((post) => isPostActive(post))).filter(
+    (post) => {
+      const isGeral = post.target_groups.length === 0
+      const isFromMyGroup = myGroups.some((g) => post.target_groups.includes(g.name))
+
+      if (activeFilters.length === 0) {
+        // Default: geral + grupos que participa
+        return isGeral || isFromMyGroup || post.author.uid === currentUser?.uid
+      }
+
+      const wantsGeneral = activeFilters.includes(GENERAL_FILTER_ID)
+      const wantsGroupNames = activeFilters
+        .filter((f) => f !== GENERAL_FILTER_ID)
+        .map((id) => myGroups.find((g) => g.id === id)?.name)
+        .filter((name): name is string => Boolean(name))
+
+      return (
+        (wantsGeneral && isGeral) ||
+        post.target_groups.some((groupName) => wantsGroupNames.includes(groupName))
+      )
+    },
+  )
 
   const handleDeletePost = async (postId: string) => {
-    if (!(await confirmAction({ title: 'Excluir aviso', description: 'Deseja excluir este aviso do mural?', confirmText: 'Excluir', destructive: true }))) return
+    if (
+      !(await confirmAction({
+        title: 'Excluir aviso',
+        description: 'Deseja excluir este aviso do mural?',
+        confirmText: 'Excluir',
+        destructive: true,
+      }))
+    )
+      return
 
     try {
       await deletePost(postId)
+      removePost(postId)
       toast.success('Aviso excluído com sucesso!')
     } catch (error) {
       toast.error('Erro ao excluir aviso')
@@ -93,11 +124,22 @@ export default function MuralPage() {
 
   const handleToggleLike = async (postId: string, likes: string[] = []) => {
     if (!currentUser) return
-    const isLiked = likes.includes(currentUser.uid)
+    const uid = currentUser.uid
+    const isLiked = likes.includes(uid)
+    const setLiked = (liked: boolean) =>
+      updatePost(postId, (p) => ({
+        ...p,
+        likes: liked
+          ? [...(p.likes ?? []).filter((l) => l !== uid), uid]
+          : (p.likes ?? []).filter((l) => l !== uid),
+      }))
 
+    // Otimista: as páginas antigas não têm listener, então a tela não esperaria o servidor
+    setLiked(!isLiked)
     try {
-      await toggleLike(postId, currentUser.uid, isLiked)
+      await toggleLike(postId, uid, isLiked)
     } catch (error) {
+      setLiked(isLiked)
       toast.error('Erro ao processar curtida')
     }
   }
@@ -156,7 +198,18 @@ export default function MuralPage() {
             <HebromSpinner size="lg" className="mb-4" />
             <p className="text-sm font-medium">Carregando avisos...</p>
           </div>
-        ) : filteredPosts.length > 0 ? (
+        ) : status === 'error' && posts.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 p-12 text-center dark:border-slate-800">
+            <Bell className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-700" />
+            <p className="mt-4 text-slate-500">Não foi possível carregar o mural.</p>
+            <button
+              onClick={start}
+              className="mt-4 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        ) : filteredPosts.length > 0 || hasMore ? (
           filteredPosts.map((post) => (
             <article
               key={post.id}
@@ -271,6 +324,23 @@ export default function MuralPage() {
           <div className="rounded-2xl border border-dashed border-slate-300 p-12 text-center dark:border-slate-800">
             <Bell className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-700" />
             <p className="mt-4 text-slate-500">Nenhum aviso encontrado para seu perfil.</p>
+          </div>
+        )}
+
+        {!isLoading && (hasMore || filteredPosts.length > 0) && (
+          <div ref={sentinelRef} className="flex justify-center py-4">
+            {loadMoreFailed ? (
+              <button
+                onClick={loadMore}
+                className="rounded-xl border border-amber-500/40 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400"
+              >
+                Erro ao carregar. Tentar novamente
+              </button>
+            ) : hasMore ? (
+              <HebromSpinner size="sm" className={cn(!loadingMore && 'opacity-0')} />
+            ) : (
+              <p className="text-xs font-medium text-slate-400">Você chegou ao fim do mural</p>
+            )}
           </div>
         )}
       </div>

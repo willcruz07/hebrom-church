@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:bible": "node --test src/lib/bible/*.test.ts",
-    "test:kids": "node --test src/lib/kids/*.test.ts"
+    "test:kids": "node --test src/lib/kids/*.test.ts",
+    "test:mural": "node --test src/lib/mural/*.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

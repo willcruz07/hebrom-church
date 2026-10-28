@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Send, MessageSquare } from 'lucide-react'
 import { FeedPost } from '@/types'
 import { useAuth } from '@/store/useAuth'
+import { useMuralStore } from '@/store/useMuralStore'
 import { addComment, subscribeToPost } from '@/services/firebase/mural'
 import { toast } from 'sonner'
 import dayjs from '@/lib/dayjs'
@@ -30,6 +31,8 @@ export function PostComments({ post: initialPost, isOpen, onClose }: PostComment
     if (isOpen && initialPost.id) {
       const unsubscribe = subscribeToPost(initialPost.id, (updatedPost) => {
         setPost(updatedPost)
+        // Leva o post atualizado para a lista — posts de páginas antigas não têm listener
+        useMuralStore.getState().updatePost(updatedPost.id, () => updatedPost)
       })
       return () => unsubscribe()
     }

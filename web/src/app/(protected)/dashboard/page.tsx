@@ -42,12 +42,11 @@ import {
   Pie,
   PieChart,
 } from 'recharts'
-import { getDocs, collection, query, orderBy, where } from 'firebase/firestore'
-import { db } from '@/services/firebase/config'
 import { prayerService } from '@/services/firebase/prayer'
 import { agendaService } from '@/services/firebase/agenda'
-import { getPosts } from '@/services/firebase/mural'
-import { AppUser, PrayerRequest, ChurchEvent, FeedPost } from '@/types'
+import { getPostsSince } from '@/services/firebase/mural'
+import { useMembersStore } from '@/store/useMembersStore'
+import { PrayerRequest, ChurchEvent, FeedPost } from '@/types'
 import { PageTitle } from '@/components/ui/page-title'
 
 interface StatCardProps {
@@ -163,7 +162,10 @@ export default function DashboardPage() {
   const [dailyWord, setDailyWord] = useState<DailyWord | null>(null)
   
   // Dashboard states
-  const [members, setMembers] = useState<AppUser[]>([])
+  // Membros vêm do listener da sessão (useMembersStore) — o mesmo da lista de membros,
+  // em vez de reler a coleção `users` inteira a cada visita.
+  const members = useMembersStore((s) => s.members)
+  const startMembers = useMembersStore((s) => s.startListening)
   const [prayers, setPrayers] = useState<PrayerRequest[]>([])
   const [events, setEvents] = useState<ChurchEvent[]>([])
   const [posts, setPosts] = useState<FeedPost[]>([])
@@ -175,33 +177,23 @@ export default function DashboardPage() {
       return
     }
 
+    startMembers()
+
     const fetchDashboardData = async () => {
       try {
         setLoading(true)
 
-        const [
-          usersSnapshot,
-          prayersData,
-          eventsData,
-          postsSnapshot,
-          dailyWordData
-        ] = await Promise.all([
-          getDocs(collection(db, 'users')),
+        const [prayersData, eventsData, postsData, dailyWordData] = await Promise.all([
           prayerService.getPrayers({ uid: currentUser?.uid ?? '', isPastor }),
           agendaService.getEvents(),
-          getDocs(query(collection(db, 'posts'), orderBy('created_at', 'desc'))),
-          getDailyWord(dayjs().format('YYYY-MM-DD'))
+          // Os contadores do mural só comparam o mês atual com o anterior
+          getPostsSince(dayjs().subtract(1, 'month').startOf('month').toDate()),
+          getDailyWord(dayjs().format('YYYY-MM-DD')),
         ])
-
-        const usersData = usersSnapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as AppUser))
-        setMembers(usersData)
 
         setPrayers(prayersData)
         setEvents(eventsData)
-
-        const postsData = postsSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as FeedPost))
         setPosts(postsData)
-
         setDailyWord(dailyWordData)
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
@@ -211,7 +203,7 @@ export default function DashboardPage() {
     }
 
     fetchDashboardData()
-  }, [permissions.canViewDashboardOverview, router, currentUser?.uid, isPastor])
+  }, [permissions.canViewDashboardOverview, router, currentUser?.uid, isPastor, startMembers])
 
   const userName = currentUser?.profile.full_name || 'Usuário'
   const firstName = userName.split(' ')[0]
